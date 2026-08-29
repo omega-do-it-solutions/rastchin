@@ -1,0 +1,76 @@
+@font-face {
+    font-family: 'IRANYekan';
+    font-style: normal;
+    font-weight: normal;
+    src: url('./fonts/IRANYekanWebRegular.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'IRANYekan';
+    font-style: normal;
+    font-weight: bold;
+    src: url('./fonts/IRANYekanWebBold.woff2') format('woff2');
+}
+
+/* Font-only class — applied to p/h/blockquote that contain any Persian, regardless of
+ * which direction dir="auto" resolves to. Ensures IRANYekan renders Persian words even
+ * in predominantly-Latin paragraphs (no forced RTL on mixed paragraphs). */
+.fa-text {
+    font-family: 'IRANYekan', sans-serif;
+}
+
+.fa-rtl {
+    direction: rtl;
+    text-align: right;
+    font-family: 'IRANYekan', sans-serif;
+}
+
+/* v8.0.2 — Per-cell direction: never reverse table column order. Tables stay
+ * LTR; cells flip direction individually based on their own content. */
+table {
+    direction: ltr;
+}
+th.fa-rtl,
+td.fa-rtl {
+    direction: rtl;
+    text-align: right;
+}
+th[dir="ltr"],
+td[dir="ltr"] {
+    text-align: left;
+}
+
+ul.fa-rtl,
+ol.fa-rtl {
+    padding-right: 1.5em;
+    padding-left: 0;
+    list-style-position: outside;
+}
+
+blockquote.fa-rtl {
+    border-right: 4px solid #555;
+    border-left: none;
+    padding-right: 1em;
+    padding-left: 0;
+}
+
+/* Code always stays LTR */
+pre, code, pre *, code * {
+    direction: ltr !important;
+    text-align: left !important;
+    unicode-bidi: isolate !important;
+    font-family: var(--vscode-editor-font-family), monospace !important;
+}
+
+/* v9 — Mirror directional arrows inside RTL context.
+ * Covers explicit .fa-rtl containers (table cells, lists) and dir=auto/rtl
+ * containers (paragraphs after the font/direction split). The flip decision
+ * was already made in JS (_shouldFlip); CSS just paints it. Only fires on
+ * spans that were actually wrapped, so LTR-resolving dir=auto paragraphs are
+ * unaffected (they have no .bidi-arrow-mirror children). */
+.fa-rtl .bidi-arrow-mirror,
+[dir="rtl"] .bidi-arrow-mirror,
+[dir="auto"] .bidi-arrow-mirror {
+    display: inline-block;
+    transform: scaleX(-1);
+    unicode-bidi: isolate;
+}

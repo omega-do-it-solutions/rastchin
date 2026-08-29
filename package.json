@@ -1,0 +1,38 @@
+{
+  "name": "rastchin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Persian-only RTL tools for the web, VS Code, and desktop AI applications",
+  "author": "Omega Do IT Solutions",
+  "license": "Apache-2.0",
+  "homepage": "https://rastchin.tools",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omega-do-it-solutions/rastchin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/omega-do-it-solutions/rastchin/issues"
+  },
+  "engines": {
+    "node": ">=24.18.1 <25"
+  },
+  "packageManager": "pnpm@11.14.0",
+  "scripts": {
+    "dev": "pnpm --dir apps/web dev",
+    "dev:browser": "pnpm --dir apps/browser-extension build:unpacked",
+    "dev:vscode": "pnpm --dir apps/vscode-extension dev",
+    "dev:desktop": "pnpm --dir apps/desktop-integrator dev",
+    "preview:web": "pnpm --dir apps/web preview",
+    "build": "pnpm -r --if-present run build",
+    "lint": "pnpm -r --if-present run lint",
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "test": "pnpm -r --if-present run test",
+    "verify": "pnpm -r --if-present run verify && pnpm verify:public",
+    "verify:public": "node scripts/check-public-repo.mjs",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm verify",
+    "audit:prod": "pnpm audit --prod --audit-level high",
+    "package:browser": "pnpm --dir apps/browser-extension package:store",
+    "package:vscode": "pnpm --dir apps/vscode-extension package",
+    "package:desktop:linux": "pnpm --dir apps/desktop-integrator package:linux"
+  }
+}

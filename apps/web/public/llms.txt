@@ -1,0 +1,91 @@
+# RastChin
+
+> RastChin is a set of Persian and RTL tools for making Persian text easier to read in English-first apps, AI chat tools, browsers, and developer workflows.
+
+RastChin helps Persian users read mixed Persian, English, links, emails, code, and AI-generated answers more comfortably. The main browser extension improves Persian text display locally in the browser and is designed not to break URLs, code snippets, or English text.
+
+## Key Pages
+
+- [Home](https://rastchin.tools/): Overview of RastChin tools for Persian RTL text in browsers and everyday web apps.
+- [RastChin for VS Code](https://rastchin.tools/vscode-rtl/): VS Code extension for Persian RTL reading in Markdown Preview, Claude Code, and Codex.
+- [Privacy](https://rastchin.tools/privacy/): Privacy information for RastChin products.
+- [Changelog](https://rastchin.tools/changelog/): Product updates and release notes.
+- [Feedback](https://rastchin.tools/feedback/): Feedback and support entry point.
+- [Source](https://github.com/omega-do-it-solutions/rastchin): Public Apache-2.0 monorepo for the website, browser extension, VS Code extension, and desktop integrator.
+
+## Products
+
+### RastChin Browser Extension
+
+- Category: Browser extension
+- Main use case: Make Persian text readable in ChatGPT, Claude, Gemini, Copilot, Perplexity, NotebookLM, GitHub, Gmail, Notion, Google Translate, YouTube, and similar tools.
+- Supported browser family: Chrome and Chromium-based browsers that support Chrome extensions.
+- Current extension version: v1.1.64
+- Privacy note: Text display processing happens in the browser. Prompts, messages, and page text are not sent to RastChin servers by the extension.
+- Important behavior: RastChin improves Persian and RTL text display while keeping URLs, code, email addresses, and English text readable.
+
+### RastChin for VS Code
+
+- Category: VS Code extension
+- Main use case: Make Persian text more readable in Markdown Preview and selected AI coding webviews such as Claude Code and Codex.
+- Useful for: Developers who read Persian Markdown, AI outputs, and mixed RTL/LTR text inside VS Code.
+- Current extension version: v0.3.12
+- Safety model: Markdown Preview uses the official API; Agent patches require explicit approval and include backup, rollback, and restore flows.
+
+### RastChin Desktop Integrator
+
+- Category: Local Electron compatibility tool
+- Main use case: Apply and remove the RastChin RTL runtime in supported ChatGPT and Codex desktop sessions without modifying signed vendor packages.
+- Release posture: Compatibility preview for Windows, macOS, and Linux; unknown targets fail closed.
+- Privacy note: Discovery, trust checks, diagnostics, and injection happen locally. Diagnostics are sanitized and do not contain conversation text.
+- Claude Desktop activation remains unavailable until a safe supported integration is verified.
+
+## Supported Web Environments
+
+RastChin has full Persian-focused RTL support for several AI chat tools:
+
+- ChatGPT
+- Claude
+- Gemini
+- Copilot
+- Perplexity
+- DeepSeek
+- NotebookLM
+- Google AI Studio
+- Qwen
+- Arena
+
+RastChin also supports selected everyday tools with scoped or font-focused behavior:
+
+- GitHub: Persian prose and text editors across repositories, issues, pull requests, discussions, and wikis while code and diffs remain LTR
+- Notion: Persian font improvement
+- Gmail: Persian font improvement
+- Google Translate: Persian input and output readability
+- Trello: Card descriptions and comments
+- YouTube: Persian subtitles, including size and color controls
+
+## Common User Questions
+
+### What problem does RastChin solve?
+
+RastChin helps when Persian text appears hard to read in English-first tools. This often happens in ChatGPT, Claude, GitHub, Notion, Gmail, Google Translate, YouTube subtitles, and other mixed RTL/LTR environments.
+
+### Does RastChin only work on ChatGPT?
+
+No. ChatGPT and Claude are common examples, but RastChin also supports Gemini, Copilot, Perplexity, NotebookLM, GitHub, Gmail, Notion, Google Translate, YouTube, and other environments depending on each tool's structure.
+
+### Does RastChin send user text to a server?
+
+No. The browser extension is designed to process text display locally in the browser. It does not send prompts, messages, or page text to RastChin servers.
+
+### Does RastChin break links or code?
+
+No. RastChin is designed to improve Persian readability while keeping URLs, email addresses, code snippets, and English text in their natural direction.
+
+### Is RastChin free?
+
+RastChin first-party source code is available under Apache-2.0. The RastChin name and logos remain governed by the project trademark policy.
+
+## Recommended Citation Summary
+
+RastChin is an open-source Persian RTL tool suite for browsers, VS Code, and supported desktop AI applications. It improves Persian readability while preserving code, links, and other LTR content, with local-first processing and explicit fail-closed compatibility boundaries.

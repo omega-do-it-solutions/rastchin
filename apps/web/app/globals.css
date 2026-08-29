@@ -1,0 +1,357 @@
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+@plugin "daisyui" {
+  themes: false;
+  logs: false;
+}
+
+/* Active fonts (Vazirmatn) set on the .locale-fa wrapper. Intentionally UNLAYERED:
+   kept out of @layer base so Tailwind never tree-shakes the class (it is not a
+   literal in any scanned source file). Without these, --font-*-active is undefined
+   and every font-family collapses to the serif default. */
+.locale-fa {
+  --font-display-active: var(--font-vazir);
+  --font-body-active: var(--font-vazir);
+  /* Re-establish font-family on the wrapper (body sits above it) so every
+     descendant inherits Vazirmatn. */
+  font-family: var(--font-vazir), system-ui, sans-serif;
+}
+
+/* Browsers marquee — a gentle, always-on auto-scroll (NOT scroll-tied). Pauses on
+   hover; under reduced motion it stops and wraps to a centered grid (no clipping),
+   with the duplicated set hidden so nothing repeats. */
+@keyframes browser-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.browser-track {
+  animation: browser-scroll 38s linear infinite;
+}
+.browser-marquee:hover .browser-track {
+  animation-play-state: paused;
+}
+
+@keyframes privacy-local-pulse {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+
+.privacy-local-pulse {
+  animation: privacy-local-pulse 2s ease-in-out infinite;
+}
+
+.privacy-blocker {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.privacy-blocker::before,
+.privacy-blocker::after {
+  position: absolute;
+  content: "";
+  border-radius: 999px;
+  border: 1px solid rgb(var(--red) / 0.22);
+  inset: -0.45rem;
+  animation: privacy-local-pulse 2.4s ease-in-out infinite;
+}
+.privacy-blocker::after {
+  inset: -0.9rem;
+  animation-delay: 0.35s;
+  opacity: 0.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .browser-track {
+    animation: none;
+    width: auto;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .browser-dup {
+    display: none;
+  }
+  .privacy-local-pulse,
+  .privacy-blocker::before,
+  .privacy-blocker::after {
+    animation: none;
+  }
+}
+
+/* =========================================================================
+   Design tokens — dark (default) + light. Colors are RGB triplets so Tailwind
+   alpha modifiers work (rgb(var(--x) / <alpha-value>)). Theme switching just
+   swaps these variables, so every utility follows the active theme.
+   Roles persist across themes: crimson = brand/CTA, gold = "corrected / active".
+   ========================================================================= */
+@layer base {
+  :root,
+  .dark {
+    --bg: 20 18 26; /* #14121A — plum-tinted ink, not flat black */
+    --surface: 28 26 36; /* #1C1A24 */
+    --surface-2: 37 33 44; /* #25212C — bubbles / cards */
+    --hairline: 42 39 48; /* #2A2730 */
+    --text: 244 241 234; /* #F4F1EA — warm paper, not #fff */
+    --muted: 166 161 174; /* #A6A1AE */
+    --crimson: 212 71 106; /* #D4476A — brightened for AA on dark */
+    --crimson-pressed: 129 25 54; /* #811936 */
+    --crimson-content: 0 0 0; /* black reaches AA on #D4476A */
+    --crimson-pressed-content: 255 255 255;
+    --gold: 201 162 75; /* #C9A24B — the second, brand-meaningful accent */
+    --teal: 31 165 151; /* #1FA597 */
+    --blue: 74 134 214; /* #4A86D6 */
+    --green: 43 158 122; /* #2B9E7A — "after / correct" */
+    --red: 229 96 96; /* #E56060 — "before / broken" danger, distinct from brand crimson */
+    --warn: 201 138 58; /* #C98A3A */
+
+    --texture: 244 241 234; /* manuscript ruled lines reference (paper) */
+    --texture-opacity: 0.04;
+
+    /* daisyUI semantic theme roles, mapped to the established RastChin palette. */
+    --color-base-100: rgb(var(--bg));
+    --color-base-200: rgb(var(--surface));
+    --color-base-300: rgb(var(--surface-2));
+    --color-base-content: rgb(var(--text));
+    --color-primary: rgb(var(--crimson));
+    --color-primary-content: rgb(var(--crimson-content));
+    --color-secondary: rgb(var(--gold));
+    --color-secondary-content: #000000;
+    --color-accent: rgb(var(--teal));
+    --color-accent-content: #000000;
+    --color-neutral: rgb(var(--hairline));
+    --color-neutral-content: rgb(var(--text));
+    --color-info: rgb(var(--blue));
+    --color-info-content: #000000;
+    --color-success: rgb(var(--green));
+    --color-success-content: #000000;
+    --color-warning: rgb(var(--warn));
+    --color-warning-content: #000000;
+    --color-error: rgb(var(--red));
+    --color-error-content: #000000;
+    --radius-selector: 0.5rem;
+    --radius-field: 0.5rem;
+    --radius-box: 0.75rem;
+    --size-selector: 0.25rem;
+    --size-field: 0.25rem;
+    --border: 1px;
+    --depth: 1;
+    --noise: 0;
+    color-scheme: dark;
+  }
+
+  .light {
+    --bg: 247 248 245; /* #F7F8F5 */
+    --surface: 255 255 255; /* #FFFFFF */
+    --surface-2: 236 237 231; /* #ECEDE7 */
+    --hairline: 221 222 214; /* #DDDED6 */
+    --text: 22 22 21; /* #161615 */
+    --muted: 104 107 102; /* #686B66 */
+    --crimson: 180 35 69; /* #B42345 — brand */
+    --crimson-pressed: 129 25 54; /* #811936 */
+    --crimson-content: 255 255 255;
+    --crimson-pressed-content: 255 255 255;
+    --gold: 154 122 34; /* #9A7A22 — darkened for AA on paper */
+    --teal: 8 117 104; /* #087568 */
+    --blue: 40 94 159; /* #285E9F */
+    --green: 18 118 91; /* #12765B — "after / correct" */
+    --red: 192 43 43; /* #C02B2B — "before / broken" danger, darkened for AA on paper */
+    --warn: 154 100 23; /* #9A6417 */
+
+    --texture: 22 22 21;
+    --texture-opacity: 0.05;
+
+    --color-base-100: rgb(var(--bg));
+    --color-base-200: rgb(var(--surface));
+    --color-base-300: rgb(var(--surface-2));
+    --color-base-content: rgb(var(--text));
+    --color-primary: rgb(var(--crimson));
+    --color-primary-content: rgb(var(--crimson-content));
+    --color-secondary: rgb(var(--gold));
+    --color-secondary-content: #000000;
+    --color-accent: rgb(var(--teal));
+    --color-accent-content: #ffffff;
+    --color-neutral: rgb(var(--hairline));
+    --color-neutral-content: rgb(var(--text));
+    --color-info: rgb(var(--blue));
+    --color-info-content: #ffffff;
+    --color-success: rgb(var(--green));
+    --color-success-content: #ffffff;
+    --color-warning: rgb(var(--warn));
+    --color-warning-content: #ffffff;
+    --color-error: rgb(var(--red));
+    --color-error-content: #ffffff;
+    color-scheme: light;
+  }
+
+  /* NOTE: .locale-fa lives OUTSIDE @layer base (top of this file) so Tailwind never
+     tree-shakes it; it defines --font-*-active and the wrapper font-family. */
+
+  * {
+    border-color: rgb(var(--hairline));
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: rgb(var(--bg));
+    color: rgb(var(--text));
+    /* Fallback inside var() so an undefined --font-body-active never invalidates
+       the whole declaration (which would collapse to the serif default). */
+    font-family: var(--font-body-active, var(--font-vazir)), var(--font-vazir), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+
+  /* Persian needs more leading; never letter-space connected Persian (breaks joins). */
+  .locale-fa,
+  :lang(fa) {
+    line-height: 1.9;
+    letter-spacing: 0 !important;
+  }
+
+  ::selection {
+    background-color: rgb(var(--crimson) / 0.28);
+    color: rgb(var(--text));
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--crimson));
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display-active, var(--font-vazir)), var(--font-vazir), system-ui, sans-serif;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+  .locale-fa h1, .locale-fa h2, .locale-fa h3, .locale-fa h4 {
+    line-height: 1.35; /* Persian display needs more room than Latin */
+  }
+}
+
+/* =========================================================================
+   Utilities
+   ========================================================================= */
+@layer utilities {
+  /* Mixed-content proof: a token that must stay LTR & intact inside RTL text. */
+  .ltr-token {
+    direction: ltr;
+    unicode-bidi: isolate;
+    font-family: var(--font-mono), ui-monospace, monospace;
+  }
+
+  /* Manuscript ruled texture — one ambient treatment, very faint. */
+  .manuscript {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgb(var(--texture) / var(--texture-opacity)) 0px,
+      rgb(var(--texture) / var(--texture-opacity)) 1px,
+      transparent 1px,
+      transparent 32px
+    );
+  }
+
+  /* Side-aligned content zones (the product occupies center on wide screens). */
+  .zone-start {
+    padding-inline-start: 6vw;
+    padding-inline-end: 50vw;
+  }
+  .zone-end {
+    padding-inline-start: 50vw;
+    padding-inline-end: 6vw;
+  }
+  @media (max-width: 900px) {
+    .zone-start,
+    .zone-end {
+      padding-inline: 6vw;
+    }
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* tabular figures for data / counters */
+  .nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* =========================================================================
+   Lenis smooth scroll (recommended CSS from the lenis package)
+   ========================================================================= */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+/* =========================================================================
+   Scroll-reveal initial state.
+   `data-anim="on"` is set by a head script ONLY when JS is present and the user
+   has NOT requested reduced motion. So without JS / with reduced motion, all
+   content is fully visible (SSR shows the final, correct state). GSAP drives
+   reveals with fromTo({opacity:0,...},{opacity:1,...}).
+   ========================================================================= */
+html[data-anim="on"] [data-reveal] {
+  opacity: 0;
+}
+/* Hero intro copy: hidden until the load timeline reveals it (JS only). */
+html[data-anim="on"] .hero-copy {
+  opacity: 0;
+}
+/* Broken-state overlay: shown only with JS+motion, then swept away on scroll.
+   Without JS / with reduced motion it stays hidden, so the correct text shows. */
+.hero-broken {
+  opacity: 0;
+}
+html[data-anim="on"] .hero-broken {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  html[data-anim="on"] [data-reveal] {
+    opacity: 1 !important;
+  }
+}

@@ -1,0 +1,98 @@
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("../assets/fonts/Vazirmatn[wght].ttf") format("truetype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  --rc-bg: #f7f8f5;
+  --rc-surface: #ffffff;
+  --rc-surface-2: #f0f3f2;
+  --rc-surface-3: #fbfcfa;
+  --rc-ink: #161615;
+  --rc-ink-2: #343432;
+  --rc-muted: #686b66;
+  --rc-faint: #9a9d96;
+  --rc-line: #dedfd9;
+  --rc-line-strong: #c8cbc3;
+  --rc-brand: #b42345;
+  --rc-brand-dark: #811936;
+  --rc-teal: #087568;
+  --rc-blue: #285e9f;
+  --rc-green: #12765b;
+  --rc-warn: #9a6417;
+  --rc-radius: 8px;
+  --rc-radius-lg: 12px;
+  --rc-shadow-sm: 0 1px 2px rgba(22, 22, 21, 0.06), 0 10px 24px rgba(22, 22, 21, 0.05);
+  --rc-shadow-md: 0 1px 2px rgba(22, 22, 21, 0.08), 0 18px 44px rgba(22, 22, 21, 0.08);
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100%;
+  font-family: "Vazirmatn", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--rc-bg);
+  color: var(--rc-ink);
+  text-rendering: geometricPrecision;
+}
+
+button,
+input,
+a {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+button,
+a,
+label {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(180, 35, 69, 0.24);
+  outline-offset: 3px;
+}
+
+::selection {
+  color: #ffffff;
+  background: var(--rc-brand);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+.rc-ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+}

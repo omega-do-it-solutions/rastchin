@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: "true"
+  NODE_VERSION: "24.18.1"
+  PNPM_VERSION: "11.14.0"
+
+jobs:
+  verify:
+    name: Check, build, and audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Install pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+      - name: Install Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Check applications
+        run: pnpm check
+      - name: Build production artifacts
+        run: pnpm build
+        env:
+          APP_ENV: production
+      - name: Audit production dependencies
+        run: pnpm audit:prod
+      - name: Verify public repository boundaries
+        run: pnpm verify:public
+      - name: Install PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: "8.4"
+          coverage: none
+      - name: Lint PHP endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' php_files < <(find apps/web -type f -name '*.php' -print0)
+          test "${#php_files[@]}" -gt 0
+          for php_file in "${php_files[@]}"; do
+            php -l "$php_file"
+          done

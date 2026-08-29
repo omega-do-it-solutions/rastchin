@@ -1,0 +1,116 @@
+{
+  "name": "rastchin-desktop-integrator",
+  "productName": "RastChin Desktop Integrator",
+  "desktopName": "rastchin-desktop-integrator",
+  "version": "0.3.2",
+  "description": "Cross-platform, local-only RTL integration manager for supported AI desktop apps.",
+  "private": true,
+  "main": "src/main/index.js",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Omega Do IT Solutions",
+    "email": "hi@rastchin.tools"
+  },
+  "homepage": "https://rastchin.tools",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omega-do-it-solutions/rastchin.git",
+    "directory": "apps/desktop-integrator"
+  },
+  "bugs": {
+    "url": "https://github.com/omega-do-it-solutions/rastchin/issues"
+  },
+  "engines": {
+    "node": ">=24.18.1 <25"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "dev:runtime": "cross-env RASTCHIN_ENABLE_RUNTIME_INJECTION=1 electron .",
+    "test": "node --test",
+    "verify": "node scripts/verify-project.js",
+    "package:win": "electron-builder --win nsis portable --publish never",
+    "package:win:installer": "electron-builder --win nsis --publish never",
+    "package:win:portable": "electron-builder --win portable --publish never",
+    "package:win:dir": "electron-builder --win --dir",
+    "package:mac": "electron-builder --mac dmg zip --x64 --arm64 --publish never -c.mac.identity=- -c.mac.hardenedRuntime=false",
+    "package:mac:release": "electron-builder --mac dmg zip --x64 --arm64 --publish never -c.mac.forceCodeSigning=true -c.mac.notarize=true",
+    "package:mac:dir": "electron-builder --mac --dir",
+    "package:linux": "electron-builder --linux AppImage deb rpm --x64 --arm64 --publish never",
+    "package:linux:x64": "electron-builder --linux AppImage deb rpm --x64 --publish never",
+    "package:linux:arm64": "electron-builder --linux AppImage deb rpm --arm64 --publish never",
+    "package:linux:dir": "electron-builder --linux --dir",
+    "package:dir": "electron-builder --dir"
+  },
+  "devDependencies": {
+    "cross-env": "10.1.0",
+    "electron": "44.0.0",
+    "electron-builder": "26.15.3",
+    "jsdom": "30.0.1"
+  },
+  "build": {
+    "appId": "tools.rastchin.desktop-integrator",
+    "productName": "RastChin Desktop Integrator",
+    "extraMetadata": {
+      "rastchinBuild": {
+        "channel": "stable",
+        "runtimeInjectionEnabled": true,
+        "runtimeInjectionPlatforms": [
+          "win32",
+          "darwin",
+          "linux"
+        ]
+      }
+    },
+    "asar": true,
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json",
+      "LICENSE",
+      "NOTICE",
+      "THIRD_PARTY_NOTICES.md"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "assets/icon.png"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "assets/icon.png",
+      "category": "public.app-category.utilities",
+      "minimumSystemVersion": "14.0",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "artifactName": "RastChin-Desktop-Integrator-${version}-macOS-${arch}.${ext}"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb",
+        "rpm"
+      ],
+      "icon": "assets/icon.png",
+      "category": "Utility",
+      "maintainer": "Omega Do IT Solutions <hi@rastchin.tools>",
+      "syncDesktopName": true,
+      "artifactName": "RastChin-Desktop-Integrator-${version}-Linux-${arch}.${ext}"
+    },
+    "nsis": {
+      "artifactName": "RastChin-Desktop-Integrator-Setup-${version}-${arch}.${ext}",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "portable": {
+      "artifactName": "RastChin-Desktop-Integrator-Portable-${version}-${arch}.${ext}"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+overrides:
+  # Next 15 pins an older PostCSS; keep the full workspace on the patched line.
+  postcss: 8.5.26
+allowBuilds:
+  "@vscode/vsce-sign": true
+  electron-winstaller: true
+  keytar: false
+  unrs-resolver: true

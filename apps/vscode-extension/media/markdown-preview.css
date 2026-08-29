@@ -1,0 +1,132 @@
+:root {
+  --persian-rtl-clean-font-family: Vazirmatn, Tahoma, Arial, sans-serif;
+}
+
+body,
+body.vscode-body {
+  font-family: var(--persian-rtl-clean-font-family) !important;
+}
+
+@font-face {
+  font-family: 'Vazirmatn';
+  font-style: normal;
+  font-weight: normal;
+  src: url('./fonts/Vazirmatn-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Vazirmatn';
+  font-style: normal;
+  font-weight: bold;
+  src: url('./fonts/Vazirmatn-Bold.woff2') format('woff2');
+}
+
+.fa-text-clean {
+  font-family: var(--persian-rtl-clean-font-family) !important;
+}
+
+.fa-rtl-clean,
+[dir="rtl"].fa-text-clean {
+  direction: rtl !important;
+  text-align: right !important;
+  font-family: var(--persian-rtl-clean-font-family) !important;
+  unicode-bidi: isolate !important;
+}
+
+[dir="ltr"].fa-text-clean,
+[dir="ltr"].fa-ltr-clean,
+.fa-ltr-clean {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: isolate !important;
+}
+
+/* VS Code's Markdown theme styles some nested emphasis/link nodes directly.
+   Re-inherit the tagged prose font, while the stronger code rules below keep
+   inline/fenced code monospace. */
+.fa-text-clean :is(p, li, div, span, strong, em, b, i, del, mark, small, sub, sup, a):not(.fa-ltr-clean):not(.fa-mono-clean):not(code *):not(pre *):not(kbd *):not(samp *),
+.fa-rtl-clean :is(p, li, div, span, strong, em, b, i, del, mark, small, sub, sup, a):not(.fa-ltr-clean):not(.fa-mono-clean):not(code *):not(pre *):not(kbd *):not(samp *) {
+  font-family: inherit !important;
+}
+
+ul.fa-rtl-clean,
+ol.fa-rtl-clean {
+  direction: rtl !important;
+  text-align: right !important;
+  unicode-bidi: isolate !important;
+  font-family: var(--persian-rtl-clean-font-family) !important;
+  padding-right: 1.5em !important;
+  padding-left: 0 !important;
+  list-style-position: outside !important;
+}
+
+:is(ul, ol).fa-rtl-clean > li.fa-rtl-clean,
+:is(ul, ol).fa-rtl-clean > li[dir="rtl"],
+:is(ul, ol).fa-rtl-clean > li.fa-rtl-clean > :not(.fa-ltr-clean):not(.fa-mono-clean):not(pre):not(code):not(kbd):not(samp),
+:is(ul, ol).fa-rtl-clean > li[dir="rtl"] > :not(.fa-ltr-clean):not(.fa-mono-clean):not(pre):not(code):not(kbd):not(samp) {
+  direction: rtl !important;
+  text-align: right !important;
+  unicode-bidi: isolate !important;
+  font-family: var(--persian-rtl-clean-font-family) !important;
+}
+
+:is(ul, ol).fa-rtl-clean > li.fa-rtl-clean :is(span, strong, em, b, i, del, mark, small, sub, sup, a):not(.fa-ltr-clean):not(.fa-mono-clean):not(code *):not(pre *):not(kbd *):not(samp *),
+:is(ul, ol).fa-rtl-clean > li[dir="rtl"] :is(span, strong, em, b, i, del, mark, small, sub, sup, a):not(.fa-ltr-clean):not(.fa-mono-clean):not(code *):not(pre *):not(kbd *):not(samp *),
+:is(ul, ol).fa-rtl-clean > li::marker {
+  font-family: var(--persian-rtl-clean-font-family) !important;
+}
+
+blockquote.fa-rtl-clean {
+  border-right: 4px solid var(--vscode-textBlockQuote-border, #555);
+  border-left: none;
+  padding-right: 1em !important;
+  padding-left: 0 !important;
+}
+
+table {
+  direction: ltr !important;
+}
+
+th[dir="rtl"],
+td[dir="rtl"] {
+  direction: rtl !important;
+  text-align: right !important;
+  font-family: var(--persian-rtl-clean-font-family) !important;
+}
+
+th[dir="ltr"],
+td[dir="ltr"] {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+pre,
+code,
+kbd,
+samp,
+textarea,
+input,
+pre *,
+code * {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: isolate !important;
+  font-family: var(--vscode-editor-font-family), monospace !important;
+}
+
+a.fa-ltr-clean {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: isolate !important;
+  font-family: var(--vscode-editor-font-family), monospace !important;
+}
+
+.fa-mono-clean {
+  font-family: var(--vscode-editor-font-family), monospace !important;
+}
+
+.bidi-arrow-mirror-clean {
+  display: inline-block;
+  transform: scaleX(-1);
+  unicode-bidi: isolate;
+}

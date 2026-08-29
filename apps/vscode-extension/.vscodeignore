@@ -1,0 +1,16 @@
+.git/**
+.gitignore
+.vscode/**
+BACKLOG.md
+docs/**
+test/**
+node_modules/**
+third_party/persian-rtl-chat-9.0.0/extension.js
+third_party/persian-rtl-chat-9.0.0/markdown-preview.css
+third_party/persian-rtl-chat-9.0.0/markdown-preview.js
+third_party/persian-rtl-chat-9.0.0/package.json
+third_party/persian-rtl-chat-9.0.0/readme.md
+*.vsix
+npm-debug.log*
+pnpm-debug.log*
+.DS_Store

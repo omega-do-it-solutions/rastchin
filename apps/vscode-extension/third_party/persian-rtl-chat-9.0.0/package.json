@@ -1,0 +1,67 @@
+{
+	"name": "persian-rtl-chat",
+	"displayName": "Persian RTL Chat",
+	"description": "RTL + IRANYekan font for Persian text in VS Code chat and Claude Code — auto-detects Persian, auto-patches, no manual steps",
+	"version": "9.0.0",
+	"publisher": "AmirRezaNasiri",
+	"icon": "icon.png",
+	"engines": {
+		"vscode": "^1.80.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"keywords": [
+		"rtl",
+		"persian",
+		"farsi",
+		"chat",
+		"copilot",
+		"claude",
+		"arabic"
+	],
+	"activationEvents": [
+		"onStartupFinished"
+	],
+	"main": "./src/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "persianRtl.enable",
+				"title": "Persian RTL: Enable (apply patches + reload)",
+				"category": "Persian RTL"
+			},
+			{
+				"command": "persianRtl.disable",
+				"title": "Persian RTL: Disable — clean all + reload",
+				"category": "Persian RTL"
+			},
+			{
+				"command": "persianRtl.reapply",
+				"title": "Persian RTL: Re-apply patches now (no reload)",
+				"category": "Persian RTL"
+			},
+			{
+				"command": "persianRtl.status",
+				"title": "Persian RTL: Status — show what's patched",
+				"category": "Persian RTL"
+			}
+		],
+		"markdown.previewStyles": [
+			"./markdown-preview.css"
+		],
+		"markdown.previewScripts": [
+			"./markdown-preview.js"
+		]
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/AmirReza-Nasiri/persian-tools"
+	},
+	"license": "MIT",
+	"__metadata": {
+		"installedTimestamp": 1780121323891,
+		"targetPlatform": "undefined",
+		"size": 487374
+	}
+}
