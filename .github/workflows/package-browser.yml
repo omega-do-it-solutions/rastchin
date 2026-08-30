@@ -9,13 +9,6 @@ on:
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
       - ".github/workflows/package-browser.yml"
-  pull_request:
-    paths:
-      - "apps/browser-extension/**"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "pnpm-workspace.yaml"
-      - ".github/workflows/package-browser.yml"
   workflow_dispatch:
 
 permissions:

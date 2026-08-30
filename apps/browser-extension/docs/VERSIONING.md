@@ -22,11 +22,10 @@ release guide and the Chrome Store
 [submission checklist](../store/chrome/submission-checklist.md) for owner review
 and publication. Packaging or tagging alone does not publish a store version.
 
-## Coordinate the website
+## Coordinate public release metadata
 
-The website and extension now live in the same monorepo. Website release data
-must be derived from the checked-in browser `manifest.json` and package metadata,
-not typed independently or fetched from a sibling repository.
+Store notes and GitHub release metadata must be derived from the checked-in
+browser `manifest.json` and package metadata, not typed independently.
 
 Do not present a version as available from Chrome Web Store until that version
 is actually live. A source change may describe an upcoming version, while the

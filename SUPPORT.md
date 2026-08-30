@@ -4,7 +4,6 @@
 
 ## از راهنمای برنامه شروع کنید
 
-- [وب‌سایت و بازخورد](apps/web/README.md)
 - [افزونهٔ مرورگر](apps/browser-extension/README.md)
 - [افزونهٔ VS Code](apps/vscode-extension/README.md)
 - [یکپارچه‌ساز دسکتاپ](apps/desktop-integrator/README.md)

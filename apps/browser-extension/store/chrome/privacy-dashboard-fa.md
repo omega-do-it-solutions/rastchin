@@ -20,8 +20,9 @@ RastChin متن صفحه، promptها، پیام‌ها، سندها، کارت�
 و تنظیمات نمایش زیرنویس YouTube. این تنظیمات در `chrome.storage.sync` ذخیره می‌شود
 و ممکن است توسط Chrome بین دستگاه‌های همان کاربر sync شود.
 
-فرم بازخورد خارج از افزونه و روی `https://rastchin.tools/feedback/` قرار دارد.
-این فرم فقط اطلاعاتی را ارسال می‌کند که کاربر خودش وارد می‌کند.
+بازخورد و پشتیبانی خارج از افزونه و از طریق قالب‌های ایشوی عمومی GitHub انجام
+می‌شود. افزونه هیچ محتوایی را به ایشو اضافه نمی‌کند و کاربر نباید اطلاعات خصوصی
+را در گزارش عمومی قرار دهد.
 
 ## Limited Use Disclosure
 
@@ -64,8 +65,8 @@ RastChin فقط روی دامنه‌های مشخص‌شده در `manifest.json
 
 ## Privacy Policy URL
 
-`https://rastchin.tools/privacy/`
+`https://github.com/omega-do-it-solutions/rastchin/blob/main/apps/browser-extension/store/chrome/privacy-policy-fa.md`
 
 ## Support URL
 
-`https://rastchin.tools/feedback/`
+`https://github.com/omega-do-it-solutions/rastchin/issues/new/choose`

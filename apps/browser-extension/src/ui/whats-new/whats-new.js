@@ -81,7 +81,7 @@ function wireFeedbackLink() {
   link.addEventListener('click', event => {
     if (typeof chrome === 'undefined' || !chrome.tabs) return;
     event.preventDefault();
-    chrome.tabs.create({ url: 'https://rastchin.tools/feedback/?source=extension&type=suggestion' });
+    chrome.tabs.create({ url: 'https://github.com/omega-do-it-solutions/rastchin/issues/new?template=feature_request.yml' });
   });
 }
 

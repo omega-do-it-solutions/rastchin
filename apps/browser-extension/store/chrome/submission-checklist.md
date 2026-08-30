@@ -41,13 +41,13 @@ apps/browser-extension/dist/rastchin-v<version>-chrome-web-store.zip
 - Category: `Productivity`
 - Language: اگر Persian/Farsi در dashboard قابل انتخاب بود، فارسی را انتخاب کن؛
   در غیر این صورت English را انتخاب کن و متن فارسی را در listing نگه دار.
-- Website: `https://rastchin.tools/`
-- Support URL: `https://rastchin.tools/feedback/`
-- Privacy policy URL: `https://rastchin.tools/privacy/`
+- Website: `https://github.com/omega-do-it-solutions/rastchin`
+- Support URL: `https://github.com/omega-do-it-solutions/rastchin/issues/new/choose`
+- Privacy policy URL: `https://github.com/omega-do-it-solutions/rastchin/blob/main/apps/browser-extension/store/chrome/privacy-policy-fa.md`
 - Submission note:
 
 ```text
-We updated the Chrome Web Store listing to remove excessive brand/site keyword lists. The description now focuses on the extension's core functionality, and the full supported-site list is referenced via the official website instead of repeated in store metadata.
+We updated the Chrome Web Store listing to focus on the extension's core functionality. The checked-in manifest and repository documentation are the source of truth for supported sites, privacy, and support.
 ```
 
 ## 4. Images
@@ -90,8 +90,8 @@ We updated the Chrome Web Store listing to remove excessive brand/site keyword l
 ## 6. Final Review Before Submit
 
 - `manifest.json` و `package.json` هر دو نسخه یکسان داشته باشند.
-- لینک‌های website، feedback و privacy روی سایت live باز شوند.
-- فرم feedback سایت ایمیل تست را با موفقیت ارسال کند.
+- لینک‌های repository، support و privacy بدون نیاز به دسترسی خصوصی باز شوند.
+- قالب‌های ایشوی support و feedback در GitHub قابل‌انتخاب باشند.
 - ZIP نهایی بعد از آخرین تغییرات دوباره با
   `pnpm --filter rastchin-browser-extension run package:store` ساخته شده باشد.
 - هیچ فایل secret، config local، ZIP قدیمی، CRX، PEM یا artifact توسعه داخل ZIP نباشد.

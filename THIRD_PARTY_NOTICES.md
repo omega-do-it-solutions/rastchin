@@ -27,25 +27,10 @@ RastChin distributes Vazirmatn font files under the SIL Open Font License 1.1.
 The full terms accompany each application that distributes the font:
 
 ```text
-apps/web/public/fonts/OFL.txt
 apps/browser-extension/src/assets/fonts/OFL.txt
 apps/vscode-extension/media/fonts/Vazirmatn-OFL.txt
 apps/desktop-integrator/assets/fonts/Vazirmatn-OFL.txt
 ```
-
-## Website runtime and build dependencies
-
-The website bundles GSAP 3.15.0 under the package author's
-[GSAP Standard "no charge" License](https://gsap.com/standard-license/). GSAP
-is not relicensed under Apache-2.0, and anyone redistributing or modifying that
-dependency must follow its separate terms.
-
-The resolved Next.js build graph also installs `sharp`/`libvips` components
-under Apache-2.0 and LGPL-3.0-or-later, and `caniuse-lite` data under CC-BY-4.0.
-The current website release is a static export and does not distribute the
-native `libvips` build package. Exact package versions and the other MIT, ISC,
-BSD, Apache, and compatible dependency licenses are recorded in
-`pnpm-lock.yaml` and their installed package metadata.
 
 ## Service and platform identities
 

@@ -4,7 +4,6 @@
 
 این افزونه local-first است: متن صفحه، promptها، پیام‌ها، سندها، نظرها و زیرنویس‌ها برای پردازش RTL یا فونت در خود مرورگر پردازش می‌شوند و جایی بارگذاری نمی‌شوند.
 
-- وب‌سایت: [rastchin.tools](https://rastchin.tools/)
 - مونوریپو: [omega-do-it-solutions/rastchin](https://github.com/omega-do-it-solutions/rastchin)
 - پوشهٔ برنامه: `apps/browser-extension`
 

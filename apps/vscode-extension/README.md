@@ -3,7 +3,6 @@
 راست‌چین خوانایی RTL فارسی را در Markdown Preview نرم‌افزار VS Code و webviewهای پشتیبانی‌شدهٔ Claude Code و Codex بهتر می‌کند. این افزونه عمداً فقط فارسی را پشتیبانی می‌کند و کد، فرمان، URL، نشانی ایمیل، مسیر، خروجی ترمینال و diff را LTR و monospace نگه می‌دارد.
 
 - هویت Marketplace: `OmegaDoITSolutions.rastchin-vscode`
-- وب‌سایت: [rastchin.tools](https://rastchin.tools/)
 - مونوریپو: [omega-do-it-solutions/rastchin](https://github.com/omega-do-it-solutions/rastchin)
 - پوشهٔ برنامه: `apps/vscode-extension`
 

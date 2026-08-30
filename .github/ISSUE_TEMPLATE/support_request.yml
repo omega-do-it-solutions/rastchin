@@ -12,7 +12,6 @@ body:
     attributes:
       label: Application
       options:
-        - Website (apps/web)
         - Browser extension (apps/browser-extension)
         - VS Code extension (apps/vscode-extension)
         - Desktop integrator (apps/desktop-integrator)

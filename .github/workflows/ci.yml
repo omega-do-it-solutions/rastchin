@@ -20,7 +20,7 @@ env:
 
 jobs:
   verify:
-    name: Check, build, and audit
+    name: Check and audit
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -42,25 +42,5 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Check applications
         run: pnpm check
-      - name: Build production artifacts
-        run: pnpm build
-        env:
-          APP_ENV: production
       - name: Audit production dependencies
         run: pnpm audit:prod
-      - name: Verify public repository boundaries
-        run: pnpm verify:public
-      - name: Install PHP
-        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
-        with:
-          php-version: "8.4"
-          coverage: none
-      - name: Lint PHP endpoints
-        shell: bash
-        run: |
-          set -euo pipefail
-          mapfile -d '' php_files < <(find apps/web -type f -name '*.php' -print0)
-          test "${#php_files[@]}" -gt 0
-          for php_file in "${php_files[@]}"; do
-            php -l "$php_file"
-          done

@@ -143,7 +143,7 @@ function registerIpc() {
     });
     ipcMain.handle('rastchin:open-link', (_event, value) => {
         const url = new URL(String(value || ''));
-        if (url.protocol !== 'https:' || !['rastchin.tools', 'learn.chatgpt.com', 'support.claude.com'].includes(url.hostname)) {
+        if (url.protocol !== 'https:' || !['github.com', 'learn.chatgpt.com', 'support.claude.com'].includes(url.hostname)) {
             throw new Error('باز کردن این پیوند مجاز نیست.');
         }
         return shell.openExternal(url.toString());

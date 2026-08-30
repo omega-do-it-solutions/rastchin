@@ -1,6 +1,6 @@
 # Releasing RastChin
 
-RastChin has four independent release tracks. A change to one application does not require unrelated version bumps or artifacts. Package creation, marketplace publication, website deployment, Git tagging, and GitHub release creation are separate explicit actions.
+RastChin has three independent release tracks. A change to one application does not require unrelated version bumps or artifacts. Package creation, marketplace publication, Git tagging, and GitHub release creation are separate explicit actions.
 
 This guide is for maintainers. Contributors should not bump versions unless a maintainer has assigned a release task.
 
@@ -8,7 +8,6 @@ This guide is for maintainers. Contributors should not bump versions unless a ma
 
 | Track | Authoritative version | Suggested tag | Primary artifact |
 | --- | --- | --- | --- |
-| Website | `apps/web/package.json` | `web-v<version>` | `apps/web/out/` static export plus PHP endpoint |
 | Browser extension | `apps/browser-extension/manifest.json` and matching `package.json` | `browser-v<version>` | `rastchin-v<version>-chrome-web-store.zip` |
 | VS Code extension | `apps/vscode-extension/package.json` | `vscode-v<version>` | `rastchin-vscode-<version>.vsix` |
 | Desktop integrator | `apps/desktop-integrator/package.json` | `desktop-v<version>` | OS- and architecture-specific installers/packages |
@@ -19,7 +18,7 @@ The root package version tracks the repository foundation only. App changelogs r
 
 - Start from a clean, reviewed commit on `main` with the frozen lockfile install passing.
 - Release only from CI artifacts or a documented, equivalent clean build on the required target OS.
-- Never publish automatically as a side effect of `push`, `pull_request`, `pnpm build`, or a packaging command.
+- Never publish automatically as a side effect of `push`, `pull_request`, or a packaging command.
 - Never put marketplace tokens, signing certificates, notarization credentials, host passwords, or deployment keys in Git or build logs.
 - Preserve `LICENSE`, `NOTICE`, all third-party license text, and the exact package identity in every artifact.
 - Describe permissions, privacy, compatibility limitations, breaking behavior, and manual migration or restore steps truthfully.
@@ -32,7 +31,6 @@ The root package version tracks the repository foundation only. App changelogs r
 corepack enable
 pnpm install --frozen-lockfile
 pnpm check
-pnpm build
 pnpm verify:public
 pnpm audit:prod
 pnpm audit --audit-level high
@@ -41,32 +39,9 @@ git status --short
 
 Review dependency audit output even when it is below the blocking threshold. Confirm generated outputs are ignored and the source tree contains no `.env`, signing, package, or local-profile files.
 
-## Website
-
-1. Update website copy, privacy text, changelog content, and `apps/web/package.json` when the website itself has a release.
-2. If a browser-extension release changes public version/copy, synchronize from the sibling workspace:
-
-   ```bash
-   pnpm --filter @rastchin/web sync:release:check
-   pnpm --filter @rastchin/web sync:release
-   ```
-
-3. Verify and build:
-
-   ```bash
-   pnpm --filter @rastchin/web check
-   pnpm --filter @rastchin/web build
-   ```
-
-4. Lint `apps/web/public/api/feedback.php` with PHP 8.4 and exercise its method, content-type, JSON, validation, rate-limit, provider-failure, and success boundaries in a non-production environment.
-5. Preview `out/` with `pnpm preview:web`; inspect every route, both themes, keyboard focus, mobile/desktop widths, technical LTR isolation, assets, and the exported PHP path.
-6. Use the sanitized [Hetzner runbook](apps/web/docs/hetzner-deploy.md) only after explicit deployment authorization and verified backup/rollback access.
-
-The static preview server does not execute PHP. A PHP-capable staging or host is required to test actual feedback delivery.
-
 ## Browser extension
 
-1. Update both `manifest.json` and `package.json` to the same version, the app changelog, store notes, privacy/permission disclosures, and website release copy.
+1. Update both `manifest.json` and `package.json` to the same version, the app changelog, store notes, and privacy/permission disclosures.
 2. Run:
 
    ```bash
@@ -130,12 +105,11 @@ For each track:
 3. Attach only verified artifacts and checksums.
 4. Publish through the official account or deployment process.
 5. Install the public artifact from its real channel and run a short post-release smoke check.
-6. Update website download links and public changelogs only after the destination is live.
+6. Update public release notes only after the destination is live.
 
 ## Failure and rollback
 
 - Stop publication when a required test, security gate, signature, notarization, package inspection, or host smoke check fails.
 - Do not replace an artifact under an existing version. Fix the problem and issue a new version.
-- For a website failure, restore the last verified static/PHP deployment using the host runbook.
 - For an extension or desktop regression, unlist or warn on the affected artifact where the channel permits, publish clear restore/disable guidance, and prepare a tested patch release.
 - For a suspected compromise, stop the release, rotate affected credentials outside Git, preserve evidence, and follow [SECURITY.md](SECURITY.md).

@@ -9,7 +9,6 @@ body:
       label: Related application
       options:
         - Root repository documentation
-        - Website (apps/web)
         - Browser extension (apps/browser-extension)
         - VS Code extension (apps/vscode-extension)
         - Desktop integrator (apps/desktop-integrator)

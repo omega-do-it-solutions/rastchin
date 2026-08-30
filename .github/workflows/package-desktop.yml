@@ -9,13 +9,6 @@ on:
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
       - ".github/workflows/package-desktop.yml"
-  pull_request:
-    paths:
-      - "apps/desktop-integrator/**"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "pnpm-workspace.yaml"
-      - ".github/workflows/package-desktop.yml"
   workflow_dispatch:
 
 permissions:

@@ -11,50 +11,42 @@ Fill this section during project bootstrap and keep it current. Once selected,
 agents must follow this profile instead of reconsidering the stack for each
 feature.
 
-- Shape: Multi-client monorepo with four independently releasable applications:
-  `apps/web`, `apps/browser-extension`, `apps/vscode-extension`, and
-  `apps/desktop-integrator`; no independent API or worker
-- Web: Next.js 15 App Router static export with React 19, plus one website-owned
-  same-origin PHP 8.4 feedback adapter
-- Interface identity: Mixed anonymous public content and focused local utilities;
+- Shape: Multi-client monorepo with three independently releasable applications:
+  `apps/browser-extension`, `apps/vscode-extension`, and
+  `apps/desktop-integrator`; no web application, independent API, or worker
+- Interface identity: Focused local utilities with public repository documentation;
   Persian-only RTL with technical tokens isolated LTR
-- Application shells (per audience surface): public website uses a shallow
-  header/footer and centered readable content; browser extension uses compact
+- Application shells (per audience surface): browser extension uses compact
   popup/side-panel/welcome surfaces; VS Code uses host-native commands and
   feedback; desktop uses a focused target/status/diagnostics utility shell
-- Application source organization (per application): preserve Next.js `app/` as
-  the website route tree with established components/content/lib ownership;
-  preserve the browser extension's manifest/background/core/platform/UI split;
+- Application source organization (per application): preserve the browser
+  extension's manifest/background/core/platform/UI split;
   preserve VS Code's extension entry, patching services, targets, media, and
   tests; preserve Electron composition/main services/injected runtime/renderer
   boundaries; `packages/` remains empty until a stable cross-app contract exists
-- UI system: Tailwind CSS 4 with daisyUI 5 and centralized RastChin themes for
-  the website; existing host-specific visual systems remain unchanged unless a
+- UI system: existing host-specific visual systems remain unchanged unless a
   future interface task modifies them
 - API: Not currently required
 - Worker: Not currently required
 - Database: Not required
 - Object storage: Not required; the product owns no uploads or generated binary
   content requiring runtime storage
-- Scale forecast: Medium product scope with small centralized infrastructure;
-  static hosting is the website scaling boundary and client tools run locally
-- Data flow and real-time delivery: local processing plus one synchronous
-  feedback request; no polling, SSE, WebSockets, durable events, or queues
+- Scale forecast: Medium product scope with no centralized application
+  infrastructure; client tools run locally
+- Data flow and real-time delivery: local processing; no application API,
+  polling, SSE, WebSockets, durable events, or queues
 - Capacity and data lifecycle: local settings/backups/ephemeral diagnostics;
-  feedback retained at most 12 months; routine CI package artifacts retained 14
-  days, signed macOS artifacts retained 30 days, and public release artifacts
-  retained with their releases
-- Runtime environments: Node.js 24 LTS and pnpm 11.14.0; app-owned website
-  environment example, runtime-injected production secrets, host-specific
+  routine CI package artifacts retained 14 days, signed macOS artifacts retained
+  30 days, and public release artifacts retained with their releases
+- Runtime environments: Node.js 24 LTS and pnpm 11.14.0; host-specific
   development and packaged production artifacts
 - Dependency version posture: supported patched lines with a single root lock;
-  Next.js 15.5.24, React 19.2.8, Tailwind 4.3.3, daisyUI 5.7.22, Electron 44,
-  PHP 8.4, frozen CI installs, and production dependency auditing
-- CI: GitHub Actions for workspace checks, public-repository validation, PHP
-  lint, browser ZIP, VSIX, and Windows/macOS/Linux desktop artifacts; no implicit
-  deployment or publication
-- Deployment: existing PHP-capable static website host, Chrome Web Store,
-  Visual Studio Marketplace, and GitHub Releases; all publication is explicit
+  Electron 44, frozen CI installs, and production dependency auditing
+- CI: GitHub Actions for workspace checks, public-repository validation, browser
+  ZIP, VSIX, and Windows/macOS/Linux desktop artifacts; packaging runs after
+  relevant changes reach `main` or by manual dispatch, with no publication
+- Deployment: Chrome Web Store, Visual Studio Marketplace, and GitHub Releases;
+  all publication is explicit
 
 ## Decision
 

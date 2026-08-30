@@ -363,21 +363,21 @@ check('side-panel loads the platform registry before its script',
 check('side-panel loads changelog data before its script',
     sidePanelHtml.indexOf('changelog-data.js') >= 0 && sidePanelHtml.indexOf('changelog-data.js') < sidePanelHtml.indexOf('side-panel.js"'), true);
 
-// --- feedback: extension-local composer removed; website owns feedback/support ---
-// Users reach feedback/support via the official site. Tabs are exactly
+// --- feedback: extension-local composer removed; GitHub owns feedback/support ---
+// Users reach feedback/support via public issue templates. Tabs are exactly
 // اصلی / تنظیمات / تازه‌ها and no src/ui/feedback page should ship.
 check('side-panel has no feedback tab button', /id="tab-feedback"/.test(sidePanelHtml), false);
 check('side-panel has no feedback view', /id="view-feedback"/.test(sidePanelHtml), false);
 check('side-panel has no feedback request form', /id="requestType"/.test(sidePanelHtml), false);
 check('side-panel has no feedback radio inputs', /name="reqType"/.test(sidePanelHtml), false);
 check('side-panel has exactly three tab buttons', (sidePanelHtml.match(/class="tab"/g) || []).length, 3);
-check('side-panel links to the official site', sidePanelHtml.includes('بازخورد و پشتیبانی') && sidePanelHtml.includes('id="panelWebsiteLink"'), true);
-check('side-panel JS opens the official feedback url', sidePanelJs.includes("'https://rastchin.tools/feedback/?source=extension'"), true);
+check('side-panel links to GitHub support', sidePanelHtml.includes('بازخورد و پشتیبانی') && sidePanelHtml.includes('id="panelSupportLink"'), true);
+check('side-panel JS opens the GitHub support url', sidePanelJs.includes("'https://github.com/omega-do-it-solutions/rastchin/issues/new/choose'"), true);
 check('side-panel JS dropped the feedback composer', /REQUEST_TYPES|wireFeedback|emailFeedback/.test(sidePanelJs), false);
 check('feedback HTML page removed from source', fileExists('src/ui/feedback/feedback.html'), false);
 check('feedback JS page removed from source', fileExists('src/ui/feedback/feedback.js'), false);
-check('popup links feedback to the website', popupJs.includes('https://rastchin.tools/feedback/?source=extension&type=suggestion'), true);
-check('whats-new links feedback to the website', whatsNewHtml.includes('https://rastchin.tools/feedback/?source=extension&type=suggestion') && whatsNewJs.includes('https://rastchin.tools/feedback/?source=extension&type=suggestion'), true);
+check('popup links feedback to GitHub', popupJs.includes('https://github.com/omega-do-it-solutions/rastchin/issues/new?template=feature_request.yml'), true);
+check('whats-new links feedback to GitHub', whatsNewHtml.includes('https://github.com/omega-do-it-solutions/rastchin/issues/new?template=feature_request.yml') && whatsNewJs.includes('https://github.com/omega-do-it-solutions/rastchin/issues/new?template=feature_request.yml'), true);
 check('extension source has no internal feedback page refs', /src\/ui\/feedback|feedback\/feedback\.html/.test([popupHtml, popupJs, whatsNewHtml, whatsNewJs, sidePanelHtml, sidePanelJs].join('\n')), false);
 check('extension UI has no legacy options page navigation', /src\/ui\/options|options\/options\.html|openOptionsPage/.test([popupJs, welcomeHtml, whatsNewHtml, sidePanelHtml, sidePanelJs].join('\n')), false);
 

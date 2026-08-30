@@ -2,8 +2,8 @@ const storage = chrome.storage.sync;
 const EXTENSION_KEY = 'extensionEnabled';
 const SIDE_PANEL_PAGE = 'src/ui/side-panel/side-panel.html';
 const WHATS_NEW_PAGE = 'src/ui/whats-new/whats-new.html';
-const FEEDBACK_URL = 'https://rastchin.tools/feedback/?source=extension&type=suggestion';
-const REPORT_URL = 'https://rastchin.tools/feedback/?source=extension&type=bug';
+const FEEDBACK_URL = 'https://github.com/omega-do-it-solutions/rastchin/issues/new?template=feature_request.yml';
+const REPORT_URL = 'https://github.com/omega-do-it-solutions/rastchin/issues/new?template=bug_report.yml';
 const PLATFORM_STORAGE_KEYS = {
   claude: 'claudeEnabled',
   chatgpt: 'chatgptEnabled',
