@@ -17,9 +17,9 @@
 (() => {
     const storage = chrome.storage.sync;
     const EXTENSION_KEY = 'extensionEnabled';
-    // Official site for feedback/support forms. The in-panel feedback composer was
-    // removed in v1.1.34; a small footer link opens this in a new tab instead.
-    const WEBSITE_URL = 'https://rastchin.tools/feedback/?source=extension';
+    // Public issue templates own ordinary feedback/support. The in-panel feedback
+    // composer was removed in v1.1.34; a small footer link opens GitHub instead.
+    const SUPPORT_URL = 'https://github.com/omega-do-it-solutions/rastchin/issues/new/choose';
 
     // YouTube caption settings live IN-PANEL (v1.1.34) — no separate options page
     // trip. Same storage keys + crop-safe preset band as the runtime
@@ -587,12 +587,12 @@
 
     // ----- header / footer actions --------------------------------------------------
     // The version badge jumps to the in-panel «تازه‌ها» tab. The only outbound link
-    // is the footer «بازخورد و پشتیبانی», which opens the official site in a new tab
+    // is the footer «بازخورد و پشتیبانی», which opens GitHub in a new tab
     // — the in-panel feedback composer (radios / textarea / copy / email) was removed
     // in v1.1.34. No button opens a separate extension page.
-    function openWebsite() {
-        if (chrome.tabs?.create) chrome.tabs.create({ url: WEBSITE_URL });
-        else window.open(WEBSITE_URL, '_blank', 'noopener');
+    function openSupport() {
+        if (chrome.tabs?.create) chrome.tabs.create({ url: SUPPORT_URL });
+        else window.open(SUPPORT_URL, '_blank', 'noopener');
     }
 
     function wireActions() {
@@ -602,7 +602,7 @@
             versionBadge.textContent = version ? `v${version}` : '';
             versionBadge.addEventListener('click', () => selectTab('whats-new'));
         }
-        document.getElementById('panelWebsiteLink')?.addEventListener('click', openWebsite);
+        document.getElementById('panelSupportLink')?.addEventListener('click', openSupport);
     }
 
     // ----- storage sync --------------------------------------------------------------

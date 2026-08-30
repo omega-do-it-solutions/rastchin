@@ -53,11 +53,6 @@ const requiredPaths = [
   "docs/product.md",
   "docs/ai/architecture.md",
   "docs/assets/rastchin-logo.png",
-  "apps/web/package.json",
-  "apps/web/LICENSE",
-  "apps/web/NOTICE",
-  "apps/web/THIRD_PARTY_NOTICES.md",
-  "apps/web/scripts/copy-legal-files.mjs",
   "apps/browser-extension/manifest.json",
   "apps/browser-extension/package.json",
   "apps/browser-extension/LICENSE",
@@ -87,6 +82,7 @@ const requiredPaths = [
 const forbiddenPaths = [
   ".env.example",
   ".github/CODEOWNERS",
+  "apps/web",
   "apps/.gitkeep",
   "compose.yaml",
   "docker",
@@ -165,7 +161,6 @@ if (rootPackage) {
 }
 
 const appPackages = [
-  ["apps/web/package.json", "apps/web"],
   ["apps/browser-extension/package.json", "apps/browser-extension"],
   ["apps/vscode-extension/package.json", "apps/vscode-extension"],
   ["apps/desktop-integrator/package.json", "apps/desktop-integrator"],

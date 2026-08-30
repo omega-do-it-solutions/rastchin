@@ -7,27 +7,47 @@ updates:
       day: monday
       time: "06:00"
       timezone: Asia/Tehran
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 1
+    rebase-strategy: disabled
     labels:
       - dependencies
+    commit-message:
+      prefix: "chore(deps)"
+    allow:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-patch
+          - version-update:semver-minor
     groups:
-      production-patches:
-        dependency-type: production
+      workspace-updates:
+        patterns:
+          - "*"
         update-types:
-          - patch
-      development-patches:
-        dependency-type: development
-        update-types:
+          - minor
           - patch
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
       time: "06:30"
       timezone: Asia/Tehran
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 1
+    rebase-strategy: disabled
     labels:
       - dependencies
       - ci
+    commit-message:
+      prefix: "chore(deps)"
+    allow:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-patch
+          - version-update:semver-minor
+    groups:
+      actions-updates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch

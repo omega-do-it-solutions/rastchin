@@ -7,7 +7,7 @@
 //   - current-site toggle storage semantics (platform key, global-gate reopen,
 //     extensionEnabled fallback on unsupported sites)
 //   - Persian-digit metrics, settings switches, whats-new render + current pill,
-//   - tab strip aria state, footer website link.
+//   - tab strip aria state, footer support link.
 
 const fs = require('fs');
 const path = require('path');
@@ -524,11 +524,11 @@ element('panelVersion').fire('click');
 check('version badge: selects whats-new tab', element('tab-whats-new').getAttribute('aria-selected'), 'true');
 check('version badge: opens no external tab', createdTabs.length, 0);
 
-// --- footer website link (replaces the removed in-panel feedback composer) -----------
-// The «بازخورد و پشتیبانی» footer link opens the official site in a new tab.
-element('panelWebsiteLink').fire('click');
-check('website link: opens rastchin.tools via tabs.create',
-    createdTabs[createdTabs.length - 1]?.url, 'https://rastchin.tools/feedback/?source=extension');
+// --- footer support link (replaces the removed in-panel feedback composer) -----------
+// The «بازخورد و پشتیبانی» footer link opens GitHub issue templates in a new tab.
+element('panelSupportLink').fire('click');
+check('support link: opens GitHub via tabs.create',
+    createdTabs[createdTabs.length - 1]?.url, 'https://github.com/omega-do-it-solutions/rastchin/issues/new/choose');
 
 // --- in-panel YouTube caption settings (v1.1.33) -------------------------------------
 // The «تنظیمات کامل» / «صفحهٔ تازه‌ها» buttons are gone — navigation is the tab strip
@@ -679,17 +679,17 @@ check('website link: opens rastchin.tools via tabs.create',
     new Set(jsIds).forEach(id => check(`html declares #${id}`, htmlIds.has(id), true));
 
     // v1.1.34: the in-panel feedback tab + composer are gone; only a footer link
-    // to the official site remains. No feedback tab/view/form survives in markup,
+    // to GitHub remains. No feedback tab/view/form survives in markup,
     // and the panel JS no longer carries any feedback wiring.
     check('side-panel HTML dropped the feedback tab', htmlIds.has('tab-feedback'), false);
     check('side-panel HTML dropped the feedback view', htmlIds.has('view-feedback'), false);
     check('side-panel HTML dropped the feedback request form', htmlIds.has('requestType'), false);
     check('side-panel HTML dropped the feedback status node', htmlIds.has('feedbackStatus'), false);
     check('side-panel HTML has no feedback radio inputs', /name="reqType"/.test(htmlSource), false);
-    check('side-panel HTML has the website link', htmlIds.has('panelWebsiteLink'), true);
+    check('side-panel HTML has the support link', htmlIds.has('panelSupportLink'), true);
     check('side-panel HTML link target text is بازخورد و پشتیبانی', /بازخورد و پشتیبانی/.test(htmlSource), true);
     check('side-panel JS dropped the feedback composer wiring', /wireFeedback|copyFeedback|emailFeedback|REQUEST_TYPES/.test(panelSource), false);
-    check('side-panel JS carries the official feedback URL', panelSource.includes('https://rastchin.tools/feedback/?source=extension'), true);
+    check('side-panel JS carries the GitHub support URL', panelSource.includes('https://github.com/omega-do-it-solutions/rastchin/issues/new/choose'), true);
     // v1.1.33: the large caption-size button is removed from the markup, the JS
     // button list, and the «بزرگ» label — only small + medium remain.
     check('side-panel HTML dropped #capSizeLarge', htmlIds.has('capSizeLarge'), false);

@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="RastChin">
-  <rect width="512" height="512" rx="112" fill="#b42345" />
-  <g fill="#ffffff">
-    <rect x="135" y="345" width="115" height="60" />
-    <rect x="250" y="285" width="50" height="60" />
-    <rect x="300" y="120" width="60" height="172" />
-  </g>
-</svg>

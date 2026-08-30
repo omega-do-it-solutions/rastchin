@@ -45,7 +45,7 @@ The injected runtime is derived from the established RastChin browser implementa
 - `auto-direction.js`: composer direction based on Persian presence, including
   controlled-editor paste commits; English-only content remains LTR.
 - `desktop-fallback-rtl.js`: conservative prose/list/table handling for local Electron
-  shells that do not expose the public website selectors.
+  shells that do not expose selectors from supported browser hosts.
 - `chatgpt-rtl.js` / `claude-rtl.js`: target-specific DOM and code guards.
 - `codex-question-card-rtl.js`: semantic interactive-question styling that preserves
   English labels, code, links, inputs, icons, and control geometry.

@@ -411,7 +411,7 @@ Run verification proportional to the change:
 - Run lint and type checking for affected applications.
 - Run builds when changing contracts, configuration, application boundaries, or
   delivery files.
-- Run the full `pnpm check` and `pnpm build` before a release candidate.
+- Run the full `pnpm check` and the relevant packaging command before a release candidate.
 
 Do not skip relevant verification merely because the user did not request it.
 Do not run unrelated expensive suites for a small isolated change.

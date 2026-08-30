@@ -5,7 +5,7 @@
   "description": "RastChin | راست‌چین — Persian-only RTL & font extension. Dev tooling only; the extension itself has no build step.",
   "license": "Apache-2.0",
   "author": "Omega Do IT Solutions",
-  "homepage": "https://rastchin.tools/",
+  "homepage": "https://github.com/omega-do-it-solutions/rastchin",
   "repository": {
     "type": "git",
     "url": "https://github.com/omega-do-it-solutions/rastchin.git",

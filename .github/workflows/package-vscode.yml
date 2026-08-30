@@ -9,13 +9,6 @@ on:
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
       - ".github/workflows/package-vscode.yml"
-  pull_request:
-    paths:
-      - "apps/vscode-extension/**"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "pnpm-workspace.yaml"
-      - ".github/workflows/package-vscode.yml"
   workflow_dispatch:
 
 permissions:

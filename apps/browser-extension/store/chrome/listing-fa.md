@@ -23,13 +23,13 @@ RastChin افزونه‌ای فارسی‌محور برای خواناتر کر�
 
 RastChin برای کاربرانی ساخته شده که در محیط‌های کاری، ابزارهای نوشتاری، چت، فرم‌ها و صفحات متنی با فارسی و انگلیسی سروکار دارند.
 
-این افزونه روی مجموعه‌ای از سایت‌ها و ابزارهای وب پشتیبانی‌شده اجرا می‌شود. فهرست کامل سایت‌های پشتیبانی‌شده و سطح پشتیبانی هرکدام در وب‌سایت رسمی راست‌چین آمده است.
+این افزونه روی مجموعه‌ای از سایت‌ها و ابزارهای وب پشتیبانی‌شده اجرا می‌شود. فایل `manifest.json` و README افزونه در مخزن عمومی، مرجع فهرست میزبان‌های پشتیبانی‌شده هستند.
 
 این افزونه وابسته، رسمی یا مورد تأیید هیچ سرویس یا وب‌سایت شخص ثالثی نیست.
 
 ## نکته حریم خصوصی برای listing
 
-RastChin متن صفحه، promptها، پیام‌ها، سندها، کارت‌ها، کامنت‌ها و زیرنویس‌ها را به هیچ سروری ارسال نمی‌کند. ترجیح‌های نمایشی افزونه با `chrome.storage.sync` ذخیره می‌شود و پردازش جهت/فونت در همان مرورگر انجام می‌شود. مسیر بازخورد و پشتیبانی از طریق فرم وب‌سایت رسمی انجام می‌شود و فقط اطلاعاتی ارسال می‌شود که کاربر خودش وارد می‌کند.
+RastChin متن صفحه، promptها، پیام‌ها، سندها، کارت‌ها، کامنت‌ها و زیرنویس‌ها را به هیچ سروری ارسال نمی‌کند. ترجیح‌های نمایشی افزونه با `chrome.storage.sync` ذخیره می‌شود و پردازش جهت/فونت در همان مرورگر انجام می‌شود. بازخورد و پشتیبانی از طریق قالب‌های ایشوی عمومی GitHub انجام می‌شود؛ افزونه چیزی را خودکار به گزارش اضافه نمی‌کند.
 
 ## متن انگلیسی کوتاه برای dashboard
 
@@ -38,9 +38,9 @@ Persian-only RTL and Vazirmatn typography for supported web tools while keeping 
 ## فیلدهای عملیاتی Dashboard
 
 - Category: `Productivity`
-- Website: `https://rastchin.tools/`
-- Support URL: `https://rastchin.tools/feedback/`
-- Privacy policy URL: `https://rastchin.tools/privacy/`
+- Website: `https://github.com/omega-do-it-solutions/rastchin`
+- Support URL: `https://github.com/omega-do-it-solutions/rastchin/issues/new/choose`
+- Privacy policy URL: `https://github.com/omega-do-it-solutions/rastchin/blob/main/apps/browser-extension/store/chrome/privacy-policy-fa.md`
 - Package: `apps/browser-extension/dist/rastchin-v<version>-chrome-web-store.zip`
 - Small promo tile: `apps/browser-extension/store/chrome/images/promo-small-440x280.png`
 - Screenshots: `apps/browser-extension/store/chrome/images/screenshot-*.png`
