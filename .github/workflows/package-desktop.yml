@@ -66,7 +66,7 @@ jobs:
           if ($setup.Count -ne 1) { throw "Expected one Setup EXE, found $($setup.Count)." }
           if ($portable.Count -ne 1) { throw "Expected one Portable EXE, found $($portable.Count)." }
       - name: Upload Windows packages
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: rastchin-desktop-windows
           path: |
@@ -136,7 +136,7 @@ jobs:
           done < <(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-Integrator-*-macOS-*.dmg' -print0)
           test "$verified_dmgs" -eq 2
       - name: Upload macOS ad-hoc packages
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: rastchin-desktop-macos-adhoc
           path: |
@@ -183,7 +183,7 @@ jobs:
           test "$(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-Integrator-*-Linux-*.deb' | wc -l | tr -d ' ')" -eq 2
           test "$(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-Integrator-*-Linux-*.rpm' | wc -l | tr -d ' ')" -eq 2
       - name: Upload Linux packages
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: rastchin-desktop-linux
           path: |
