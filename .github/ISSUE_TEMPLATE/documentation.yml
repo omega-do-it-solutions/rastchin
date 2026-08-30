@@ -1,0 +1,42 @@
+name: Documentation issue
+description: Report missing, inaccurate, inaccessible, or confusing documentation.
+title: "[Docs]: "
+labels: []
+body:
+  - type: dropdown
+    id: component
+    attributes:
+      label: Related application
+      options:
+        - Root repository documentation
+        - Website (apps/web)
+        - Browser extension (apps/browser-extension)
+        - VS Code extension (apps/vscode-extension)
+        - Desktop integrator (apps/desktop-integrator)
+        - Contributor or release documentation
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Page or file
+      placeholder: "A public URL or repository-relative path"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong or missing?
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested correction
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Confirmation
+      options:
+        - label: I checked the current `main` branch and removed private information from this report.
+          required: true

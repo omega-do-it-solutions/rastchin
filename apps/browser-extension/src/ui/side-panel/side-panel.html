@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>راست‌چین</title>
+    <link rel="stylesheet" href="../global.css">
+    <style>
+        /* Compact operational panel: fluid width (the user can resize the side
+           panel down to ~320px), sticky header + tab strip, scrollable body. */
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            font-size: 13.5px;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px 8px;
+            background: var(--rc-surface);
+            border-bottom: 1px solid var(--rc-line);
+        }
+
+        .panel-header img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .panel-header h1 {
+            font-size: 14.5px;
+            font-weight: 700;
+            margin: 0;
+            flex: 1;
+        }
+
+        .panel-version {
+            direction: ltr;
+            unicode-bidi: isolate;
+            font-size: 11px;
+            color: var(--rc-muted);
+            background: var(--rc-surface-2);
+            border: 1px solid var(--rc-line);
+            border-radius: 999px;
+            padding: 2px 8px;
+            cursor: pointer;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 2px;
+            padding: 6px 10px 0;
+            background: var(--rc-surface);
+            border-bottom: 1px solid var(--rc-line);
+        }
+
+        .tab {
+            flex: 1;
+            background: transparent;
+            color: var(--rc-muted);
+            font-size: 12.5px;
+            font-weight: 600;
+            padding: 7px 4px 9px;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            color: var(--rc-ink);
+            background: var(--rc-surface-2);
+        }
+
+        .tab[aria-selected="true"] {
+            color: var(--rc-brand);
+            border-bottom-color: var(--rc-brand);
+        }
+
+        .views {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-gutter: stable;
+            padding: 12px 14px 18px;
+        }
+
+        .view[hidden] {
+            display: none;
+        }
+
+        .card {
+            background: var(--rc-surface);
+            border: 1px solid var(--rc-line);
+            border-radius: var(--rc-radius-lg);
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .card h2 {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--rc-ink-2);
+            margin: 0 0 10px;
+        }
+
+        /* --- main tab --- */
+        .site-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .site-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .site-name {
+            font-weight: 700;
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .site-state {
+            font-size: 11.5px;
+            color: var(--rc-muted);
+        }
+
+        .site-state[data-enabled="true"] {
+            color: var(--rc-green);
+        }
+
+        /* compact switch (on = right, off = left, mirroring the popup) */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+            flex-shrink: 0;
+        }
+
+        .switch input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .switch .slider {
+            position: absolute;
+            inset: 0;
+            background: var(--rc-line-strong);
+            border-radius: 999px;
+            transition: background 0.15s ease;
+            pointer-events: none;
+        }
+
+        .switch .slider::before {
+            content: "";
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 3px;
+            left: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.15s ease;
+            box-shadow: var(--rc-shadow-sm);
+        }
+
+        .switch input:checked + .slider {
+            background: var(--rc-brand);
+        }
+
+        .switch input:checked + .slider::before {
+            transform: translateX(18px);
+        }
+
+        .switch input:focus-visible + .slider {
+            outline: 3px solid rgba(180, 35, 69, 0.24);
+            outline-offset: 2px;
+        }
+
+        .metrics {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .metric {
+            flex: 1;
+            background: var(--rc-surface-2);
+            border-radius: var(--rc-radius);
+            padding: 8px;
+            text-align: center;
+        }
+
+        .metric b {
+            display: block;
+            font-size: 16px;
+            direction: ltr;
+            unicode-bidi: isolate;
+        }
+
+        .metric span {
+            font-size: 11px;
+            color: var(--rc-muted);
+        }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+
+        .platform-chip {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 8px;
+            border: 1px solid var(--rc-line);
+            border-radius: var(--rc-radius);
+            background: var(--rc-surface-3);
+            font-size: 12px;
+            direction: ltr;
+            unicode-bidi: isolate;
+            justify-content: flex-start;
+            overflow: hidden;
+        }
+
+        .platform-chip img {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        .platform-chip span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .platform-chip:hover {
+            border-color: var(--rc-line-strong);
+            background: var(--rc-surface);
+        }
+
+        .platform-chip.is-current {
+            border-color: var(--rc-brand);
+            box-shadow: 0 0 0 1px var(--rc-brand) inset;
+        }
+
+        /* --- YouTube caption settings card (v1.1.33) --- */
+        .cap-card h2 {
+            margin-bottom: 8px;
+        }
+
+        .cap-preview {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 46px;
+            padding: 8px;
+            margin-bottom: 10px;
+            border-radius: var(--rc-radius);
+            background-image: linear-gradient(135deg, #1c1c1c 0, #050505 100%);
+            overflow: hidden;
+        }
+
+        .cap-preview__pill {
+            max-width: 100%;
+            padding: 1px 10px;
+            border-radius: 6px;
+            background: rgba(8, 8, 8, 0.78);
+            color: #ffd400;
+            font-size: 18px;
+            line-height: 1.6;
+            font-weight: 600;
+            text-align: center;
+            overflow-wrap: anywhere;
+        }
+
+        /* Size + colour as TWO MATCHING segmented controls on a single compact row
+           (v1.1.34). Each control is icon-only — an «A» glyph for size, a colour dot
+           for colour — with a Persian aria-label, so the card stays short and tidy in
+           the narrow side panel. The active segment in BOTH fills with the brand. */
+        .cap-controls {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .cap-seg {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            border: 1px solid var(--rc-line);
+            border-radius: var(--rc-radius);
+            overflow: hidden;
+            background: var(--rc-surface-2);
+        }
+
+        .cap-seg__btn {
+            flex: 1;
+            min-width: 0;
+            min-height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 8px;
+            border: 0;
+            border-inline-start: 1px solid var(--rc-line);
+            background: transparent;
+            color: var(--rc-ink-2);
+            font: inherit;
+            font-size: 13px;
+            cursor: pointer;
+            transition: color 0.12s ease, background-color 0.12s ease;
+        }
+
+        .cap-seg__btn:first-child {
+            border-inline-start: 0;
+        }
+
+        .cap-seg__btn:hover {
+            background: var(--rc-surface-3);
+        }
+
+        /* Inset ring so the focus indicator is never clipped by the segmented
+           wrapper's overflow:hidden and never overlaps the centred glyph/dot. The
+           two layers keep it visible on both the light (unpressed) and brand-red
+           (pressed) segment backgrounds. */
+        .cap-seg__btn:focus-visible {
+            outline: none;
+            box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 4px var(--rc-brand);
+        }
+
+        .cap-seg__btn[aria-pressed="true"] {
+            color: #fff;
+            background: var(--rc-brand);
+        }
+
+        .cap-a {
+            font-weight: 800;
+            line-height: 1;
+        }
+        .cap-a--sm { font-size: 0.82em; }
+        .cap-a--md { font-size: 1.1em; }
+
+        /* A dark outer ring makes the swatch readable on BOTH the light unpressed
+           surface (where a bare white dot would vanish) and the brand-red pressed
+           segment; the colour itself fills the centre. */
+        .cap-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--c, #ffd400);
+            box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.42);
+        }
+
+        /* --- settings tab --- */
+        .setting-group-title {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--rc-muted);
+            margin: 12px 2px 6px;
+        }
+
+        .setting-group-title:first-child {
+            margin-top: 0;
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 10px;
+            background: var(--rc-surface);
+            border: 1px solid var(--rc-line);
+            border-radius: var(--rc-radius);
+            margin-bottom: 6px;
+        }
+
+        .setting-row img {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        .setting-row .name {
+            flex: 1;
+            font-size: 12.5px;
+            font-weight: 600;
+            direction: ltr;
+            unicode-bidi: isolate;
+            text-align: right;
+        }
+
+        /* --- what's new tab --- */
+        .release {
+            border-right: 2px solid var(--rc-line);
+            padding: 2px 12px 14px 0;
+            margin-right: 4px;
+            list-style: none;
+        }
+
+        .release.is-current {
+            border-right-color: var(--rc-brand);
+        }
+
+        .release-head {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .release-version {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--rc-muted);
+            background: var(--rc-surface-2);
+            border-radius: 999px;
+            padding: 1px 8px;
+        }
+
+        .release-title {
+            font-size: 12.5px;
+            font-weight: 700;
+        }
+
+        .current-pill {
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+            background: var(--rc-brand);
+            border-radius: 999px;
+            padding: 1px 8px;
+        }
+
+        .release-list {
+            margin: 0;
+            padding-right: 16px;
+            display: grid;
+            gap: 4px;
+        }
+
+        .release-list li {
+            font-size: 12px;
+            line-height: 1.9;
+            color: var(--rc-ink-2);
+        }
+
+        #timeline {
+            margin: 0;
+            padding: 0;
+        }
+
+        /* --- footer: outbound link to the official site (feedback/support) --- */
+        .panel-footer {
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            padding: 7px 14px;
+            background: var(--rc-surface);
+            border-top: 1px solid var(--rc-line);
+        }
+
+        .panel-footer__link {
+            background: none;
+            border: none;
+            padding: 4px 8px;
+            font: inherit;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--rc-brand);
+            cursor: pointer;
+            border-radius: var(--rc-radius);
+        }
+
+        .panel-footer__link:hover {
+            text-decoration: underline;
+        }
+
+        .panel-footer__link:focus-visible {
+            outline: 2px solid var(--rc-brand);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <header class="panel-header">
+        <img src="../../assets/icons/thumbnails/icon48.png" alt="">
+        <h1>راست‌چین</h1>
+        <button class="panel-version" id="panelVersion" title="نمایش تازه‌ها"></button>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="بخش‌های پنل راست‌چین">
+        <button class="tab" id="tab-main" role="tab" aria-selected="true" aria-controls="view-main">اصلی</button>
+        <button class="tab" id="tab-settings" role="tab" aria-selected="false" aria-controls="view-settings" tabindex="-1">تنظیمات</button>
+        <button class="tab" id="tab-whats-new" role="tab" aria-selected="false" aria-controls="view-whats-new" tabindex="-1">تازه‌ها</button>
+    </nav>
+
+    <main class="views">
+        <section class="view" id="view-main" role="tabpanel" aria-labelledby="tab-main" tabindex="0">
+            <div class="card">
+                <div class="site-row">
+                    <div class="site-info">
+                        <div class="site-name" id="siteName">در حال بررسی…</div>
+                        <div class="site-state" id="siteState"></div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="siteToggle" disabled aria-label="در حال شناسایی سایت فعلی">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="metrics">
+                    <div class="metric"><b id="activePlatformCount">۰</b><span>ابزار فعال</span></div>
+                    <div class="metric"><b id="totalPlatformCount">۰</b><span>ابزار پشتیبانی‌شده</span></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>ابزارهای پشتیبانی‌شده</h2>
+                <div class="platform-grid" id="platformGrid"></div>
+            </div>
+        </section>
+
+        <section class="view" id="view-settings" role="tabpanel" aria-labelledby="tab-settings" tabindex="0" hidden>
+            <div id="settingsList"></div>
+
+            <!-- YouTube caption settings, in-panel (v1.1.33). No separate page. -->
+            <div class="card cap-card">
+                <h2>زیرنویس یوتیوب</h2>
+                <div class="cap-preview" role="img" aria-label="پیش‌نمایش زیرنویس فارسی">
+                    <span class="cap-preview__pill" id="capPreviewPill">نمونهٔ زیرنویس فارسی است؟</span>
+                </div>
+                <!-- Size + colour on one compact row, two matching segmented controls. -->
+                <div class="cap-controls">
+                    <div class="cap-seg" role="group" aria-label="اندازهٔ زیرنویس">
+                        <button type="button" class="cap-seg__btn" id="capSizeSmall" aria-pressed="false" aria-label="اندازه کوچک"><b class="cap-a cap-a--sm">A</b></button>
+                        <button type="button" class="cap-seg__btn" id="capSizeMedium" aria-pressed="true" aria-label="اندازه متوسط"><b class="cap-a cap-a--md">A</b></button>
+                    </div>
+                    <div class="cap-seg" role="group" aria-label="رنگ زیرنویس">
+                        <button type="button" class="cap-seg__btn" id="capColorYellow" aria-pressed="true" aria-label="رنگ زرد"><span class="cap-dot" style="--c:#ffd400"></span></button>
+                        <button type="button" class="cap-seg__btn" id="capColorWhite" aria-pressed="false" aria-label="رنگ سفید"><span class="cap-dot" style="--c:#ffffff"></span></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="view" id="view-whats-new" role="tabpanel" aria-labelledby="tab-whats-new" tabindex="0" hidden>
+            <ul id="timeline"></ul>
+        </section>
+    </main>
+
+    <footer class="panel-footer">
+        <button type="button" class="panel-footer__link" id="panelWebsiteLink">بازخورد و پشتیبانی</button>
+    </footer>
+
+    <script src="../shared/platform-registry.js"></script>
+    <script src="../shared/changelog-data.js"></script>
+    <script src="side-panel.js"></script>
+</body>
+</html>

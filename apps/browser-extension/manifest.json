@@ -1,0 +1,118 @@
+{
+   "action": {
+      "default_icon": {
+         "16": "src/assets/icons/thumbnails/icon16.png",
+         "32": "src/assets/icons/thumbnails/icon32.png",
+         "48": "src/assets/icons/thumbnails/icon48.png"
+      },
+      "default_popup": "src/ui/popup/popup.html"
+   },
+   "background": {
+      "service_worker": "src/background/service-worker.js"
+   },
+   "content_scripts": [ {
+      "js": [ "src/core/controller.js", "src/core/font-inject.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/auto-direction.js", "src/core/recipe-runner.js", "src/platforms/chatgpt-rtl.js" ],
+      "matches": [ "https://chat.openai.com/*", "https://chatgpt.com/*" ],
+      "run_at": "document_end"
+   }, {
+      "all_frames": true,
+      "js": [ "src/core/controller.js", "src/core/font-inject.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/auto-direction.js", "src/core/recipe-runner.js", "src/platforms/claude-rtl.js" ],
+      "match_about_blank": true,
+      "matches": [ "https://claude.ai/*", "https://claudeusercontent.com/*", "https://*.claudeusercontent.com/*", "https://claudemcpcontent.com/*", "https://*.claudemcpcontent.com/*" ],
+      "run_at": "document_end"
+   }, {
+      "js": [ "src/core/controller.js", "src/core/font-inject.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/auto-direction.js", "src/core/recipe-runner.js", "src/platforms/copilot-rtl.js" ],
+      "matches": [ "https://copilot.microsoft.com/*" ],
+      "run_at": "document_end"
+   }, {
+      "js": [ "src/core/controller.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/recipe-runner.js", "src/platforms/github-rtl.js" ],
+      "matches": [ "https://github.com/*" ],
+      "run_at": "document_end"
+   }, {
+      "js": [ "src/core/controller.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/recipe-runner.js", "src/platforms/visual-studio-marketplace-rtl.js" ],
+      "matches": [ "https://marketplace.visualstudio.com/*" ],
+      "run_at": "document_end"
+   }, {
+      "js": [ "src/core/controller.js", "src/core/font-inject.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/auto-direction.js", "src/core/recipe-runner.js", "src/platforms/gemini-rtl.js" ],
+      "matches": [ "https://gemini.google.com/*" ],
+      "run_at": "document_end"
+   }, {
+      "js": [ "src/core/controller.js", "src/core/font-inject.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/auto-direction.js", "src/core/recipe-runner.js", "src/platforms/aistudio-rtl.js" ],
+      "matches": [ "https://aistudio.google.com/*" ],
+      "run_at": "document_end"
+   }, {
+      "js": [ "src/core/controller.js", "src/core/font-inject.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/auto-direction.js", "src/core/recipe-runner.js", "src/platforms/perplexity-rtl.js" ],
+      "matches": [ "https://perplexity.ai/*", "https://www.perplexity.ai/*" ],
+      "run_at": "document_end"
+   }, {
+      "js": [ "src/core/controller.js", "src/core/font-inject.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/auto-direction.js", "src/core/recipe-runner.js", "src/platforms/deepseek-rtl.js" ],
+      "matches": [ "https://chat.deepseek.com/*", "https://www.deepseek.com/*", "https://deepseek.com/*" ],
+      "run_at": "document_end"
+   }, {
+      "js": [ "src/core/controller.js", "src/core/font-inject.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/auto-direction.js", "src/core/recipe-runner.js", "src/platforms/notebooklm-rtl.js" ],
+      "matches": [ "https://notebook.google.com/*", "https://notebooklm.google.com/*" ],
+      "run_at": "document_end"
+   }, {
+      "js": [ "src/core/controller.js", "src/core/font-inject.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/auto-direction.js", "src/core/recipe-runner.js", "src/platforms/qwen-rtl.js" ],
+      "matches": [ "https://qwen.ai/*", "https://chat.qwen.ai/*" ],
+      "run_at": "document_end"
+   }, {
+      "js": [ "src/core/controller.js", "src/core/font-inject.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/auto-direction.js", "src/core/recipe-runner.js", "src/platforms/arena-rtl.js" ],
+      "matches": [ "https://arena.ai/*", "https://www.arena.ai/*" ],
+      "run_at": "document_end"
+   }, {
+      "js": [ "src/core/controller.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/recipe-runner.js", "src/platforms/trello-rtl.js" ],
+      "matches": [ "https://trello.com/*", "https://www.trello.com/*" ],
+      "run_at": "document_end"
+   }, {
+      "js": [ "src/core/controller.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/recipe-runner.js", "src/platforms/notion-rtl.js" ],
+      "matches": [ "https://notion.so/*", "https://www.notion.so/*", "https://app.notion.so/*", "https://*.notion.site/*" ],
+      "run_at": "document_end"
+   }, {
+      "js": [ "src/core/controller.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/recipe-runner.js", "src/platforms/gmail-rtl.js" ],
+      "matches": [ "https://mail.google.com/*" ],
+      "run_at": "document_end"
+   }, {
+      "js": [ "src/core/controller.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/recipe-runner.js", "src/platforms/google-translate-rtl.js" ],
+      "matches": [ "https://translate.google.com/*" ],
+      "run_at": "document_end"
+   }, {
+      "all_frames": true,
+      "js": [ "src/core/controller.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/recipe-runner.js", "src/platforms/google-workspace-rtl.js" ],
+      "match_about_blank": true,
+      "matches": [ "https://docs.google.com/document/*", "https://docs.google.com/spreadsheets/*" ],
+      "run_at": "document_end"
+   }, {
+      "js": [ "src/core/controller.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/recipe-runner.js", "src/platforms/whatsapp-rtl.js" ],
+      "matches": [ "https://web.whatsapp.com/*" ],
+      "run_at": "document_end"
+   }, {
+      "js": [ "src/core/controller.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/recipe-runner.js", "src/platforms/telegram-rtl.js" ],
+      "matches": [ "https://web.telegram.org/*" ],
+      "run_at": "document_end"
+   }, {
+      "js": [ "src/core/controller.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/recipe-runner.js", "src/platforms/youtube-rtl.js" ],
+      "matches": [ "https://www.youtube.com/*", "https://m.youtube.com/*" ],
+      "run_at": "document_end"
+   } ],
+   "description": "Persian-only RTL and Vazirmatn typography for supported web tools while keeping code, URLs and English readable.",
+   "icons": {
+      "128": "src/assets/icons/thumbnails/icon128.png",
+      "16": "src/assets/icons/thumbnails/icon16.png",
+      "32": "src/assets/icons/thumbnails/icon32.png",
+      "48": "src/assets/icons/thumbnails/icon48.png"
+   },
+   "manifest_version": 3,
+   "minimum_chrome_version": "114",
+   "name": "RastChin راست‌چین - Persian RTL & Font",
+   "permissions": [ "storage", "activeTab", "sidePanel", "tabs" ],
+   "side_panel": {
+      "default_path": "src/ui/side-panel/side-panel.html"
+   },
+   "short_name": "RastChin",
+   "version": "1.1.64",
+   "web_accessible_resources": [ {
+      "matches": [ "https://chat.openai.com/*", "https://chatgpt.com/*", "https://claude.ai/*", "https://claudeusercontent.com/*", "https://*.claudeusercontent.com/*", "https://claudemcpcontent.com/*", "https://*.claudemcpcontent.com/*", "https://copilot.microsoft.com/*", "https://github.com/*", "https://marketplace.visualstudio.com/*", "https://gemini.google.com/*", "https://aistudio.google.com/*", "https://perplexity.ai/*", "https://www.perplexity.ai/*", "https://chat.deepseek.com/*", "https://www.deepseek.com/*", "https://deepseek.com/*", "https://notebook.google.com/*", "https://notebooklm.google.com/*", "https://qwen.ai/*", "https://chat.qwen.ai/*", "https://arena.ai/*", "https://www.arena.ai/*", "https://trello.com/*", "https://www.trello.com/*", "https://notion.so/*", "https://www.notion.so/*", "https://app.notion.so/*", "https://*.notion.site/*", "https://mail.google.com/*", "https://translate.google.com/*", "https://docs.google.com/*", "https://web.whatsapp.com/*", "https://web.telegram.org/*", "https://www.youtube.com/*", "https://m.youtube.com/*" ],
+      "resources": [ "src/assets/fonts/*" ]
+   } ]
+}

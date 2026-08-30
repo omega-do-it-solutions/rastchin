@@ -1,0 +1,50 @@
+name: Feature request
+description: Propose a user outcome, supported host, or workflow improvement.
+title: "[Feature]: "
+labels: []
+body:
+  - type: dropdown
+    id: component
+    attributes:
+      label: Owning application
+      options:
+        - Website (apps/web)
+        - Browser extension (apps/browser-extension)
+        - VS Code extension (apps/vscode-extension)
+        - Desktop integrator (apps/desktop-integrator)
+        - Repository or contributor tooling
+        - Unsure
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: Describe the task or readability problem before describing a technical solution.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: What should a user be able to observe or accomplish?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Host and example context
+      description: For a new host, include public product/version information and a synthetic example. Do not include private content.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: impact
+    attributes:
+      label: Boundary check
+      options:
+        - label: I identified any new browser permission, host access, file mutation, external request, stored data, or privacy impact above.
+          required: true
+        - label: I used no private page, conversation, document, credential, or personal data in this request.
+          required: true

@@ -1,0 +1,135 @@
+{
+  "name": "rastchin-vscode",
+  "private": true,
+  "displayName": "RastChin for VS Code",
+  "description": "Improves Persian RTL readability in VS Code Markdown Preview, Claude Code, and Codex webviews.",
+  "version": "0.3.12",
+  "publisher": "OmegaDoITSolutions",
+  "author": "Mo. MIKAELI / Omega Do IT Solutions",
+  "license": "Apache-2.0",
+  "engines": {
+    "vscode": "^1.80.0",
+    "node": ">=24.18.1 <25"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "rastchin",
+    "rtl",
+    "persian",
+    "farsi",
+    "chat",
+    "codex",
+    "claude",
+    "markdown"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:persianRtlClean.status",
+    "onCommand:persianRtlClean.preview",
+    "onCommand:persianRtlClean.reapply",
+    "onCommand:persianRtlClean.disable",
+    "onCommand:persianRtlClean.cleanLegacy"
+  ],
+  "main": "./src/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "persianRtlClean.status",
+        "title": "RastChin for VS Code: Status",
+        "category": "RastChin for VS Code"
+      },
+      {
+        "command": "persianRtlClean.preview",
+        "title": "RastChin for VS Code: Inspect Agent Patch Plan",
+        "category": "RastChin for VS Code"
+      },
+      {
+        "command": "persianRtlClean.reapply",
+        "title": "RastChin for VS Code: Re-apply Patches",
+        "category": "RastChin for VS Code"
+      },
+      {
+        "command": "persianRtlClean.disable",
+        "title": "RastChin for VS Code: Disable / Restore Patches",
+        "category": "RastChin for VS Code"
+      },
+      {
+        "command": "persianRtlClean.cleanLegacy",
+        "title": "RastChin for VS Code: Clean Legacy Extension Patches",
+        "category": "RastChin for VS Code"
+      }
+    ],
+    "menus": {
+      "extension/context": [
+        {
+          "command": "persianRtlClean.reapply",
+          "when": "extension == OmegaDoITSolutions.rastchin-vscode && extensionStatus == installed",
+          "group": "1_configure"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "RastChin for VS Code",
+      "properties": {
+        "persianRtlClean.patchOnStartup": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically re-apply Claude Code and Codex webview patches on VS Code startup. Default is false so installation does not modify other extensions until you opt in."
+        },
+        "persianRtlClean.patchClaudeCode": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include Claude Code webview and Plan Preview when applying or restoring patches."
+        },
+        "persianRtlClean.patchCodex": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include Codex / ChatGPT webview when applying or restoring patches."
+        },
+        "persianRtlClean.patchClaudePlanPreview": {
+          "type": "boolean",
+          "default": true,
+          "description": "Patch Claude Code Plan Preview when its embedded HTML layout passes RastChin compatibility checks. Disable this to limit Claude changes to webview/index.css and webview/index.js."
+        },
+        "persianRtlClean.confirmBeforePatching": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the read-only patch plan and require confirmation before a manual patch operation modifies installed agent extensions."
+        },
+        "persianRtlClean.experimentalWorkbenchPatch": {
+          "type": "boolean",
+          "default": false,
+          "description": "Reserved opt-in flag for future VS Code workbench patching. This extension does not patch workbench.html or product.json by default."
+        }
+      }
+    },
+    "markdown.previewStyles": [
+      "./media/markdown-preview.css"
+    ],
+    "markdown.previewScripts": [
+      "./media/markdown-preview.js"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/omega-do-it-solutions/rastchin.git",
+    "directory": "apps/vscode-extension"
+  },
+  "bugs": {
+    "url": "https://github.com/omega-do-it-solutions/rastchin/issues"
+  },
+  "scripts": {
+    "dev": "code --new-window --extensionDevelopmentPath=.",
+    "test": "node --test",
+    "package": "vsce package --no-dependencies",
+    "vscode:uninstall": "node ./scripts/uninstall.js"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "3.9.2",
+    "jsdom": "30.0.1"
+  },
+  "icon": "media/icon.png",
+  "homepage": "https://rastchin.tools"
+}

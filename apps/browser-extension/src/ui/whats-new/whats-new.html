@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تازه‌های راست‌چین</title>
+  <link rel="stylesheet" href="../global.css">
+  <style>
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 28% 36%, rgba(180, 35, 69, 0.06), transparent 360px),
+        #fbfbfa;
+    }
+
+    .page {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .brandline {
+      min-height: 88px;
+      padding: 0 clamp(24px, 4vw, 72px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      background: rgba(255, 255, 255, 0.9);
+      border-bottom: 1px solid var(--rc-line);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      direction: ltr;
+    }
+
+    .brand-icon {
+      position: relative;
+      width: 56px;
+      height: 56px;
+      flex: 0 0 auto;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #bd2448, var(--rc-brand-dark));
+      box-shadow: 0 12px 24px rgba(180, 35, 69, 0.18);
+    }
+
+    .brand-icon::before {
+      content: "";
+      position: absolute;
+      right: 17px;
+      top: 14px;
+      width: 7px;
+      height: 7px;
+      border-radius: 1px;
+      background: #fff;
+      box-shadow:
+        0 8px 0 #fff,
+        -8px 16px 0 #fff,
+        -16px 24px 0 #fff;
+    }
+
+    .brand strong {
+      display: block;
+      color: var(--rc-ink);
+      font-size: 24px;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    .brand-version {
+      display: block;
+      margin-top: 6px;
+      color: var(--rc-brand);
+      font-size: 12px;
+      font-weight: 950;
+      direction: ltr;
+      text-align: left;
+    }
+
+    .head-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .head-actions a {
+      min-height: 40px;
+      padding: 0 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--rc-radius);
+      color: var(--rc-ink);
+      background: var(--rc-surface);
+      border: 1px solid var(--rc-line);
+      font-size: 13px;
+      font-weight: 950;
+      cursor: pointer;
+      transition: border-color 150ms ease-out, color 150ms ease-out;
+    }
+
+    .head-actions a:hover {
+      border-color: var(--rc-brand);
+      color: var(--rc-brand);
+    }
+
+    .shell {
+      width: min(820px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 38px 0 56px;
+    }
+
+    .intro {
+      display: grid;
+      gap: 12px;
+      padding: 0 4px 26px;
+    }
+
+    .kicker {
+      color: var(--rc-brand);
+      font-size: 12px;
+      font-weight: 950;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .kicker::before {
+      content: "";
+      width: 11px;
+      height: 11px;
+      border-radius: 999px;
+      background: var(--rc-brand);
+      box-shadow: 0 0 0 5px rgba(180, 35, 69, 0.1);
+    }
+
+    .intro h1 {
+      font-size: clamp(28px, 4.4vw, 40px);
+      line-height: 1.25;
+      font-weight: 950;
+      color: var(--rc-ink);
+      text-wrap: balance;
+    }
+
+    .intro p {
+      max-width: 640px;
+      color: var(--rc-muted);
+      font-size: 15px;
+      line-height: 1.9;
+      text-wrap: pretty;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 16px;
+    }
+
+    .release {
+      border: 1px solid var(--rc-line);
+      border-radius: var(--rc-radius-lg);
+      background: var(--rc-surface);
+      box-shadow: var(--rc-shadow-sm);
+      overflow: hidden;
+    }
+
+    .release.is-current {
+      border-color: var(--rc-brand);
+      box-shadow: 0 0 0 1px var(--rc-brand), var(--rc-shadow-sm);
+    }
+
+    .release-head {
+      min-height: 58px;
+      padding: 13px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      background: var(--rc-surface-2);
+      border-bottom: 1px solid var(--rc-line);
+    }
+
+    .release-version {
+      direction: ltr;
+      color: var(--rc-ink);
+      background: var(--rc-surface);
+      border: 1px solid var(--rc-line-strong);
+      border-radius: 999px;
+      padding: 4px 11px;
+      font-size: 13px;
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .release-title {
+      color: var(--rc-ink);
+      font-size: 15px;
+      font-weight: 950;
+      line-height: 1.5;
+    }
+
+    .current-pill {
+      margin-inline-start: auto;
+      color: #fff;
+      background: var(--rc-brand);
+      border-radius: 999px;
+      padding: 4px 11px;
+      font-size: 11px;
+      font-weight: 950;
+    }
+
+    .release-list {
+      margin: 0;
+      padding: 14px 18px 16px;
+      display: grid;
+      gap: 9px;
+      list-style: none;
+    }
+
+    .release-list li {
+      position: relative;
+      padding-inline-start: 20px;
+      color: var(--rc-ink-2);
+      font-size: 14px;
+      line-height: 1.85;
+      text-wrap: pretty;
+    }
+
+    .release-list li::before {
+      content: "";
+      position: absolute;
+      inset-inline-start: 4px;
+      top: 11px;
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--rc-brand);
+    }
+
+    .rc-ltr {
+      direction: ltr;
+      unicode-bidi: isolate;
+    }
+
+    @media (max-width: 680px) {
+      .brandline {
+        padding: 14px 18px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .head-actions {
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="brandline">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true"></span>
+        <div>
+          <strong>RastChin</strong>
+          <span class="brand-version" id="whatsNewVersion"></span>
+        </div>
+      </div>
+      <nav class="head-actions" aria-label="پیوندهای افزونه">
+        <a href="../side-panel/side-panel.html">تنظیمات</a>
+        <a id="feedbackLink" href="https://rastchin.tools/feedback/?source=extension&type=suggestion">بازخورد و پشتیبانی</a>
+      </nav>
+    </header>
+
+    <div class="shell">
+      <section class="intro">
+        <span class="kicker">تازه‌های راست‌چین</span>
+        <h1>هر نسخه، فارسیِ خواناتر.</h1>
+        <p>این صفحه خلاصهٔ تغییرهای مهمِ راست‌چین را به زبان ساده نشان می‌دهد. جزئیات فنی اینجا نمی‌آید؛ فقط آنچه برای شما در استفادهٔ روزمره تغییر کرده است.</p>
+      </section>
+
+      <ol class="timeline" id="timeline" aria-label="تاریخچهٔ نسخه‌ها"></ol>
+    </div>
+  </main>
+  <script src="../shared/changelog-data.js"></script>
+  <script src="whats-new.js"></script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# next.js
+/.next/
+/out/
+/ready-to-upload/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files
+.env*
+!.env.example
+rastchin-feedback.config.php
+/.local-secrets/
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# editor / os
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# large hero source video (frames are committed, source is not)
+/docs/hero/*.mp4
+/docs/hero/*.mov
+
+# browser test artifacts
+.playwright-mcp/
+*-hero.png
+/*-privacy.png
+/docs/hero/frames-src/
+
+# local agent / tooling state
+/.claude/
+/.seo-cache/

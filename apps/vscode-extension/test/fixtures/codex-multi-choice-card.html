@@ -1,0 +1,50 @@
+<!doctype html>
+<!--
+  Fixture approximating the Codex request_option_picker / approval card DOM.
+  Stable hooks observed in the installed Codex webview bundle:
+    - card surface:   [data-codex-approval-surface]
+    - option group:   [role="radiogroup"]
+    - option row:     <button role="radio" aria-checked="...">
+  Hashed CSS-module classes are intentionally omitted; the runtime must rely on
+  the stable hooks + content detection, not on brittle class names.
+-->
+<html lang="en">
+  <body>
+    <div id="root">
+      <div data-codex-approval-surface="true">
+        <div class="px-4 text-sm font-medium" data-role="question">
+          آیا این تغییرات را با دستور
+          <code>git commit -m "افزودن پشتیبانی RTL"</code>
+          کامیت کنم؟
+        </div>
+        <div class="flex flex-col" data-role="description">
+          <span>این کار فایل‌های زیر را تغییر می‌دهد: <code>src/injections.js</code></span>
+        </div>
+        <div class="flex flex-col gap-1" role="radiogroup">
+          <button role="radio" aria-checked="false" data-id="yes">
+            <span class="indicator"></span>
+            <span class="label">بله، همه تغییرات را کامیت کن</span>
+            <span class="description">یک commit واحد روی شاخه فعلی ساخته می‌شود</span>
+          </button>
+          <button role="radio" aria-checked="false" data-id="no">
+            <span class="indicator"></span>
+            <span class="label">نه، فعلاً صبر کن</span>
+          </button>
+          <button role="radio" aria-checked="false" data-id="review">
+            <span class="indicator"></span>
+            <span class="label">اول این را اجرا کن: <code>npm test</code></span>
+          </button>
+          <button role="radio" aria-checked="false" data-id="english-only">
+            <span class="indicator"></span>
+            <span class="label">Run npm run package instead</span>
+          </button>
+        </div>
+        <pre data-role="command-block"><code>git commit -m "msg" &amp;&amp; git status</code></pre>
+        <div class="footer">
+          <button data-id="submit">تایید</button>
+          <button data-id="skip">Skip</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

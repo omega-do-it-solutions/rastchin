@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RastChin</title>
+  <link rel="stylesheet" href="../global.css">
+  <style>
+    body {
+      width: 430px;
+      min-width: 430px;
+      min-height: 588px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      scrollbar-gutter: stable;
+      background: var(--rc-bg);
+    }
+
+    .popup {
+      min-height: 588px;
+      display: flex;
+      flex-direction: column;
+      background:
+        linear-gradient(180deg, rgba(180, 35, 69, 0.08), transparent 148px),
+        var(--rc-bg);
+    }
+
+    .topbar {
+      padding: 16px 18px 13px;
+      display: grid;
+      grid-template-columns: 48px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      background: var(--rc-surface);
+      border-bottom: 1px solid var(--rc-line);
+    }
+
+    .brandmark {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--rc-radius-lg);
+      display: grid;
+      place-items: center;
+      background: var(--rc-brand);
+      box-shadow: 0 10px 20px rgba(180, 35, 69, 0.18);
+    }
+
+    .brandmark img {
+      width: 32px;
+      height: 32px;
+    }
+
+    .brand {
+      min-width: 0;
+      display: grid;
+      gap: 5px;
+      justify-items: start;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      direction: ltr;
+      text-align: right;
+    }
+
+    .brand-row strong {
+      font-size: 19px;
+      line-height: 1;
+      font-weight: 950;
+      color: var(--rc-ink);
+    }
+
+    .version-badge {
+      color: var(--rc-brand);
+      font-size: 12px;
+      font-weight: 950;
+      line-height: 1;
+      direction: ltr;
+      text-align: right;
+      cursor: pointer;
+    }
+
+    .version-badge:hover {
+      text-decoration: underline;
+    }
+
+    .version-badge:focus-visible {
+      outline: 2px solid rgba(180, 35, 69, 0.4);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    .report-action {
+      min-width: 98px;
+      min-height: 42px;
+      padding: 0 11px;
+      border-radius: var(--rc-radius);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      color: var(--rc-ink-2);
+      background: var(--rc-surface-2);
+      border: 1px solid var(--rc-line);
+      cursor: pointer;
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 950;
+      transition-property: transform, border-color, color, background-color;
+      transition-duration: 150ms;
+      transition-timing-function: ease-out;
+    }
+
+    .report-action svg {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+    }
+
+    .report-action:hover {
+      border-color: var(--rc-brand);
+      color: var(--rc-brand);
+      background: #fff;
+    }
+
+    .report-action:active {
+      transform: scale(0.96);
+    }
+
+    .status {
+      padding: 15px 18px 13px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+    }
+
+    h1 {
+      max-width: 290px;
+      font-size: 23px;
+      line-height: 1.28;
+      font-weight: 950;
+      letter-spacing: 0;
+      text-wrap: balance;
+    }
+
+    .mode {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--rc-green);
+      font-size: 12px;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .mode::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: currentColor;
+      box-shadow: 0 0 0 4px rgba(19, 138, 99, 0.12);
+    }
+
+    .mode[data-enabled="false"] {
+      color: var(--rc-muted);
+    }
+
+    .mode[data-enabled="false"]::before {
+      box-shadow: 0 0 0 4px rgba(103, 112, 125, 0.12);
+    }
+
+    .control-strip {
+      margin: 0 18px 13px;
+      min-height: 76px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 14px;
+      align-items: center;
+      padding: 13px 14px;
+      background: var(--rc-surface);
+      border: 1px solid var(--rc-line);
+      border-radius: var(--rc-radius-lg);
+      box-shadow: var(--rc-shadow-sm);
+    }
+
+    .power {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      cursor: pointer;
+    }
+
+    /* Keep a comfortable hit target even though the visual switch is smaller:
+       extends the clickable label to ~62x44 around the 44x24 track. */
+    .power::after {
+      content: "";
+      position: absolute;
+      inset: -10px -9px;
+      border-radius: 999px;
+    }
+
+    .power input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .power span {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: #ced8e5;
+      border: 1px solid #bcc9d8;
+      transition-property: background-color, border-color;
+      transition-duration: 160ms;
+      transition-timing-function: ease;
+    }
+
+    /* Off state: thumb rests on the LEFT over the grey track. The track uses
+       box-sizing:border-box with a 1px border, so its padding box (the thumb's
+       containing block) is inset 1px; top/left:3px therefore render a symmetric
+       4px gap from the outer track edge on every side. */
+    .power span::before {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: #fff;
+      box-shadow: 0 5px 12px rgba(17, 24, 39, 0.16);
+      transition: transform 0.18s ease;
+    }
+
+    .power input:checked + span {
+      background: var(--rc-brand);
+      border-color: var(--rc-brand);
+    }
+
+    .power input:focus-visible + span {
+      outline: 3px solid rgba(180, 35, 69, 0.24);
+      outline-offset: 3px;
+    }
+
+    /* On state: thumb slides to the RIGHT over the brand track. From the 4px
+       resting offset, a 20px travel lands the thumb 4px from the outer right
+       edge — symmetric with the off state. */
+    .power input:checked + span::before {
+      transform: translateX(20px);
+    }
+
+    .control-copy strong {
+      display: block;
+      color: var(--rc-ink);
+      font-size: 14px;
+      line-height: 1.45;
+      font-weight: 950;
+    }
+
+    .control-copy p {
+      margin-top: 5px;
+      color: var(--rc-muted);
+      font-size: 11px;
+      line-height: 1.65;
+      text-wrap: pretty;
+    }
+
+    .status-off {
+      display: none;
+    }
+
+    .power:not(:has(input:checked)) + .control-copy .status-on {
+      display: none;
+    }
+
+    .power:not(:has(input:checked)) + .control-copy .status-off {
+      display: inline;
+    }
+
+    #extensionStatusText[data-enabled="false"] .status-on {
+      display: none;
+    }
+
+    #extensionStatusText[data-enabled="false"] .status-off {
+      display: inline;
+    }
+
+    #extensionStatusText[data-enabled="true"] .status-on {
+      display: inline;
+    }
+
+    #extensionStatusText[data-enabled="true"] .status-off {
+      display: none;
+    }
+
+    .control-copy a {
+      color: var(--rc-brand);
+      font-weight: 900;
+    }
+
+    .metrics {
+      margin: 0 18px 13px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      border: 1px solid var(--rc-line);
+      border-radius: var(--rc-radius-lg);
+      overflow: hidden;
+      background: var(--rc-surface);
+      box-shadow: 0 1px 2px rgba(22, 22, 21, 0.04);
+    }
+
+    .metric {
+      padding: 11px 12px;
+      border-left: 1px solid var(--rc-line);
+    }
+
+    .metric:last-child {
+      border-left: 0;
+    }
+
+    .metric b {
+      display: block;
+      direction: ltr;
+      text-align: right;
+      font-size: 20px;
+      line-height: 1;
+      font-weight: 950;
+      color: var(--rc-ink);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 7px;
+      color: var(--rc-muted);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .platform-area {
+      margin: 0 18px;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--rc-line);
+      border-radius: var(--rc-radius-lg);
+      overflow: hidden;
+      background: var(--rc-surface);
+      box-shadow: 0 1px 2px rgba(22, 22, 21, 0.04);
+    }
+
+    .platform-head {
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 13px;
+      background: var(--rc-surface-2);
+      border-bottom: 1px solid var(--rc-line);
+    }
+
+    .platform-head h2 {
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .platform-head span {
+      color: var(--rc-muted);
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .platforms {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-content: start;
+    }
+
+    .platform {
+      min-height: 42px;
+      padding: 0 11px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      direction: ltr;
+      color: var(--rc-ink-2);
+      border-left: 1px solid var(--rc-line);
+      border-bottom: 1px solid var(--rc-line);
+      background: var(--rc-surface);
+      transition-property: background-color, color;
+      transition-duration: 150ms;
+      transition-timing-function: ease-out;
+    }
+
+    .platform:nth-child(2n) {
+      border-left: 0;
+    }
+
+    .platform:hover {
+      background: #f9fbfd;
+      color: var(--rc-brand);
+    }
+
+    .platform--active {
+      background: rgba(180, 35, 69, 0.08);
+      color: var(--rc-brand);
+      box-shadow: inset 0 2px 0 var(--rc-brand);
+    }
+
+    .platform img {
+      width: 18px;
+      height: 18px;
+      object-fit: contain;
+      flex: 0 0 auto;
+      filter: drop-shadow(0 1px 0 rgba(22, 22, 21, 0.08));
+    }
+
+    .platform span {
+      min-width: 0;
+      font-size: 11px;
+      font-weight: 850;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .footer {
+      min-height: 36px;
+      padding: 0 18px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      background: var(--rc-bg);
+    }
+
+    .footer-link {
+      min-height: 28px;
+      padding: 0 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--rc-muted);
+      background: transparent;
+      border-left: 1px solid var(--rc-line);
+      font-size: 12px;
+      font-weight: 950;
+      line-height: 1;
+      white-space: nowrap;
+      transition-property: transform, color;
+      transition-duration: 150ms;
+      transition-timing-function: ease-out;
+    }
+
+    .footer-link:last-child {
+      border-left: 0;
+    }
+
+    .footer-link:hover {
+      color: var(--rc-brand);
+    }
+
+    .footer-link:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+  <main class="popup">
+    <header class="topbar">
+      <div class="brandmark" aria-hidden="true">
+        <img src="../../assets/icons/rastchin-logo.png" alt="">
+      </div>
+      <div class="brand">
+        <div class="brand-row">
+          <strong>RastChin</strong>
+        </div>
+        <span class="version-badge" role="button" tabindex="0" aria-label="باز کردن تازه‌های راست‌چین" title="تازه‌های راست‌چین" id="extensionVersion">v1.1.64</span>
+      </div>
+      <button class="report-action" id="reportBug" type="button" aria-label="گزارش مشکل">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M8 9h8M8 13h5M5 19l2.6-2H17a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v12h1Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>گزارش مشکل</span>
+      </button>
+    </header>
+
+    <section class="status">
+      <h1>کنترل فارسی برای سایت فعلی</h1>
+      <span class="mode" id="extensionMode">فعال</span>
+    </section>
+
+    <section class="control-strip">
+      <label class="power">
+        <input type="checkbox" id="extensionToggle" aria-label="روشن یا خاموش کردن افزونه" checked>
+        <span></span>
+      </label>
+      <div class="control-copy">
+        <strong>RTL هوشمند + فونت Vazirmatn</strong>
+        <p id="extensionStatusText">
+          <span class="status-on">برای این وبسایت، راست‌چین فعال است.</span>
+          <span class="status-off">برای این وبسایت، راست‌چین فعال نیست.</span>
+        </p>
+      </div>
+    </section>
+
+    <section class="metrics" aria-label="خلاصه">
+      <div class="metric"><b id="totalPlatformCount">20</b><span>تعداد کل</span></div>
+      <div class="metric"><b id="activePlatformCount">20</b><span>تعداد فعال</span></div>
+    </section>
+
+    <section class="platform-area">
+      <div class="platform-head">
+        <h2>دامنه‌های پشتیبانی‌شده</h2>
+        <span>سایت فعلی مشخص می‌شود</span>
+      </div>
+      <div class="platforms">
+        <a href="https://chatgpt.com" class="platform" data-platform="chatgpt" target="_blank" rel="noopener noreferrer"><img src="../../assets/icons/ChatGPT.svg" alt=""><span>ChatGPT</span></a>
+        <a href="https://claude.ai" class="platform" data-platform="claude" target="_blank" rel="noopener noreferrer"><img src="../../assets/icons/Claude.svg" alt=""><span>Claude</span></a>
+        <a href="https://gemini.google.com" class="platform" data-platform="gemini" target="_blank" rel="noopener noreferrer"><img src="../../assets/icons/Gemini.svg" alt=""><span>Gemini</span></a>
+        <a href="https://github.com/copilot" class="platform" data-platform="copilot" target="_blank" rel="noopener noreferrer"><img src="../../assets/icons/Copilot.svg" alt=""><span>Copilot</span></a>
+        <a href="https://perplexity.ai" class="platform" data-platform="perplexity" target="_blank" rel="noopener noreferrer"><img src="../../assets/icons/Perplexity.svg" alt=""><span>Perplexity</span></a>
+        <a href="https://notebook.google.com" class="platform" data-platform="notebooklm" target="_blank" rel="noopener noreferrer"><img src="../../assets/icons/NotebookLM.svg" alt=""><span>NotebookLM</span></a>
+        <a href="https://chat.deepseek.com" class="platform" data-platform="deepseek" target="_blank" rel="noopener noreferrer"><img src="../../assets/icons/Deepseek.svg" alt=""><span>DeepSeek</span></a>
+        <a href="https://aistudio.google.com" class="platform" data-platform="aistudio" target="_blank" rel="noopener noreferrer"><img src="../../assets/icons/AIStudio.svg" alt=""><span>AI Studio</span></a>
+        <a href="https://chat.qwen.ai" class="platform" data-platform="qwen" target="_blank" rel="noopener noreferrer"><img src="../../assets/icons/Qwen.svg" alt=""><span>Qwen</span></a>
+        <a href="https://arena.ai" class="platform" data-platform="arena" target="_blank" rel="noopener noreferrer"><img src="../../assets/icons/Arena.svg" alt=""><span>Arena</span></a>
+        <a href="https://trello.com" class="platform" data-platform="trello" target="_blank" rel="noopener noreferrer"><img src="../../assets/icons/Trello.svg" alt=""><span>Trello</span></a>
+        <a href="https://www.notion.so" class="platform" data-platform="notion" target="_blank" rel="noopener noreferrer"><img src="../../assets/icons/Notion.svg" alt=""><span>Notion</span></a>
+        <a href="https://github.com" class="platform" data-platform="github" target="_blank" rel="noopener noreferrer"><img src="../../assets/icons/GitHub.svg" alt=""><span>GitHub</span></a>
+        <a href="https://marketplace.visualstudio.com/vscode" class="platform" data-platform="vsMarketplace" target="_blank" rel="noopener noreferrer"><img src="../../assets/icons/VisualStudioMarketplace.svg" alt=""><span>VS Marketplace</span></a>
+        <a href="https://mail.google.com" class="platform" data-platform="gmail" target="_blank" rel="noopener noreferrer"><img src="../../assets/icons/Gmail.svg" alt=""><span>Gmail</span></a>
+        <a href="https://translate.google.com" class="platform" data-platform="googleTranslate" target="_blank" rel="noopener noreferrer"><img src="../../assets/icons/GoogleTranslate.svg" alt=""><span>Translate</span></a>
+        <a href="https://www.youtube.com" class="platform" data-platform="youtube" target="_blank" rel="noopener noreferrer"><img src="../../assets/icons/YouTube.svg" alt=""><span>YouTube</span></a>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <button class="footer-link" id="managePlatforms" type="button">تنظیمات</button>
+      <button class="footer-link" id="whatsNewButton" type="button">تازه‌ها</button>
+      <button class="footer-link" id="feedbackButton" type="button">بازخورد و پشتیبانی</button>
+    </footer>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

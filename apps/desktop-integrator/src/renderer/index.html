@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+    <title>یکپارچه‌ساز دسکتاپ راست‌چین</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main class="shell">
+        <header class="topbar">
+            <div class="brand">
+                <img src="../../assets/icon.png" alt="" width="48" height="48">
+                <div>
+                    <p class="eyebrow" id="platform-label">راست‌چین برای دسکتاپ</p>
+                    <h1>یکپارچه‌ساز دسکتاپ</h1>
+                </div>
+            </div>
+            <button class="secondary" id="scan-button" type="button">بررسی دوباره</button>
+        </header>
+
+        <section class="hero">
+            <div>
+                <span class="release-badge">پایدار برای ChatGPT و Codex</span>
+                <h2>فارسی، خوانا و طبیعی در برنامه‌هایی که همین حالا استفاده می‌کنید.</h2>
+                <p>راست‌چین همهٔ پردازش‌ها را روی دستگاه شما انجام می‌دهد و فایل‌های اصلی ChatGPT یا Claude را تغییر نمی‌دهد.</p>
+            </div>
+            <div class="privacy-card">
+                <span class="privacy-icon">✓</span>
+                <div>
+                    <strong>کاملاً محلی</strong>
+                    <span>بدون ذخیرهٔ گفتگو، بدون سرور و بدون تغییر دائمی فایل‌های برنامه.</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="platform-warning hidden" id="platform-warning"></section>
+        <section class="app-grid" id="app-grid" aria-live="polite"></section>
+
+        <section class="explain">
+            <div>
+                <p class="eyebrow">پشتیبانی برنامه‌ها</p>
+                <h3>ChatGPT و Codex برای راست‌چین فارسی آماده‌اند.</h3>
+            </div>
+            <p>یکپارچه‌سازی پایدار ChatGPT و Codex در ویندوز، مک‌اواس و لینوکس در دسترس است. Claude Desktop همچنان اتصال لازم برای اعمال امن استایل را مسدود می‌کند و پس از ارائهٔ روش رسمی پشتیبانی خواهد شد.</p>
+        </section>
+
+        <footer>
+            <span id="version-label">یکپارچه‌ساز دسکتاپ راست‌چین</span>
+            <button class="text-link" data-link="https://rastchin.tools" type="button">rastchin.tools ↗</button>
+        </footer>
+    </main>
+
+    <div class="toast hidden" id="toast" role="status"></div>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+# Dependencies and build output
+node_modules/
+.pnpm-store/
+dist/
+build/
+.output/
+.next/
+.nuxt/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+out/
+unpacked/
+ready-to-upload/
+release-artifacts/
+*.vsix
+*.zip
+*.crx
+*.pem
+*.AppImage
+*.deb
+*.rpm
+*.dmg
+*.exe
+*.nsis.7z
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Runtime data
+tmp/
+db-dumps/
+uploads/
+*.log
+.local-secrets/
+.playwright-mcp/
+local-chromium-profile/
+
+# Agent and editor local state
+.idea/
+.vscode/
+.codex/
+.claude/settings.local.json
+CLAUDE.local.md
+
+# Operating systems
+.DS_Store
+Thumbs.db

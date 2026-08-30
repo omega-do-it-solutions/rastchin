@@ -1,0 +1,59 @@
+name: Support request
+description: Ask a public installation, configuration, or usage question.
+title: "[Support]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Support is public and best effort. Read SUPPORT.md first. Never paste credentials, private conversation/page/document content, personal data, or unsanitized logs here. Vulnerabilities use SECURITY.md.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Application
+      options:
+        - Website (apps/web)
+        - Browser extension (apps/browser-extension)
+        - VS Code extension (apps/vscode-extension)
+        - Desktop integrator (apps/desktop-integrator)
+        - Repository development setup
+        - Unsure
+    validations:
+      required: true
+  - type: input
+    id: rastchin_version
+    attributes:
+      label: RastChin version
+      placeholder: "Application version or current main commit"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Operating system and host version
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: What are you trying to do?
+    validations:
+      required: true
+  - type: textarea
+    id: attempted
+    attributes:
+      label: What have you tried?
+      description: Include the public guide and sanitized commands or messages you already checked.
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Confirmation
+      options:
+        - label: I read SUPPORT.md and the affected application's README.
+          required: true
+        - label: I removed secrets, personal data, private paths, and page/conversation/document content.
+          required: true
+        - label: This request does not disclose a suspected vulnerability.
+          required: true

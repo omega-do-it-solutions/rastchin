@@ -1,0 +1,85 @@
+name: Bug report
+description: Report reproducible behavior that is incorrect in a RastChin application.
+title: "[Bug]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve RastChin. Do not include private page or conversation content, credentials, personal data, or unsanitized logs. Report security vulnerabilities through SECURITY.md instead.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected application
+      options:
+        - Website (apps/web)
+        - Browser extension (apps/browser-extension)
+        - VS Code extension (apps/vscode-extension)
+        - Desktop integrator (apps/desktop-integrator)
+        - Repository, CI, or documentation
+        - Unsure
+    validations:
+      required: true
+  - type: input
+    id: rastchin_version
+    attributes:
+      label: RastChin version
+      description: Use the application version shown in its UI, manifest, marketplace, or package.
+      placeholder: "For example: browser 1.1.64"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Operating system and host
+      description: Include OS version and the browser, VS Code, or desktop host name and version.
+      placeholder: "For example: Windows 11; Chrome 140"
+    validations:
+      required: true
+  - type: input
+    id: install_source
+    attributes:
+      label: Installation source
+      placeholder: "Chrome Web Store, VS Marketplace, GitHub artifact, local source, or website deployment"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Use synthetic Persian/English text or a test account. Make the steps minimal and repeatable.
+      placeholder: |
+        1. Open ...
+        2. Enable ...
+        3. Enter synthetic text ...
+        4. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sanitized evidence
+      description: Optional screenshots, console output, or diagnostics with private content and local paths removed.
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Confirmation
+      options:
+        - label: I searched existing issues and tested the latest available version.
+          required: true
+        - label: I removed secrets, personal data, private paths, and page/conversation/document content.
+          required: true
+        - label: This is not a vulnerability report; security issues must use SECURITY.md.
+          required: true
