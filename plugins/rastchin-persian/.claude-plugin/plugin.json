@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "rastchin-persian",
+  "displayName": "RastChin Persian",
+  "version": "0.1.0",
+  "description": "Translate, review, and localize product interfaces into natural modern Persian while preserving technical structure.",
+  "author": {
+    "name": "Omega Do IT Solutions",
+    "url": "https://github.com/omega-do-it-solutions"
+  },
+  "homepage": "https://github.com/omega-do-it-solutions/rastchin/tree/main/plugins/rastchin-persian",
+  "repository": "https://github.com/omega-do-it-solutions/rastchin",
+  "license": "Apache-2.0",
+  "keywords": [
+    "persian",
+    "farsi",
+    "localization",
+    "translation",
+    "ui-copy",
+    "rtl"
+  ]
+}

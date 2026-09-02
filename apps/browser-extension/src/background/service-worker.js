@@ -1,8 +1,10 @@
 // src/background/service-worker.js
-chrome.runtime.onInstalled.addListener((details) => {
+const extensionApi = globalThis.browser ?? globalThis.chrome;
+
+extensionApi.runtime.onInstalled.addListener((details) => {
     if (details.reason === 'install') {
-        chrome.tabs.create({
-            url: chrome.runtime.getURL("src/ui/welcome/welcome.html")
+        extensionApi.tabs.create({
+            url: extensionApi.runtime.getURL("src/ui/welcome/welcome.html")
         });
     }
 });
@@ -14,7 +16,12 @@ chrome.runtime.onInstalled.addListener((details) => {
 // manifest has loaded (for example, another Chromium fork), the click falls
 // through to the existing popup automatically - keep default_popup in the
 // manifest as that fallback.
-if (chrome.sidePanel?.setPanelBehavior) {
-    chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
+if (globalThis.chrome?.sidePanel?.setPanelBehavior) {
+    globalThis.chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
         .catch((error) => console.warn('RastChin: side panel behavior failed', error));
+} else if (extensionApi.sidebarAction?.open && extensionApi.action?.onClicked) {
+    extensionApi.action.onClicked.addListener(() => {
+        extensionApi.sidebarAction.open()
+            .catch((error) => console.warn('RastChin: Firefox sidebar failed', error));
+    });
 }

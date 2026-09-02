@@ -49,7 +49,7 @@
 
 برای جلوگیری از اغراق در تصاویر، رفتار پلتفرم‌ها دقیقاً این‌طور نمایش داده شود:
 
-- ابزارهای AI مثل ChatGPT، Claude، Gemini، Copilot، Perplexity، DeepSeek، NotebookLM، AI Studio، Qwen و Arena: RTL فارسی‌محور، فونت فارسی خواناتر، حفظ خوانایی متن ترکیبی.
+- ابزارهای AI مثل ChatGPT، Meta AI، Claude، Gemini، Copilot، Perplexity، DeepSeek، NotebookLM، AI Studio، Qwen و Arena: RTL فارسی‌محور، فونت فارسی خواناتر، حفظ خوانایی متن ترکیبی.
 - Trello: اصلاح scoped برای توضیحات و کامنت‌های کارت بازشده.
 - Notion و `notion.site`: font-only برای خواناتر شدن فارسی؛ ادعای اصلاح کامل RTL نشود.
 - Gmail: font-only برای خواناتر شدن فارسی؛ ادعای اصلاح کامل RTL نشود.
@@ -60,7 +60,7 @@
 
 - فارسی‌زبان‌هایی که روزانه با ChatGPT، Claude، Gemini، Perplexity، Copilot و ابزارهای مشابه کار می‌کنند.
 - توسعه‌دهنده‌ها و کاربران فنی که متن فارسی، کد، لینک، ایمیل و Markdown را در یک پیام ترکیب می‌کنند.
-- تیم‌های کاری فارسی‌زبان که از Trello، Notion، Gmail و YouTube استفاده می‌کنند.
+- تیم‌های کاری فارسی‌زبان که از Trello، Notion، Linear، Gmail و YouTube استفاده می‌کنند.
 - کاربرانی که نگران دسترسی افزونه به متن صفحه و حریم خصوصی هستند.
 
 ## لحن بصری
@@ -97,7 +97,7 @@
 ## محدودیت‌های محتوایی
 
 - از badgeها و ادعاهای گمراه‌کننده مثل `#1`، `Editor's Choice`، `Best`، `Featured` یا «بهترین افزونه» استفاده نشود.
-- پلتفرم‌های پشتیبانی‌نشده نمایش داده نشوند. فقط از این پلتفرم‌ها استفاده شود: ChatGPT، Claude، Gemini، Copilot، Perplexity، DeepSeek، NotebookLM، Google AI Studio، Qwen، Arena، Trello، Notion، Gmail و YouTube.
+- پلتفرم‌های پشتیبانی‌نشده نمایش داده نشوند. فقط از پلتفرم‌های ثبت‌شده در manifest و README نسخهٔ جاری، از جمله ChatGPT، Meta AI، Claude، Gemini، Copilot، Perplexity، DeepSeek، NotebookLM، Google AI Studio، Qwen، Arena، Trello، Notion، Linear، Gmail و YouTube استفاده شود.
 - اگر برندهای گوگل یا پلتفرم‌های دیگر در تصویر دیده می‌شوند، فقط در قالب screenshot واقعی محصول باشند؛ از لوگوها برای القای همکاری رسمی یا endorsement استفاده نشود.
 - هیچ prompt، ایمیل، نام شخص، URL داخلی یا اطلاعات واقعی شرکت در تصویرها نیاید. از داده نمونه مثل `example.com` و `support@example.com` استفاده شود.
 - در تصاویر مربوط به YouTube از چهره واقعی، محتوای کپی‌رایتی یا thumbnail قابل‌شناسایی استفاده نشود. یک فریم ویدئویی خنثی یا محتوای demo بی‌مساله کافی است.

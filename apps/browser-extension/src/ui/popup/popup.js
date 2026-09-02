@@ -7,6 +7,7 @@ const REPORT_URL = 'https://github.com/omega-do-it-solutions/rastchin/issues/new
 const PLATFORM_STORAGE_KEYS = {
   claude: 'claudeEnabled',
   chatgpt: 'chatgptEnabled',
+  metaAi: 'metaAiEnabled',
   gemini: 'geminiEnabled',
   copilot: 'copilotEnabled',
   github: 'githubEnabled',
@@ -19,6 +20,7 @@ const PLATFORM_STORAGE_KEYS = {
   arena: 'arenaEnabled',
   trello: 'trelloEnabled',
   notion: 'notionEnabled',
+  linear: 'linearEnabled',
   googleWorkspace: 'googleWorkspaceEnabled',
   gmail: 'gmailEnabled',
   googleTranslate: 'googleTranslateEnabled',
@@ -29,6 +31,7 @@ const PLATFORM_STORAGE_KEYS = {
 const PLATFORM_HOST_MAP = {
   claude: ['claude.ai'],
   chatgpt: ['chatgpt.com', 'chat.openai.com'],
+  metaAi: ['meta.ai'],
   gemini: ['gemini.google.com'],
   copilot: ['copilot.microsoft.com'],
   github: ['github.com'],
@@ -41,6 +44,7 @@ const PLATFORM_HOST_MAP = {
   arena: ['arena.ai'],
   trello: ['trello.com'],
   notion: ['notion.so', 'notion.site'],
+  linear: ['linear.app'],
   googleWorkspace: ['docs.google.com/document', 'docs.google.com/spreadsheets'],
   gmail: ['mail.google.com'],
   googleTranslate: ['translate.google.com'],

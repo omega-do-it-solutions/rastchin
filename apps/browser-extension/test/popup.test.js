@@ -89,16 +89,16 @@ function check(label, actual, expected) {
 
 check('disabled current platform is reflected in popup toggle', element('extensionToggle').checked, false);
 check('disabled current platform is reflected in popup mode', element('extensionMode').textContent, 'غیرفعال');
-check('total platform count is dynamic', element('totalPlatformCount').textContent, '20');
-check('active platform count reflects settings', element('activePlatformCount').textContent, '18');
+check('total platform count is dynamic', element('totalPlatformCount').textContent, '22');
+check('active platform count reflects settings', element('activePlatformCount').textContent, '20');
 
 element('extensionToggle').checked = true;
 listeners['extensionToggle:change']({ target: element('extensionToggle') });
 check('popup writes the current platform key', JSON.stringify(writes.at(-1)), JSON.stringify({ chatgptEnabled: true }));
-check('active count updates after popup toggle', element('activePlatformCount').textContent, '19');
+check('active count updates after popup toggle', element('activePlatformCount').textContent, '21');
 
 storageChanges[0]({ claudeEnabled: { newValue: false } }, 'sync');
-check('active count updates after external settings change', element('activePlatformCount').textContent, '18');
+check('active count updates after external settings change', element('activePlatformCount').textContent, '20');
 
 storageChanges[0]({ extensionEnabled: { newValue: false } }, 'sync');
 check('legacy global disable is reflected in current-site state', element('extensionToggle').checked, false);
@@ -111,7 +111,7 @@ check(
   JSON.stringify(writes.at(-1)),
   JSON.stringify({ chatgptEnabled: true, extensionEnabled: true })
 );
-check('active count returns after reopening global gate', element('activePlatformCount').textContent, '18');
+check('active count returns after reopening global gate', element('activePlatformCount').textContent, '20');
 
 listeners['managePlatforms:click']();
 check('settings button opens the side-panel page', createdTabs.at(-1).url, 'src/ui/side-panel/side-panel.html');

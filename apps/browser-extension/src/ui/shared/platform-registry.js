@@ -16,6 +16,7 @@
 
 window.RASTCHIN_PLATFORMS = [
     { id: 'chatgpt', name: 'ChatGPT', storageKey: 'chatgptEnabled', hosts: ['chatgpt.com', 'chat.openai.com'], url: 'https://chatgpt.com', icon: 'ChatGPT.svg', category: 'ai' },
+    { id: 'metaAi', name: 'Meta AI', storageKey: 'metaAiEnabled', hosts: ['meta.ai', 'www.meta.ai'], url: 'https://www.meta.ai', icon: 'MetaAI.svg', category: 'ai' },
     { id: 'claude', name: 'Claude', storageKey: 'claudeEnabled', hosts: ['claude.ai'], url: 'https://claude.ai', icon: 'Claude.svg', category: 'ai' },
     { id: 'gemini', name: 'Gemini', storageKey: 'geminiEnabled', hosts: ['gemini.google.com'], url: 'https://gemini.google.com', icon: 'Gemini.svg', category: 'ai' },
     { id: 'copilot', name: 'Copilot', storageKey: 'copilotEnabled', hosts: ['copilot.microsoft.com'], url: 'https://copilot.microsoft.com', icon: 'Copilot.svg', category: 'ai' },
@@ -27,6 +28,7 @@ window.RASTCHIN_PLATFORMS = [
     { id: 'arena', name: 'Arena', storageKey: 'arenaEnabled', hosts: ['arena.ai', 'www.arena.ai'], url: 'https://arena.ai', icon: 'Arena.svg', category: 'ai' },
     { id: 'trello', name: 'Trello', storageKey: 'trelloEnabled', hosts: ['trello.com', 'www.trello.com'], url: 'https://trello.com', icon: 'Trello.svg', category: 'work' },
     { id: 'notion', name: 'Notion', storageKey: 'notionEnabled', hosts: ['notion.so', 'www.notion.so', 'app.notion.so', '*.notion.site'], url: 'https://www.notion.so', icon: 'Notion.svg', category: 'work' },
+    { id: 'linear', name: 'Linear', storageKey: 'linearEnabled', hosts: ['linear.app'], url: 'https://linear.app', icon: 'Linear.svg', category: 'work' },
     { id: 'github', name: 'GitHub', storageKey: 'githubEnabled', hosts: ['github.com'], url: 'https://github.com', icon: 'GitHub.svg', category: 'work' },
     { id: 'vsMarketplace', name: 'VS Marketplace', storageKey: 'vsMarketplaceEnabled', hosts: ['marketplace.visualstudio.com'], url: 'https://marketplace.visualstudio.com/vscode', icon: 'VisualStudioMarketplace.svg', category: 'work' },
     { id: 'gmail', name: 'Gmail', storageKey: 'gmailEnabled', hosts: ['mail.google.com'], url: 'https://mail.google.com', icon: 'Gmail.svg', category: 'comm' },

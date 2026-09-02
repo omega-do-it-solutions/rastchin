@@ -5,6 +5,7 @@ node_modules/
 dist/
 build/
 unpacked/
+unpacked-firefox/
 release-artifacts/
 coverage/
 *.zip

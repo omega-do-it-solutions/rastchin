@@ -3,7 +3,7 @@
   "private": true,
   "displayName": "RastChin for VS Code",
   "description": "Improves Persian RTL readability in VS Code Markdown Preview, Claude Code, and Codex webviews.",
-  "version": "0.3.12",
+  "version": "0.3.14",
   "publisher": "OmegaDoITSolutions",
   "author": "Mo. MIKAELI / Omega Do IT Solutions",
   "license": "Apache-2.0",
@@ -65,7 +65,7 @@
       "extension/context": [
         {
           "command": "persianRtlClean.reapply",
-          "when": "extension == OmegaDoITSolutions.rastchin-vscode && extensionStatus == installed",
+          "when": "extension == omegadoitsolutions.rastchin-vscode && extensionStatus == installed",
           "group": "1_configure"
         }
       ]

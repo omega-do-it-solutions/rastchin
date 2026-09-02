@@ -23,8 +23,16 @@ function loadExtension(vscodeStub, patcherStub) {
   }
 }
 
-function makeVscode(config, infoChoice) {
-  const calls = { info: [], warn: [], error: [], reload: 0, executed: [], statusVisible: false };
+function makeVscode(config, infoChoice, warningChoice) {
+  const calls = {
+    info: [],
+    warn: [],
+    warningActions: [],
+    error: [],
+    reload: 0,
+    executed: [],
+    statusVisible: false,
+  };
   const vscode = {
     ExtensionMode: { Production: 1, Development: 2, Test: 3 },
     StatusBarAlignment: { Left: 1, Right: 2 },
@@ -45,7 +53,11 @@ function makeVscode(config, infoChoice) {
         dispose() {},
       }),
       showInformationMessage: (msg) => { calls.info.push(msg); return Promise.resolve(infoChoice); },
-      showWarningMessage: (msg) => { calls.warn.push(msg); return Promise.resolve(undefined); },
+      showWarningMessage: (msg, ...actions) => {
+        calls.warn.push(msg);
+        calls.warningActions.push(actions);
+        return Promise.resolve(warningChoice);
+      },
       showErrorMessage: (msg) => { calls.error.push(msg); return Promise.resolve(undefined); },
     },
     commands: {
@@ -63,7 +75,7 @@ function makeVscode(config, infoChoice) {
 function makePatcher(patchResult, planResult = { changed: false, actionableCount: 0, incompatibleCount: 0, targets: [], messages: [] }) {
   return {
     patchAll: () => patchResult,
-    planAll: () => planResult,
+    planAll: () => (typeof planResult === 'function' ? planResult() : planResult),
     status: () => ({ version: '0', bundledRuntimeFp: '00000000', workbench: { found: false }, claude: [], codex: [] }),
     restoreAll: () => ({ changed: false, messages: [] }),
     cleanLegacy: () => ({ changed: false, messages: [] }),
@@ -80,6 +92,24 @@ const fakeContext = (store = new Map()) => ({
   },
   subscriptions: [],
 });
+
+function missingCodexPlan(version = '27.1.0') {
+  return {
+    changed: true,
+    actionableCount: 1,
+    incompatibleCount: 0,
+    targets: [{
+      key: 'codex',
+      label: 'Codex / ChatGPT',
+      version,
+      adapter: 'codex-webview-v1',
+      compatible: true,
+      actions: ['install webview loader', 'refresh Vazirmatn fonts'],
+      issues: [],
+    }],
+    messages: [`Codex / ChatGPT v${version}: install webview loader; refresh Vazirmatn fonts.`],
+  };
+}
 
 // Activates the extension, capturing the startup setTimeout callback so the test
 // can run it deterministically (and more than once for the once-per-session check).
@@ -228,4 +258,140 @@ test('suppressed or closed onboarding notification retries next startup', async 
 
   assert.equal(first.calls.info.some((message) => /needs RTL setup/.test(message)), true);
   assert.equal(second.calls.info.some((message) => /needs RTL setup/.test(message)), true, 'closing the toast without a choice must not permanently suppress setup');
+});
+
+test('a stale patch is reported on startup even after installation onboarding was acknowledged', async () => {
+  const store = new Map([['rastchin.setupPromptInstallation', '0.3.9:/fake/ext:unknown']]);
+  const { vscode, calls } = makeVscode({ patchOnStartup: false }, undefined, 'Re-apply Now');
+  const ext = loadExtension(vscode, makePatcher({ changed: false, messages: [] }, missingCodexPlan()));
+
+  const startup = await activateCapturingStartup(ext, fakeContext(store));
+  await startup();
+
+  assert.equal(calls.info.length, 0, 'health recovery does not repeat the installation prompt');
+  assert.equal(calls.warn.some((message) => /Codex \/ ChatGPT v27\.1\.0/.test(message)), true);
+  assert.deepEqual(calls.warningActions[0], ['Re-apply Now', 'Later', 'View Details']);
+  assert.equal(calls.executed.includes('persianRtlClean.reapply'), true);
+  assert.equal(calls.statusVisible, true);
+});
+
+test('Later snoozes the same stale patch but a newer agent version prompts immediately', async () => {
+  const store = new Map([['rastchin.setupPromptInstallation', '0.3.9:/fake/ext:unknown']]);
+  const first = makeVscode({ patchOnStartup: false }, undefined, 'Later');
+  const firstExt = loadExtension(first.vscode, makePatcher({ changed: false, messages: [] }, missingCodexPlan('27.1.0')));
+  const firstStartup = await activateCapturingStartup(firstExt, fakeContext(store));
+  await firstStartup();
+
+  const same = makeVscode({ patchOnStartup: false });
+  const sameExt = loadExtension(same.vscode, makePatcher({ changed: false, messages: [] }, missingCodexPlan('27.1.0')));
+  const sameStartup = await activateCapturingStartup(sameExt, fakeContext(store));
+  await sameStartup();
+
+  const updated = makeVscode({ patchOnStartup: false });
+  const updatedExt = loadExtension(updated.vscode, makePatcher({ changed: false, messages: [] }, missingCodexPlan('27.2.0')));
+  const updatedStartup = await activateCapturingStartup(updatedExt, fakeContext(store));
+  await updatedStartup();
+
+  assert.equal(first.calls.warn.length, 1);
+  assert.equal(same.calls.warn.length, 0, 'the same target problem stays quiet during the snooze');
+  assert.equal(updated.calls.warn.length, 1, 'a new target version is a new health issue');
+});
+
+test('an unsupported agent layout offers diagnostics and never offers re-apply', async () => {
+  const store = new Map([['rastchin.setupPromptInstallation', '0.3.9:/fake/ext:unknown']]);
+  const unsupported = {
+    changed: false,
+    actionableCount: 0,
+    incompatibleCount: 1,
+    targets: [{
+      key: 'claude',
+      label: 'Claude Code',
+      version: '3.0.0',
+      adapter: 'claude-webview-v1',
+      compatible: false,
+      actions: [],
+      issues: ['supported insertion anchor missing'],
+    }],
+    messages: ['Claude Code v3.0.0: UNSUPPORTED — no files will be changed.'],
+  };
+  const { vscode, calls } = makeVscode({ patchOnStartup: false });
+  const ext = loadExtension(vscode, makePatcher({ changed: false, messages: [] }, unsupported));
+
+  const startup = await activateCapturingStartup(ext, fakeContext(store));
+  await startup();
+
+  assert.equal(calls.warn.some((message) => /unsupported layout/.test(message)), true);
+  assert.deepEqual(calls.warningActions[0], ['View Details', 'Later']);
+  assert.equal(calls.warningActions[0].includes('Re-apply Now'), false);
+});
+
+test('an agent extension registry change schedules the same patch-health recovery flow', async () => {
+  const store = new Map([['rastchin.setupPromptInstallation', '0.3.9:/fake/ext:unknown']]);
+  const agent = { version: '27.1.0', missingPatch: false };
+  const { vscode, calls } = makeVscode({ patchOnStartup: false });
+  vscode.extensions = {
+    getExtension(id) {
+      if (id !== 'openai.chatgpt') return undefined;
+      return {
+        extensionPath: '/fake/openai.chatgpt',
+        packageJSON: { version: agent.version },
+      };
+    },
+    onDidChange(handler) {
+      calls.extensionChange = handler;
+      return { dispose() {} };
+    },
+  };
+  vscode.window.onDidChangeWindowState = (handler) => {
+    calls.windowStateChange = handler;
+    return { dispose() {} };
+  };
+  const currentPlan = {
+    changed: false,
+    actionableCount: 0,
+    incompatibleCount: 0,
+    targets: [{
+      ...missingCodexPlan(agent.version).targets[0],
+      actions: [],
+    }],
+    messages: [`Codex / ChatGPT v${agent.version}: already current.`],
+  };
+  const patcher = makePatcher(
+    { changed: false, messages: [] },
+    () => (agent.missingPatch ? missingCodexPlan(agent.version) : currentPlan),
+  );
+  const ext = loadExtension(vscode, patcher);
+
+  const startup = await activateCapturingStartup(ext, fakeContext(store));
+  await startup();
+  assert.equal(calls.warn.length, 0);
+
+  agent.version = '27.2.0';
+  agent.missingPatch = true;
+  let scheduledHealthCheck;
+  const originalSetTimeout = global.setTimeout;
+  global.setTimeout = (fn) => { scheduledHealthCheck = fn; return 1; };
+  try {
+    calls.extensionChange();
+  } finally {
+    global.setTimeout = originalSetTimeout;
+  }
+  assert.equal(typeof scheduledHealthCheck, 'function');
+  await scheduledHealthCheck();
+
+  assert.equal(calls.warn.some((message) => /v27\.2\.0/.test(message)), true);
+  assert.deepEqual(calls.warningActions[0], ['Re-apply Now', 'Later', 'View Details']);
+  assert.equal(calls.statusVisible, true);
+
+  agent.version = '27.3.0';
+  scheduledHealthCheck = undefined;
+  global.setTimeout = (fn) => { scheduledHealthCheck = fn; return 2; };
+  try {
+    calls.windowStateChange({ focused: true });
+  } finally {
+    global.setTimeout = originalSetTimeout;
+  }
+  assert.equal(typeof scheduledHealthCheck, 'function');
+  await scheduledHealthCheck();
+  assert.equal(calls.warn.some((message) => /v27\.3\.0/.test(message)), true);
 });

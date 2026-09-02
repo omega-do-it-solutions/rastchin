@@ -10,8 +10,9 @@ const vm = require('vm');
 
 // --- minimal DOM mock ---
 // Matches one simple selector part against a node: a TAG ("code"), a CLASS
-// (".hljs"), a substring attribute ('[class*="language-"]', '[style*="x" i]'),
-// or an exact attribute ('[role="code"]'). Attribute values resolve through
+// (".hljs"), a prefix/substring attribute ('[data-testid^="conversation-turn"]',
+// '[class*="language-"]', '[style*="x" i]'), or an exact attribute
+// ('[role="code"]'). Attribute values resolve through
 // getAttribute first (the real-DOM semantics), then fall back to the same-named
 // JS property for legacy fixtures built with opts.role etc.
 function attrValueOf(node, name) {
@@ -28,6 +29,12 @@ function matchesPart(node, part) {
     if (node.nodeType !== 1) return false;
     if (part === '*') return true;
     let m;
+    if ((m = part.match(/^\[([\w-]+)\^=["']?([^"'\]]+)["']?(\s+i)?\]$/))) {
+        const value = attrValueOf(node, m[1]);
+        return m[3]
+            ? value.toLowerCase().startsWith(m[2].toLowerCase())
+            : value.startsWith(m[2]);
+    }
     if ((m = part.match(/^\[([\w-]+)\*=["']?([^"'\]]+)["']?(\s+i)?\]$/))) {
         const value = attrValueOf(node, m[1]);
         return m[3]
@@ -36,6 +43,9 @@ function matchesPart(node, part) {
     }
     if ((m = part.match(/^\[([\w-]+)=["']?([^"'\]]+)["']?\]$/))) {
         return attrValueOf(node, m[1]) === m[2];
+    }
+    if ((m = part.match(/^\[([\w-]+)\]$/))) {
+        return typeof node.hasAttribute === 'function' && node.hasAttribute(m[1]);
     }
     if (part.startsWith('.')) return (node.className || '').split(/\s+/).includes(part.slice(1));
     return node.tagName === part.toUpperCase();

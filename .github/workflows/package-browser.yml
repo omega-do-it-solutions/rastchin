@@ -1,4 +1,4 @@
-name: Browser extension package
+name: Browser extension packages
 
 on:
   push:
@@ -43,14 +43,12 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Test extension
-        run: pnpm --filter rastchin-browser-extension test
-      - name: Build and verify Chrome Web Store ZIP
-        run: pnpm --filter rastchin-browser-extension package:store
-      - name: Upload verified ZIP
+      - name: Build and verify Chrome and Firefox ZIPs
+        run: pnpm --filter rastchin-browser-extension package:all
+      - name: Upload verified browser ZIPs
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: rastchin-browser-extension
+          name: rastchin-browser-extensions
           path: apps/browser-extension/dist/*.zip
           if-no-files-found: error
           retention-days: 14

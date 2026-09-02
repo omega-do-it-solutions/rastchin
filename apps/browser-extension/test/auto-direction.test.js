@@ -39,6 +39,7 @@ class MockElement {
         this._geminiSkip = !!opts.geminiSkip;
         this._claudeSkip = !!opts.claudeSkip;
         this._chatgptSkip = !!opts.chatgptSkip;
+        this.className = opts.className || '';
         this.parentElement = opts.parent || null;
         this.shadowRoot = opts.shadowRoot || null;
     }
@@ -49,6 +50,9 @@ class MockElement {
     set dir(v) { this._attrs.set('dir', v); }
     matches(selector) {
         if (!selector) return false;
+        if (selector.startsWith('.')) {
+            return this.className.split(/\s+/).includes(selector.slice(1));
+        }
         // Support [contenteditable]:not([contenteditable="false"])
         if (selector.includes('[contenteditable]')) {
             const ce = this._attrs.get('contenteditable');
@@ -353,6 +357,26 @@ if (!fn) {
     legacyTurn.append(legacyEditable);
     check('chat.openai.com response editable → response subtree still skipped', fnLegacy.shouldSkipElement(legacyEditable), true);
     check('chat.openai.com response editable → editable itself is allowed', fnLegacy.shouldSkipEditable(legacyEditable), false);
+}
+
+// 8d. Linear's multi-block ProseMirror editor is handled paragraph-by-paragraph
+// by the Linear adapter, while ordinary text inputs keep auto-direction.
+{
+    const fnLinear = loadAutoDir('linear.app');
+    const editor = new MockElement('div', {
+        className: 'ProseMirror',
+        contenteditable: true,
+        text: 'متن فارسی\nEnglish paragraph'
+    });
+    check('Linear ProseMirror → shouldSkipEditable=true', fnLinear.shouldSkipEditable(editor), true);
+    check('Linear ProseMirror → shouldSkipElement=true', fnLinear.shouldSkipElement(editor), true);
+    fnLinear.scanEditableNodes(editor);
+    check('Linear ProseMirror → root direction remains adapter-owned', editor.getAttribute('dir'), null);
+
+    const titleInput = new fnLinear.HTMLInputElement({ value: 'عنوان فارسی' });
+    check('Linear title input → shouldSkipEditable=false', fnLinear.shouldSkipEditable(titleInput), false);
+    fnLinear.updateDirection(titleInput);
+    check('Linear title input → receives RTL', titleInput.getAttribute('dir'), 'rtl');
 }
 
 // 9. scanEditableNodes enters existing open shadow roots on initial scan

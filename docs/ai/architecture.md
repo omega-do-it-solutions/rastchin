@@ -13,17 +13,22 @@ feature.
 
 - Shape: Multi-client monorepo with three independently releasable applications:
   `apps/browser-extension`, `apps/vscode-extension`, and
-  `apps/desktop-integrator`; no web application, independent API, or worker
+  `apps/desktop-integrator`, plus the independently versioned skills-only
+  `plugins/rastchin-persian` distribution for Codex and Claude; no web
+  application, independent API, or worker
 - Interface identity: Focused local utilities with public repository documentation;
   Persian-only RTL with technical tokens isolated LTR
 - Application shells (per audience surface): browser extension uses compact
   popup/side-panel/welcome surfaces; VS Code uses host-native commands and
   feedback; desktop uses a focused target/status/diagnostics utility shell
 - Application source organization (per application): preserve the browser
-  extension's manifest/background/core/platform/UI split;
+  extension's canonical Chrome manifest, deterministic Firefox manifest
+  transform, background/core/platform/UI split;
   preserve VS Code's extension entry, patching services, targets, media, and
   tests; preserve Electron composition/main services/injected runtime/renderer
-  boundaries; `packages/` remains empty until a stable cross-app contract exists
+  boundaries; keep one self-contained agent skill with thin vendor manifests in
+  `plugins/rastchin-persian`; `packages/` remains empty until a stable cross-app
+  contract exists
 - UI system: existing host-specific visual systems remain unchanged unless a
   future interface task modifies them
 - API: Not currently required
@@ -33,8 +38,10 @@ feature.
   content requiring runtime storage
 - Scale forecast: Medium product scope with no centralized application
   infrastructure; client tools run locally
-- Data flow and real-time delivery: local processing; no application API,
-  polling, SSE, WebSockets, durable events, or queues
+- Data flow and real-time delivery: application processing is local; the agent
+  plugin adds no RastChin service or telemetry, while selected prompt/file data
+  follows Codex or Claude provider handling; no application API, polling, SSE,
+  WebSockets, durable events, or queues
 - Capacity and data lifecycle: local settings/backups/ephemeral diagnostics;
   routine CI package artifacts retained 14 days, signed macOS artifacts retained
   30 days, and public release artifacts retained with their releases
@@ -42,11 +49,14 @@ feature.
   development and packaged production artifacts
 - Dependency version posture: supported patched lines with a single root lock;
   Electron 44, frozen CI installs, and production dependency auditing
-- CI: GitHub Actions for workspace checks, public-repository validation, browser
-  ZIP, VSIX, and Windows/macOS/Linux desktop artifacts; packaging runs after
-  relevant changes reach `main` or by manual dispatch, with no publication
-- Deployment: Chrome Web Store, Visual Studio Marketplace, and GitHub Releases;
-  all publication is explicit
+- CI: GitHub Actions for workspace checks, dual agent-plugin manifest/evaluation
+  validation, public-repository validation, Chrome and Firefox browser ZIPs,
+  VSIX, and Windows/macOS/Linux desktop artifacts;
+  packaging runs after relevant changes reach `main` or by manual dispatch,
+  with no publication
+- Deployment: Chrome Web Store, Firefox Add-ons, Visual Studio Marketplace,
+  repository-based Codex/Claude plugin marketplaces, and GitHub Releases; all
+  official-directory publication and marketplace signing are explicit
 
 ## Decision
 

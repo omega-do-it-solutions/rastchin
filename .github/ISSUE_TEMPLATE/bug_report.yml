@@ -15,6 +15,7 @@ body:
         - Browser extension (apps/browser-extension)
         - VS Code extension (apps/vscode-extension)
         - Desktop integrator (apps/desktop-integrator)
+        - Persian agent plugin (plugins/rastchin-persian)
         - Repository, CI, or documentation
         - Unsure
     validations:
@@ -31,15 +32,15 @@ body:
     id: environment
     attributes:
       label: Operating system and host
-      description: Include OS version and the browser, VS Code, or desktop host name and version.
-      placeholder: "For example: Windows 11; Chrome 140"
+      description: Include OS version and the browser, VS Code, desktop host, Codex, or Claude name and version.
+      placeholder: "For example: Windows 11; Firefox 142, or Codex CLI 0.146.0"
     validations:
       required: true
   - type: input
     id: install_source
     attributes:
       label: Installation source
-      placeholder: "Chrome Web Store, VS Marketplace, GitHub artifact, or local source"
+      placeholder: "Chrome Web Store, Firefox Add-ons, VS Marketplace, Codex/Claude marketplace, GitHub artifact, or local source"
     validations:
       required: true
   - type: textarea

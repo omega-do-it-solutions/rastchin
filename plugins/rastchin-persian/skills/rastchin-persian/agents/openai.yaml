@@ -1,0 +1,7 @@
+interface:
+  display_name: "RastChin Persian"
+  short_description: "Natural Persian localization for product interfaces"
+  icon_small: "./assets/rastchin-logo.png"
+  icon_large: "./assets/rastchin-logo.png"
+  brand_color: "#B42345"
+  default_prompt: "Use $rastchin-persian to localize this product copy into natural Persian."

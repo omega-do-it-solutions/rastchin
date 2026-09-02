@@ -66,12 +66,13 @@ function makeDocument() {
     };
 }
 
-function makeWindow({ hostname, withConfig }) {
+function makeWindow({ hostname, withConfig, childFrame }) {
     const w = {
         location: { hostname },
         listeners: {},
         addEventListener: (type, handler) => { w.listeners[type] = handler; }
     };
+    w.top = childFrame ? {} : w;
     if (withConfig) {
         w.subCallback = null;
         w.unsubscribed = false;
@@ -84,9 +85,9 @@ function makeWindow({ hostname, withConfig }) {
 
 // Builds a fresh contextified sandbox (no HTMLElement defined, so the runner's
 // `typeof HTMLElement` guard path is exercised, as in a real Node run).
-function makeCtx({ hostname, withConfig, withDebug } = {}) {
+function makeCtx({ hostname, withConfig, withDebug, childFrame } = {}) {
     const instances = [];
-    const window = makeWindow({ hostname, withConfig });
+    const window = makeWindow({ hostname, withConfig, childFrame });
     const document = makeDocument();
     const ctx = {
         window,
@@ -175,6 +176,23 @@ const recipe = {
     check('host gate: returns null on non-matching host', handle, null);
     check('host gate: no engine constructed', instances.length, 0);
     check('host gate: no <style> appended', document.head.children.length, 0);
+}
+
+// Related `about:`, `data:` and `blob:` child frames have no hostname even when
+// the browser injected the content script because their creator is ChatGPT.
+// Only recipes that explicitly opt in may pass this narrow child-frame gate.
+{
+    const opaqueRecipe = { ...recipe, allowOpaqueOriginFrames: true };
+    const child = makeCtx({ hostname: '', childFrame: true, withConfig: false });
+    const childHandle = child.api.runPlatformRecipe(opaqueRecipe);
+    check('opaque child frame: opt-in recipe is allowed', typeof childHandle === 'object' && childHandle !== null, true);
+    check('opaque child frame: engine constructed', child.instances.length, 1);
+
+    const top = makeCtx({ hostname: '', childFrame: false, withConfig: false });
+    check('opaque top frame: opt-in does not bypass host gate', top.api.runPlatformRecipe(opaqueRecipe), null);
+
+    const noOptIn = makeCtx({ hostname: '', childFrame: true, withConfig: false });
+    check('opaque child frame: ordinary recipe remains blocked', noOptIn.api.runPlatformRecipe(recipe), null);
 }
 
 // --- runPlatformRecipe: host match + no-chatbotConfig fallback ---
@@ -352,6 +370,9 @@ const recipe = {
     const trello = findByMatch('https://trello.com/*');
     const notion = findByMatch('https://www.notion.so/*');
     check('manifest: chatgpt loads recipe-runner.js', !!chatgpt && chatgpt.js.includes('src/core/recipe-runner.js'), true);
+    check('manifest: ChatGPT runs in all related frames', !!chatgpt && chatgpt.all_frames === true, true);
+    check('manifest: ChatGPT covers about:blank/srcdoc frames', !!chatgpt && chatgpt.match_about_blank === true, true);
+    check('manifest: ChatGPT covers related blob/data frames', !!chatgpt && chatgpt.match_origin_as_fallback === true, true);
     check('manifest: claude loads recipe-runner.js', !!claude && claude.js.includes('src/core/recipe-runner.js'), true);
     check('manifest: copilot loads recipe-runner.js', !!copilot && copilot.js.includes('src/core/recipe-runner.js'), true);
     check('manifest: Microsoft Copilot no longer owns github.com', !!copilot && !copilot.matches.some(match => match.includes('github.com')), true);

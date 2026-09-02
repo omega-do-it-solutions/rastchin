@@ -32,7 +32,9 @@
 
 ## به‌روزرسانی و بازیابی
 
-به‌روزرسانی Claude Code یا Codex ممکن است فایل‌های patchشدهٔ آن‌ها را جایگزین کند. راست‌چین این وضعیت را تشخیص می‌دهد و بازبینی تازه پیشنهاد می‌کند؛ به‌روزرسانی را بی‌صدا patch نمی‌کند. برای بازیابی اجرا کنید:
+به‌روزرسانی Claude Code یا Codex ممکن است فایل‌های patchشدهٔ آن‌ها را جایگزین کند. راست‌چین در startup، پس از تغییر registry افزونه‌ها و هنگام بازگشت focus به پنجره، نسخه و فایل‌های فعال را به‌صورت فقط‌خواندنی بررسی می‌کند. اگر patch سازگار حذف یا قدیمی شده باشد، اعلان **Re-apply Now**، **Later** و **View Details** نمایش داده می‌شود. **Later** همان مشکل و نسخه را ۲۴ ساعت به تعویق می‌اندازد، اما نسخهٔ جدیدتر agent فوراً دوباره بررسی می‌شود. چیدمان ناشناخته فقط diagnostics نشان می‌دهد و هرگز به‌صورت حدسی patch نمی‌شود.
+
+همان جریان امن را می‌توان همیشه از Command Palette اجرا کرد. همچنین در نمای Extensions روی کارت **RastChin for VS Code** راست‌کلیک کنید و **RastChin for VS Code: Re-apply Patches** را انتخاب کنید. راست‌چین به‌روزرسانی را بی‌صدا patch نمی‌کند و تأیید کاربر، preflight و backup همچنان الزامی‌اند. برای بازیابی اجرا کنید:
 
 ```text
 RastChin for VS Code: Disable / Restore Patches
@@ -62,6 +64,7 @@ RastChin for VS Code: Disable / Restore Patches
 
 ```text
 src/extension.js             فعال‌سازی VS Code، فرمان‌ها، رابط و چرخهٔ عمر
+src/patchHealth.js           تشخیص مشکل، امضای نسخه و snooze اعلان بازیابی
 src/targets/registry.js      کشف نسخهٔ فعال و چیدمان‌های پشتیبانی‌شده
 src/patcher.js               برنامه‌ریزی و هماهنگی اعمال/بازیابی و عیب‌یابی
 src/fileTransaction.js       نوشتن اتمیک، پشتیبان، هش و rollback

@@ -35,10 +35,10 @@ apps/desktop-integrator/assets/fonts/Vazirmatn-OFL.txt
 ## Service and platform identities
 
 Product names and logos used to explain compatibility—including OpenAI,
-ChatGPT, Codex, Anthropic, Claude, Google, Chrome, Chromium, Microsoft, Visual
-Studio Code, GitHub, Electron, browsers, operating systems, and supported
-websites—belong to their respective owners. Their inclusion does not imply
-affiliation, sponsorship, or endorsement.
+ChatGPT, Codex, Anthropic, Claude, Meta, Meta AI, Linear, Google, Chrome, Chromium, Mozilla, Firefox,
+Microsoft, Visual Studio Code, GitHub, Electron, browsers, operating systems,
+and supported websites—belong to their respective owners. Their inclusion does
+not imply affiliation, sponsorship, or endorsement.
 
 Application-specific notices contain the detailed material shipped in each
 artifact. JavaScript dependencies and their resolved versions are recorded in

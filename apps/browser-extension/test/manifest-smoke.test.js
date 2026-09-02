@@ -65,7 +65,7 @@ function walkJsFiles(dirRel) {
 
 function walkTextFiles(dirRel) {
     const out = [];
-    const skippedDirs = new Set(['.git', 'node_modules', 'unpacked', 'dist', 'build', 'coverage']);
+    const skippedDirs = new Set(['.git', 'node_modules', 'unpacked', 'unpacked-firefox', 'dist', 'build', 'coverage']);
     const textExts = new Set(['.css', '.html', '.js', '.json', '.md']);
     for (const name of fs.readdirSync(rel(dirRel))) {
         if (skippedDirs.has(name)) continue;
@@ -101,7 +101,7 @@ check('action.default_popup kept as no-sidePanel fallback', typeof (manifest.act
 {
     const swSource = fs.readFileSync(rel(manifest.background.service_worker), 'utf8');
     check('service worker opts into openPanelOnActionClick', /setPanelBehavior\(\s*\{\s*openPanelOnActionClick:\s*true\s*\}\s*\)/.test(swSource), true);
-    check('service worker feature-detects chrome.sidePanel', /chrome\.sidePanel\?\./.test(swSource), true);
+    check('service worker feature-detects chrome.sidePanel', /globalThis\.chrome\?\.sidePanel\?\./.test(swSource), true);
 }
 
 for (const [size, p] of Object.entries(manifest.icons || {})) {
@@ -252,9 +252,9 @@ const textFiles = walkTextFiles('.');
 const oldSupportPattern = new RegExp(`(?:support|rastchin)@${'omegado'}\\.(?:at|com)`);
 const oldSupportRefs = textFiles.filter(file => oldSupportPattern.test(fs.readFileSync(rel(file), 'utf8')));
 check('old support domain removed from text-like files', oldSupportRefs, []);
-const releaseTextFiles = textFiles.filter(file => /^(src\/ui|store\/chrome)\//.test(file) || file === 'manifest.json');
+const releaseTextFiles = textFiles.filter(file => /^(src\/ui|store\/(?:chrome|firefox))\//.test(file) || file === 'manifest.json');
 const projectProvenanceFiles = textFiles.filter(file => (
-    /^(src\/ui|store\/chrome)\//.test(file)
+    /^(src\/ui|store\/(?:chrome|firefox))\//.test(file)
     || file === 'manifest.json'
 ));
 const welcomeTypoRefs = releaseTextFiles.filter(file => /خانا/.test(fs.readFileSync(rel(file), 'utf8')));

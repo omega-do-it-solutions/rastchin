@@ -1,0 +1,12 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="meta-ai-gradient" x1="22" y1="22" x2="108" y2="108" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A7CFF"/>
+      <stop offset="0.5" stop-color="#7356FF"/>
+      <stop offset="1" stop-color="#D64BC4"/>
+    </linearGradient>
+  </defs>
+  <rect x="12" y="12" width="104" height="104" rx="30" fill="url(#meta-ai-gradient)"/>
+  <path d="M32 76C36.5 49.5 45.8 38 56.2 38C67.8 38 70.8 56.4 76.8 70.4C81 80.2 84.7 86 90 86C95.8 86 99.4 78.3 101 68" stroke="white" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M96 43L98.8 50.2L106 53L98.8 55.8L96 63L93.2 55.8L86 53L93.2 50.2L96 43Z" fill="white"/>
+</svg>

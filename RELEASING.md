@@ -1,6 +1,6 @@
 # Releasing RastChin
 
-RastChin has three independent release tracks. A change to one application does not require unrelated version bumps or artifacts. Package creation, marketplace publication, Git tagging, and GitHub release creation are separate explicit actions.
+RastChin has four independent release tracks: three applications and one agent plugin. A change to one track does not require unrelated version bumps or artifacts. Package creation, marketplace publication, Git tagging, and GitHub release creation are separate explicit actions.
 
 This guide is for maintainers. Contributors should not bump versions unless a maintainer has assigned a release task.
 
@@ -8,9 +8,10 @@ This guide is for maintainers. Contributors should not bump versions unless a ma
 
 | Track | Authoritative version | Suggested tag | Primary artifact |
 | --- | --- | --- | --- |
-| Browser extension | `apps/browser-extension/manifest.json` and matching `package.json` | `browser-v<version>` | `rastchin-v<version>-chrome-web-store.zip` |
+| Browser extension | `apps/browser-extension/manifest.json` and matching `package.json` | `browser-v<version>` | Chrome Web Store and Firefox Add-ons ZIPs |
 | VS Code extension | `apps/vscode-extension/package.json` | `vscode-v<version>` | `rastchin-vscode-<version>.vsix` |
 | Desktop integrator | `apps/desktop-integrator/package.json` | `desktop-v<version>` | OS- and architecture-specific installers/packages |
+| Persian agent plugin | matching Codex/Claude manifests in `plugins/rastchin-persian` | `agent-v<version>` | Repository marketplace entry and shared portable skill |
 
 The root package version tracks the repository foundation only. App changelogs remain with their applications; [CHANGELOG.md](CHANGELOG.md) records repository-wide changes.
 
@@ -41,20 +42,20 @@ Review dependency audit output even when it is below the blocking threshold. Con
 
 ## Browser extension
 
-1. Update both `manifest.json` and `package.json` to the same version, the app changelog, store notes, and privacy/permission disclosures.
+1. Update both `manifest.json` and `package.json` to the same version, the app changelog, and the Chrome and Firefox store notes and privacy/permission disclosures.
 2. Run:
 
    ```bash
    pnpm --filter rastchin-browser-extension test
    pnpm --filter rastchin-browser-extension verify
-   pnpm --filter rastchin-browser-extension package:store
+   pnpm --filter rastchin-browser-extension package:all
    ```
 
-3. Follow the host-specific QA and [Chrome submission checklist](apps/browser-extension/store/chrome/submission-checklist.md) using test accounts and synthetic content.
-4. Confirm the ZIP contains only the verified unpacked tree, all referenced manifest assets, Apache/NOTICE/third-party files, and Vazirmatn's OFL text.
-5. Upload manually through the official Chrome Web Store account. Recheck the store privacy dashboard and permission explanations before submission.
+3. Follow the host-specific QA plus the [Chrome submission checklist](apps/browser-extension/store/chrome/submission-checklist.md) and [Firefox submission checklist](apps/browser-extension/store/firefox/submission-checklist.md), using test accounts and synthetic content.
+4. Confirm both ZIPs contain only their verified unpacked trees, all referenced manifest assets, Apache/NOTICE/third-party files, and Vazirmatn's OFL text. Confirm the Firefox ZIP contains its stable Gecko ID and no-data-collection declaration.
+5. Upload the Chrome ZIP manually through the official Chrome Web Store account. Upload the Firefox ZIP manually through Firefox Add-ons and use the Mozilla-signed result for distribution. Recheck each store's privacy and permission disclosures before submission.
 
-The `Browser extension package` workflow builds and uploads a finite-retention CI artifact; it does not publish it.
+The `Browser extension packages` workflow builds and uploads both finite-retention ZIPs in one CI artifact; it does not sign or publish them.
 
 ## VS Code extension
 
@@ -95,6 +96,43 @@ The `VS Code extension package` workflow creates a finite-retention VSIX artifac
 6. Confirm every installer contains the baked stable runtime policy, Apache/NOTICE/third-party files, and matching app/version/architecture metadata before attaching it to a GitHub release.
 
 Windows and macOS packages must be built and verified on their native CI runners. Cross-building is not evidence of host compatibility.
+
+## Persian agent plugin
+
+1. Update the matching versions in both plugin manifests, the Claude marketplace
+   entry, `evals/cases.json`, this release guide, and the relevant changelog. The
+   Codex and Claude wrappers must continue to point to one shared skill tree.
+2. Confirm the plugin remains skills-only unless a separately reviewed product
+   decision explicitly adds executable behavior, authentication, an MCP server,
+   or network access.
+3. Run the repository gate and both platform-native validators:
+
+   ```bash
+   pnpm verify:agent-plugin
+   python3 ~/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/rastchin-persian
+   claude plugin validate plugins/rastchin-persian --strict
+   claude plugin validate .
+   ```
+
+4. Add the reviewed repository as a temporary local marketplace in each host,
+   install `rastchin-persian@rastchin`, and start a new session. Test explicit
+   invocation and automatic selection for translation, Persian review, JSON,
+   ICU, HTML, and Markdown cases. Remove the temporary marketplace afterward.
+5. Run the complete corpus and blind quality review in
+   `plugins/rastchin-persian/evals/README.md`. All protected-token invariants must
+   pass, the average score must be at least 17/20, and no case may score below
+   15/20. Record host/model versions and any untested environment honestly.
+6. Verify the installed copy contains both manifests, the shared skill and all
+   referenced files, `LICENSE`, and `NOTICE`, with no hook, executable, MCP
+   configuration, secret, or private path.
+7. Tag the reviewed commit as `agent-v<version>`. Repository marketplace
+   availability follows the source/tag; submission to an official OpenAI/Codex
+   or Anthropic directory is a separate manual action and must not be inferred
+   from validation or tagging.
+
+Claude plugin/skill support is separate from the desktop integrator's host
+matrix. Releasing this plugin does not claim that the Electron integrator can
+modify or manage Claude Desktop.
 
 ## Publish and verify
 

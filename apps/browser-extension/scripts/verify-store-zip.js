@@ -7,8 +7,17 @@ const { strFromU8, unzipSync } = require('fflate');
 
 const APP_ROOT = path.resolve(__dirname, '..');
 const pkg = JSON.parse(fs.readFileSync(path.join(APP_ROOT, 'package.json'), 'utf8'));
-const defaultZip = path.join(APP_ROOT, 'dist', `rastchin-v${pkg.version}-chrome-web-store.zip`);
-const zipArgument = process.argv.slice(2).find((argument) => argument !== '--');
+const targetArgument = process.argv.slice(2).find((argument) => argument.startsWith('--target='));
+const target = targetArgument?.slice('--target='.length) || 'chrome';
+if (!['chrome', 'firefox'].includes(target)) {
+    console.error(`✗ verify-store-zip FAILED — unsupported target: ${target}`);
+    process.exit(1);
+}
+const artifactSuffix = target === 'firefox' ? 'firefox-add-ons' : 'chrome-web-store';
+const defaultZip = path.join(APP_ROOT, 'dist', `rastchin-v${pkg.version}-${artifactSuffix}.zip`);
+const zipArgument = process.argv.slice(2).find(
+    (argument) => argument !== '--' && !argument.startsWith('--target=')
+);
 const zipPath = path.resolve(zipArgument || defaultZip);
 
 function fail(message) {
@@ -64,6 +73,7 @@ const forbiddenPatterns = [
     /^node_modules\//,
     /^dist\//,
     /^unpacked\//,
+    /^unpacked-firefox\//,
     /^\.claude\//,
     /^CLAUDE\.local\.md$/,
     /^\.env(?:\.|$)/,
@@ -94,11 +104,43 @@ if (manifest.version !== pkg.version) {
 }
 
 if (manifest.key || manifest.update_url) {
-    fail('manifest.json must not include key or update_url for Chrome Web Store upload');
+    fail('manifest.json must not include key or update_url for store upload');
 }
 
 if (manifest.options_page) {
     fail('manifest.json must not include a standalone options_page; settings live in the side panel');
+}
+
+if (target === 'chrome') {
+    if (manifest.background?.service_worker !== 'src/background/service-worker.js') {
+        fail('Chrome manifest must use the background service worker');
+    }
+    if (!manifest.side_panel?.default_path || !(manifest.permissions || []).includes('sidePanel')) {
+        fail('Chrome manifest must declare side_panel and the sidePanel permission');
+    }
+    if (manifest.sidebar_action || manifest.browser_specific_settings) {
+        fail('Chrome package must not include Firefox-only manifest keys');
+    }
+} else {
+    const gecko = manifest.browser_specific_settings?.gecko;
+    if (JSON.stringify(manifest.background?.scripts) !== JSON.stringify(['src/background/service-worker.js'])) {
+        fail('Firefox manifest must use background.scripts');
+    }
+    if (manifest.background?.service_worker || manifest.side_panel || (manifest.permissions || []).includes('sidePanel')) {
+        fail('Firefox package contains Chrome-only background or side-panel configuration');
+    }
+    if (manifest.action?.default_popup) {
+        fail('Firefox action popup must be absent so toolbar clicks open the sidebar');
+    }
+    if (manifest.sidebar_action?.default_panel !== 'src/ui/side-panel/side-panel.html') {
+        fail('Firefox sidebar_action.default_panel is missing or incorrect');
+    }
+    if (gecko?.id !== 'rastchin@rastchin.tools' || gecko?.strict_min_version !== '142.0') {
+        fail('Firefox Gecko ID or minimum version is missing or incorrect');
+    }
+    if (JSON.stringify(gecko?.data_collection_permissions?.required) !== JSON.stringify(['none'])) {
+        fail('Firefox no-data-collection declaration is missing');
+    }
 }
 
 const referencedFiles = new Set();
@@ -107,7 +149,9 @@ for (const rel of Object.values(manifest.icons || {})) referencedFiles.add(rel);
 for (const rel of Object.values(manifest.action?.default_icon || {})) referencedFiles.add(rel);
 if (manifest.action?.default_popup) referencedFiles.add(manifest.action.default_popup);
 if (manifest.background?.service_worker) referencedFiles.add(manifest.background.service_worker);
+for (const rel of manifest.background?.scripts || []) referencedFiles.add(rel);
 if (manifest.side_panel?.default_path) referencedFiles.add(manifest.side_panel.default_path);
+if (manifest.sidebar_action?.default_panel) referencedFiles.add(manifest.sidebar_action.default_panel);
 for (const entry of manifest.content_scripts || []) {
     for (const rel of entry.js || []) referencedFiles.add(rel);
 }
@@ -132,4 +176,4 @@ if (!fontLicense.includes('SIL OPEN FONT LICENSE Version 1.1')) {
     fail('Vazirmatn OFL text is missing or incomplete');
 }
 
-console.log(`✓ verify-store-zip passed — ${files.length} file(s), version ${manifest.version}`);
+console.log(`✓ verify-store-zip passed — ${target}, ${files.length} file(s), version ${manifest.version}`);

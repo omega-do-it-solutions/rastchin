@@ -1,0 +1,41 @@
+{
+  "name": "rastchin-persian",
+  "version": "0.1.0",
+  "description": "Translate, review, and localize product interfaces into natural modern Persian while preserving technical structure.",
+  "author": {
+    "name": "Omega Do IT Solutions",
+    "url": "https://github.com/omega-do-it-solutions"
+  },
+  "homepage": "https://github.com/omega-do-it-solutions/rastchin/tree/main/plugins/rastchin-persian",
+  "repository": "https://github.com/omega-do-it-solutions/rastchin",
+  "license": "Apache-2.0",
+  "keywords": [
+    "persian",
+    "farsi",
+    "localization",
+    "translation",
+    "ui-copy",
+    "rtl"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "RastChin Persian",
+    "shortDescription": "Natural Persian localization for product interfaces",
+    "longDescription": "Translate, review, and localize application UI and structured language resources into natural modern Persian while preserving placeholders, code, links, markup, and file structure.",
+    "developerName": "Omega Do IT Solutions",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/omega-do-it-solutions/rastchin/tree/main/plugins/rastchin-persian",
+    "brandColor": "#B42345",
+    "composerIcon": "./skills/rastchin-persian/assets/rastchin-logo.png",
+    "logo": "./skills/rastchin-persian/assets/rastchin-logo.png",
+    "defaultPrompt": [
+      "Use $rastchin-persian to localize these interface strings into natural Persian.",
+      "Use $rastchin-persian to review this Persian product copy and fix unnatural wording."
+    ]
+  }
+}
