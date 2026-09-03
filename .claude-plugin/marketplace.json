@@ -1,0 +1,16 @@
+{
+  "name": "rastchin",
+  "description": "Official RastChin skills and plugins for natural Persian product experiences.",
+  "owner": {
+    "name": "Omega Do IT Solutions",
+    "url": "https://github.com/omega-do-it-solutions"
+  },
+  "plugins": [
+    {
+      "name": "rastchin-persian",
+      "source": "./plugins/rastchin-persian",
+      "description": "Natural Persian localization for product interfaces and structured language resources.",
+      "version": "0.1.0"
+    }
+  ]
+}

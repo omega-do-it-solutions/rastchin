@@ -2,6 +2,13 @@ const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 const patcher = require('./patcher');
+const {
+  clearPatchHealthSnooze,
+  patchHealthIsSnoozed,
+  patchHealthIssue,
+  snoozePatchHealth,
+} = require('./patchHealth');
+const { FONT_FILES, INJECT_DIR } = require('./constants');
 const { vscodeTargets } = require('./targets/registry');
 
 // Once-per-session (per extension-host lifetime) guard so a startup patch never
@@ -219,8 +226,18 @@ function targetsSignature(options) {
   return ['claude', 'codex'].flatMap((key) => (
     (options.targets[key] || []).map((item) => {
       const relativeFiles = key === 'claude'
-        ? ['webview/index.css', 'webview/index.js', 'extension.js']
-        : ['webview/index.html'];
+        ? [
+          'webview/index.css',
+          'webview/index.js',
+          'extension.js',
+          ...FONT_FILES.map((file) => path.join('webview', INJECT_DIR, file)),
+        ]
+        : [
+          'webview/index.html',
+          path.join('webview', INJECT_DIR, 'persian-rtl-clean.css'),
+          path.join('webview', INJECT_DIR, 'persian-rtl-clean.js'),
+          ...FONT_FILES.map((file) => path.join('webview', INJECT_DIR, file)),
+        ];
       const bundleState = relativeFiles
         .map((relative) => fileState(path.join(item.extensionPath, relative)))
         .join(',');
@@ -255,6 +272,8 @@ function extensionInstallSignature(context) {
 async function activate(context) {
   const channel = vscode.window.createOutputChannel('RastChin for VS Code');
   context.subscriptions.push(channel);
+  const healthPromptedThisSession = new Set();
+  let startupHealthReady = false;
 
   // A compact, native entry point for users who do not know the Command
   // Palette. It is deliberately visible only while at least one compatible
@@ -288,6 +307,39 @@ async function activate(context) {
     }
   }
 
+  async function offerPatchHealth(plan, reason) {
+    if (!plan) return false;
+    updatePatchAction(plan);
+    const issue = patchHealthIssue(plan);
+    if (!issue) {
+      healthPromptedThisSession.clear();
+      await clearPatchHealthSnooze(context.globalState);
+      return false;
+    }
+    if (
+      healthPromptedThisSession.has(issue.signature)
+      || patchHealthIsSnoozed(context.globalState, issue)
+    ) {
+      return false;
+    }
+
+    healthPromptedThisSession.add(issue.signature);
+    logResult(channel, `${reason} — RTL patch attention required`, plan);
+
+    const actions = issue.kind === 'repair'
+      ? ['Re-apply Now', 'Later', 'View Details']
+      : ['View Details', 'Later'];
+    const choice = await vscode.window.showWarningMessage(issue.message, ...actions);
+    if (choice === 'Re-apply Now') {
+      await vscode.commands.executeCommand('persianRtlClean.reapply');
+    } else if (choice === 'View Details') {
+      showPatchPlan(channel, plan);
+    } else if (choice === 'Later') {
+      await snoozePatchHealth(context.globalState, issue);
+    }
+    return true;
+  }
+
   async function offerInitialPatchAction() {
     const plan = refreshPatchAction();
 
@@ -298,7 +350,9 @@ async function activate(context) {
     // offer setup again even though VS Code preserves globalState.
     const installSignature = extensionInstallSignature(context);
     const state = context.globalState;
-    if (state && state.get(SETUP_PROMPT_INSTALL_KEY) === installSignature) return;
+    if (state && state.get(SETUP_PROMPT_INSTALL_KEY) === installSignature) {
+      return { offered: false, plan };
+    }
 
     let message = 'RastChin for VS Code is installed. Apply or verify RTL patches for Codex and Claude Code.';
     if (plan && plan.changed && plan.actionableCount > 0) {
@@ -318,9 +372,13 @@ async function activate(context) {
     if (state && (choice === 'Apply RTL Patches' || choice === 'Not Now')) {
       await state.update(SETUP_PROMPT_INSTALL_KEY, installSignature);
     }
+    if (choice === 'Not Now') {
+      await snoozePatchHealth(state, patchHealthIssue(plan));
+    }
     if (choice === 'Apply RTL Patches') {
       await vscode.commands.executeCommand('persianRtlClean.reapply');
     }
+    return { offered: true, plan };
   }
 
   context.subscriptions.push(
@@ -366,6 +424,8 @@ async function activate(context) {
           } else if (!plan.targets.length) {
             vscode.window.showInformationMessage('RastChin for VS Code: no enabled Claude Code or Codex extension was found.');
           } else {
+            healthPromptedThisSession.clear();
+            await clearPatchHealthSnooze(context.globalState);
             vscode.window.showInformationMessage('RastChin for VS Code: active agent patches are already current.');
           }
           return;
@@ -377,11 +437,14 @@ async function activate(context) {
         }
         const result = patcher.patchAll(options);
         showDetailedResult(channel, 'Re-apply patches', result);
-        if (resultHasWarnings(result)) {
+        const verifiedPlan = refreshPatchAction(options);
+        if (resultHasWarnings(result) || (verifiedPlan && verifiedPlan.changed)) {
           vscode.window.showWarningMessage('RastChin for VS Code: some targets could not be patched cleanly. See Output for details.');
-          refreshPatchAction(options);
-        } else if (result.changed) {
-          patchAction.hide();
+        } else if (verifiedPlan && verifiedPlan.incompatibleCount) {
+          vscode.window.showWarningMessage('RastChin for VS Code: compatible targets were patched, but another detected agent layout is unsupported. See Output for details.');
+        } else {
+          healthPromptedThisSession.clear();
+          await clearPatchHealthSnooze(context.globalState);
         }
         if (result.changed) {
           await maybeReload('RastChin for VS Code: patches were applied. Reload the window to load patched webviews.');
@@ -437,34 +500,47 @@ async function activate(context) {
 
   const cfg = vscode.workspace.getConfiguration('persianRtlClean');
   const startupTimer = setTimeout(async () => {
-    if (!cfg.get('patchOnStartup', false)) {
-      await offerInitialPatchAction();
-      return;
-    }
     try {
-      const result = patcher.patchAll(getPatchOptions(context));
-      // Nothing was written: keep the status accurate and stay silent.
-      if (!result.changed) {
-        if (resultHasWarnings(result)) logResult(channel, 'Startup patch preflight warnings', result);
-        refreshPatchAction();
+      if (!cfg.get('patchOnStartup', false)) {
+        const onboarding = await offerInitialPatchAction();
+        if (!onboarding.offered) {
+          await offerPatchHealth(onboarding.plan, 'Startup health check');
+        }
         return;
       }
-      // Log what happened to the Output channel WITHOUT stealing focus or
-      // popping the panel — startup must be quiet.
-      logResult(channel, 'Startup patch apply', result);
-      if (resultHasWarnings(result)) refreshPatchAction();
-      else patchAction.hide();
-      // Only a content change (a (re)written webview/extension block) needs a
-      // reload, and we prompt at most once per session. A routine font/asset
-      // refresh changes nothing visible until reload-worthy content does, so it
-      // never prompts.
-      if (result.contentChanged && !reloadPromptShownThisSession) {
-        reloadPromptShownThisSession = true;
-        await maybeReload('RastChin for VS Code: patched webviews changed. Reload the window to load them.');
+      try {
+        const result = patcher.patchAll(getPatchOptions(context));
+        // Nothing was written: keep the status accurate and stay silent.
+        if (!result.changed) {
+          if (resultHasWarnings(result)) logResult(channel, 'Startup patch preflight warnings', result);
+          const plan = refreshPatchAction();
+          if (resultHasWarnings(result)) await offerPatchHealth(plan, 'Startup patch check');
+          return;
+        }
+        // Log what happened to the Output channel WITHOUT stealing focus or
+        // popping the panel — startup must be quiet.
+        logResult(channel, 'Startup patch apply', result);
+        const plan = refreshPatchAction();
+        if (resultHasWarnings(result) || (plan && plan.changed)) {
+          await offerPatchHealth(plan, 'Startup patch check');
+        } else if (plan && !plan.incompatibleCount) {
+          healthPromptedThisSession.clear();
+          await clearPatchHealthSnooze(context.globalState);
+        }
+        // Only a content change (a (re)written webview/extension block) needs a
+        // reload, and we prompt at most once per session. A routine font/asset
+        // refresh changes nothing visible until reload-worthy content does, so it
+        // never prompts.
+        if (result.contentChanged && !reloadPromptShownThisSession) {
+          reloadPromptShownThisSession = true;
+          await maybeReload('RastChin for VS Code: patched webviews changed. Reload the window to load them.');
+        }
+      } catch (error) {
+        patchAction.hide();
+        vscode.window.showErrorMessage(`RastChin for VS Code: startup patch failed: ${error.message}`);
       }
-    } catch (error) {
-      patchAction.hide();
-      vscode.window.showErrorMessage(`RastChin for VS Code: startup patch failed: ${error.message}`);
+    } finally {
+      startupHealthReady = true;
     }
   }, 1000);
   context.subscriptions.push({ dispose: () => clearTimeout(startupTimer) });
@@ -476,31 +552,35 @@ async function activate(context) {
   // Agent updates replace their webview bundles and therefore remove our patch.
   // Listen to the official extension registry, but never rewrite on the user's
   // behalf: offer the normal review-and-confirm command instead.
-  if (vscode.extensions && typeof vscode.extensions.onDidChange === 'function') {
-    let previousSignature = targetsSignature(getPatchOptions(context));
-    let updateTimer;
-    const listener = vscode.extensions.onDidChange(() => {
-      if (updateTimer) clearTimeout(updateTimer);
-      updateTimer = setTimeout(async () => {
-        const options = getPatchOptions(context);
-        const nextSignature = targetsSignature(options);
-        if (!nextSignature || nextSignature === previousSignature) return;
-        previousSignature = nextSignature;
-        const plan = patcher.planAll(options);
-        updatePatchAction(plan);
-        if (!plan.changed) return;
-        logResult(channel, 'Agent extension update detected — patch review required', plan);
-        const choice = await vscode.window.showInformationMessage(
-          'RastChin for VS Code: Claude Code or Codex changed and its RTL patch needs to be refreshed.',
-          'Apply RTL Patches',
-        );
-        if (choice === 'Apply RTL Patches') {
-          await vscode.commands.executeCommand('persianRtlClean.reapply');
-        }
-      }, 1500);
-    });
-    context.subscriptions.push(listener, { dispose: () => { if (updateTimer) clearTimeout(updateTimer); } });
+  let previousSignature = targetsSignature(getPatchOptions(context));
+  let healthTimer;
+  function schedulePatchHealthCheck(reason) {
+    if (!startupHealthReady) return;
+    if (healthTimer) clearTimeout(healthTimer);
+    healthTimer = setTimeout(async () => {
+      healthTimer = undefined;
+      const options = getPatchOptions(context);
+      const nextSignature = targetsSignature(options);
+      if (nextSignature === previousSignature) return;
+      previousSignature = nextSignature;
+      const plan = refreshPatchAction(options);
+      if (plan) await offerPatchHealth(plan, reason);
+    }, 1500);
   }
+
+  if (vscode.extensions && typeof vscode.extensions.onDidChange === 'function') {
+    const listener = vscode.extensions.onDidChange(() => {
+      schedulePatchHealthCheck('Agent extension change detected');
+    });
+    context.subscriptions.push(listener);
+  }
+  if (vscode.window && typeof vscode.window.onDidChangeWindowState === 'function') {
+    const listener = vscode.window.onDidChangeWindowState((state) => {
+      if (state && state.focused) schedulePatchHealthCheck('Window-focus health check');
+    });
+    context.subscriptions.push(listener);
+  }
+  context.subscriptions.push({ dispose: () => { if (healthTimer) clearTimeout(healthTimer); } });
 }
 
 function deactivate() {}

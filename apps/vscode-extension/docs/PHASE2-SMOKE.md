@@ -19,6 +19,9 @@ VSIX روی lab) را سریع smoke کنیم.
     کلیدهای غیر `Ctrl`/غیر `Shift`؛ و no-throw در Plan Preview.
   - diagnostics نسخه‌ی **active**: مقایسه‌ی عددی نسخه (`2.1.10 > 2.1.9`،
     `26.616.51431 > 26.616.41845`) و سناریوی «فقط نسخه‌ی stale وصله‌شده».
+  - patch-health: تشخیص patch حذف‌شده/قدیمی در startup و registry/focus، دکمه‌های
+    **Re-apply Now**، **Later** و **View Details**، snooze دقیق ۲۴ساعته و مسیر
+    diagnostic-only برای layout ناسازگار.
 - نگاشت زنده‌ی باندل (drift map): hookهای اصلی روی نسخه‌های active
   (`claude 2.1.185`, `codex 26.616.51431`) حاضرند؛ drift پوششی option_picker
   در کدکس شناسایی و با fallback محدود به shape واقعی همان surface پوشش داده شده است.
@@ -38,7 +41,7 @@ export RASTCHIN_VSCODE_EXTENSIONS_DIR="/absolute/path/to/rastchin-vscode-lab/ext
 
 code --user-data-dir "$RASTCHIN_VSCODE_USER_DATA_DIR" \
      --extensions-dir "$RASTCHIN_VSCODE_EXTENSIONS_DIR" \
-     --install-extension "apps/vscode-extension/rastchin-vscode-0.3.12.vsix" --force
+     --install-extension "apps/vscode-extension/rastchin-vscode-0.3.14.vsix" --force
 node - <<'NODE'
 const path = require('path');
 const patcher = require('./apps/vscode-extension/src/patcher');
@@ -58,7 +61,7 @@ patched=false` دیدی یعنی نسخه‌ی فعال بعد از update وص�
 
 ## ماتریس verify دستی زنده (GUI — هنوز debt)
 
-این پنج مورد فقط با تعامل انسانی روی پنجره‌ی lab با session لاگین‌شده‌ی
+این شش مورد فقط با تعامل انسانی روی پنجره‌ی lab با session لاگین‌شده‌ی
 Codex/Claude قابل تأییدند؛ jsdom + شاهد فایل‌محور آن‌ها را تا حد منطق پوشش می‌دهد
 ولی render نهایی باید چشمی دیده شود.
 
@@ -69,6 +72,7 @@ Codex/Claude قابل تأییدند؛ jsdom + شاهد فایل‌محور آن
 | 3 | Claude composer | تب `CLAUDE CODE`: «یک فایل موقت به نام claude-rtl-check.txt بساز …» | composer و bubble فارسی RTL؛ preview/plaintext درست؛ statusهای انگلیسی LTR |
 | 4 | میان‌برها | composer فارسی، `Ctrl+RightShift` و `Ctrl+LeftShift` روی هر دو سطح | RTL/LTR دستی toggle شود و با فشار دوباره برگردد |
 | 5 | startup بعد از reload | `Reload Window` روی lab | بعد از reload، نسخه‌ی active همچنان patch؛ RTL بدون اجرای دستی برمی‌گردد |
+| 6 | بازیابی پس از update | Codex یا Claude Code را update کنید، سپس VS Code را reload یا پنجره را دوباره focus کنید | اعلان patch-health ظاهر شود؛ **View Details** برنامهٔ فقط‌خواندنی را باز کند؛ **Later** همان نسخه را ۲۴ ساعت snooze کند؛ راست‌کلیک روی کارت RastChin در Extensions فرمان **Re-apply Patches** را نشان دهد |
 
 ## invariantهایی که نباید بشکنند (هنگام smoke چشمی چک شوند)
 

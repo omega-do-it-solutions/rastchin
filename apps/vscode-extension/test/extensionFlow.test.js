@@ -57,12 +57,22 @@ function harness({ approval = 'Apply Patches', planChanged = true } = {}) {
   const patcher = {
     planAll: () => {
       calls.plan++;
+      const needsPatch = planChanged && calls.patch === 0;
       return {
-        changed: planChanged,
-        actionableCount: planChanged ? 1 : 0,
+        changed: needsPatch,
+        actionableCount: needsPatch ? 1 : 0,
         incompatibleCount: 0,
-        targets: [{ compatible: true, current: !planChanged }],
-        messages: ['Claude Code v2: update chat runtime.'],
+        targets: [{
+          key: 'claude',
+          label: 'Claude Code',
+          version: '2',
+          adapter: 'claude-webview-v1',
+          compatible: true,
+          current: !needsPatch,
+          actions: needsPatch ? ['update chat runtime'] : [],
+          issues: [],
+        }],
+        messages: [needsPatch ? 'Claude Code v2: update chat runtime.' : 'Claude Code v2: already current.'],
       };
     },
     patchAll: () => {
@@ -105,7 +115,7 @@ test('manual re-apply reviews the plan, asks for consent, then patches', async (
   await activateWithoutStartupTimer(extension, h.context);
   await h.handlers.get('persianRtlClean.reapply')();
 
-  assert.equal(h.calls.plan, 1);
+  assert.equal(h.calls.plan, 2, 'the post-write plan verifies that the repair is now current');
   assert.equal(h.calls.patch, 1);
   assert.equal(h.calls.warnings.some((message) => /will modify 1 installed agent extension/.test(message)), true);
   assert.equal(h.calls.statusVisible, false, 'successful patch hides the status-bar action');
@@ -139,13 +149,18 @@ test('manifest keeps Command Palette commands and adds the RastChin Extensions c
   const manifest = require('../package.json');
   const commands = manifest.contributes.commands.map((item) => item.command);
   const extensionMenu = manifest.contributes.menus['extension/context'];
-  const extensionId = `${manifest.publisher}.${manifest.name}`;
+  const marketplaceExtensionId = 'omegadoitsolutions.rastchin-vscode';
 
   assert.equal(commands.includes('persianRtlClean.reapply'), true, 're-apply remains a contributed Command Palette command');
   assert.equal(
+    `${manifest.publisher}.${manifest.name}`.toLowerCase(),
+    marketplaceExtensionId,
+    'the menu condition tracks VS Code\'s normalized installed extension ID',
+  );
+  assert.equal(
     extensionMenu.some((item) => (
       item.command === 'persianRtlClean.reapply'
-      && item.when.includes(`extension == ${extensionId}`)
+      && item.when === `extension == ${marketplaceExtensionId} && extensionStatus == installed`
     )),
     true,
     'right-clicking RastChin in Extensions exposes the same safe re-apply command',

@@ -76,6 +76,24 @@ function loadController(hostname, pathname = '/', options = {}) {
 }
 
 {
+    const { ctx } = loadController('meta.ai');
+    check('controller: meta.ai resolves metaAiEnabled',
+        ctx.window.chatbotConfig.getCurrentPlatformInfo().storageKey, 'metaAiEnabled');
+}
+
+{
+    const { ctx } = loadController('www.meta.ai');
+    check('controller: www.meta.ai resolves metaAiEnabled',
+        ctx.window.chatbotConfig.getCurrentPlatformInfo().storageKey, 'metaAiEnabled');
+}
+
+{
+    const { ctx } = loadController('linear.app');
+    check('controller: linear.app resolves linearEnabled',
+        ctx.window.chatbotConfig.getCurrentPlatformInfo().storageKey, 'linearEnabled');
+}
+
+{
     const { ctx } = loadController('claudeusercontent.com');
     check('controller: claudeusercontent root resolves claudeEnabled',
         ctx.window.chatbotConfig.getCurrentPlatformInfo().storageKey, 'claudeEnabled');
@@ -177,7 +195,7 @@ function loadController(hostname, pathname = '/', options = {}) {
     const registryKeys = new Set([...registrySource.matchAll(/storageKey: '([^']+)'/g)].map(m => m[1]));
     const urlMapBlock = (source.match(/URL_TO_CHATBOT = \{([\s\S]*?)\}/) || [, ''])[1];
     const controllerKeys = [...new Set([...urlMapBlock.matchAll(/:\s*'([^']+)'/g)].map(m => m[1]))];
-    check('parity: controller maps all 20 platform keys', controllerKeys.length, 20);
+    check('parity: controller maps all 22 platform keys', controllerKeys.length, 22);
     controllerKeys.forEach(key => check(`parity: registry knows ${key}`, registryKeys.has(key), true));
 }
 

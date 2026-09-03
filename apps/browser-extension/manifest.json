@@ -11,8 +11,15 @@
       "service_worker": "src/background/service-worker.js"
    },
    "content_scripts": [ {
+      "all_frames": true,
       "js": [ "src/core/controller.js", "src/core/font-inject.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/auto-direction.js", "src/core/recipe-runner.js", "src/platforms/chatgpt-rtl.js" ],
+      "match_about_blank": true,
+      "match_origin_as_fallback": true,
       "matches": [ "https://chat.openai.com/*", "https://chatgpt.com/*" ],
+      "run_at": "document_end"
+   }, {
+      "js": [ "src/core/controller.js", "src/core/font-inject.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/auto-direction.js", "src/core/recipe-runner.js", "src/platforms/meta-ai-rtl.js" ],
+      "matches": [ "https://meta.ai/*", "https://www.meta.ai/*" ],
       "run_at": "document_end"
    }, {
       "all_frames": true,
@@ -69,6 +76,10 @@
       "matches": [ "https://notion.so/*", "https://www.notion.so/*", "https://app.notion.so/*", "https://*.notion.site/*" ],
       "run_at": "document_end"
    }, {
+      "js": [ "src/core/controller.js", "src/core/font-inject.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/auto-direction.js", "src/core/recipe-runner.js", "src/platforms/linear-rtl.js" ],
+      "matches": [ "https://linear.app/*" ],
+      "run_at": "document_end"
+   }, {
       "js": [ "src/core/controller.js", "src/core/rtl-engine.js", "src/core/bidi-isolate.js", "src/core/recipe-runner.js", "src/platforms/gmail-rtl.js" ],
       "matches": [ "https://mail.google.com/*" ],
       "run_at": "document_end"
@@ -110,9 +121,9 @@
       "default_path": "src/ui/side-panel/side-panel.html"
    },
    "short_name": "RastChin",
-   "version": "1.1.64",
+   "version": "1.1.71",
    "web_accessible_resources": [ {
-      "matches": [ "https://chat.openai.com/*", "https://chatgpt.com/*", "https://claude.ai/*", "https://claudeusercontent.com/*", "https://*.claudeusercontent.com/*", "https://claudemcpcontent.com/*", "https://*.claudemcpcontent.com/*", "https://copilot.microsoft.com/*", "https://github.com/*", "https://marketplace.visualstudio.com/*", "https://gemini.google.com/*", "https://aistudio.google.com/*", "https://perplexity.ai/*", "https://www.perplexity.ai/*", "https://chat.deepseek.com/*", "https://www.deepseek.com/*", "https://deepseek.com/*", "https://notebook.google.com/*", "https://notebooklm.google.com/*", "https://qwen.ai/*", "https://chat.qwen.ai/*", "https://arena.ai/*", "https://www.arena.ai/*", "https://trello.com/*", "https://www.trello.com/*", "https://notion.so/*", "https://www.notion.so/*", "https://app.notion.so/*", "https://*.notion.site/*", "https://mail.google.com/*", "https://translate.google.com/*", "https://docs.google.com/*", "https://web.whatsapp.com/*", "https://web.telegram.org/*", "https://www.youtube.com/*", "https://m.youtube.com/*" ],
+      "matches": [ "https://chat.openai.com/*", "https://chatgpt.com/*", "https://meta.ai/*", "https://www.meta.ai/*", "https://claude.ai/*", "https://claudeusercontent.com/*", "https://*.claudeusercontent.com/*", "https://claudemcpcontent.com/*", "https://*.claudemcpcontent.com/*", "https://copilot.microsoft.com/*", "https://github.com/*", "https://marketplace.visualstudio.com/*", "https://gemini.google.com/*", "https://aistudio.google.com/*", "https://perplexity.ai/*", "https://www.perplexity.ai/*", "https://chat.deepseek.com/*", "https://www.deepseek.com/*", "https://deepseek.com/*", "https://notebook.google.com/*", "https://notebooklm.google.com/*", "https://qwen.ai/*", "https://chat.qwen.ai/*", "https://arena.ai/*", "https://www.arena.ai/*", "https://trello.com/*", "https://www.trello.com/*", "https://notion.so/*", "https://www.notion.so/*", "https://app.notion.so/*", "https://*.notion.site/*", "https://linear.app/*", "https://mail.google.com/*", "https://translate.google.com/*", "https://docs.google.com/*", "https://web.whatsapp.com/*", "https://web.telegram.org/*", "https://www.youtube.com/*", "https://m.youtube.com/*" ],
       "resources": [ "src/assets/fonts/*" ]
    } ]
 }

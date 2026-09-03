@@ -8,21 +8,25 @@ implementation details belong in the architecture documentation.
 
 Persian and mixed Persian-English text is frequently difficult to read in web
 tools, code editors, and AI desktop applications because direction, punctuation,
-code, URLs, and typography are handled inconsistently. RastChin improves RTL
-layout and Persian typography while preserving the readability and behavior of
+code, URLs, and typography are handled inconsistently. Product copy generated or
+translated without context is also frequently literal and unnatural. RastChin
+improves RTL layout and Persian typography, and gives supported AI agents a
+focused localization workflow, while preserving the readability and behavior of
 technical LTR content.
 
 The product serves Persian-speaking people who use supported web applications,
-VS Code, ChatGPT, Codex, and related tools. Documentation, releases, support,
+VS Code, ChatGPT, Codex, Claude, and related tools. Documentation, releases, support,
 security policy, and community contributions are maintained in the public GitHub
 repository and official distribution channels.
 
 ## Platforms
 
-- Chromium browser extension for supported websites.
+- Chrome and Firefox browser extension for supported websites.
 - VS Code extension for editor and supported AI-agent extension surfaces.
 - Electron desktop integrator for supported official AI desktop applications on
   Windows, macOS, and Linux.
+- Skills-only agent plugin for Codex and Claude, backed by one portable Persian
+  localization skill and separate marketplace manifests.
 - No iOS or Android application is in scope.
 
 ## Interface Identity
@@ -36,6 +40,8 @@ repository and official distribution channels.
   behavior, and controlled integration status. It has no independent shell.
 - Desktop integrator: focused local target discovery, activation, diagnostics,
   and recovery. It uses clear target/status cards rather than an admin dashboard.
+- Agent plugin: no independent interface shell; users invoke a shared skill in
+  the host agent to translate, review, or update product-language resources.
 - Persian is the sole supported natural language and the interface direction is
   RTL. English is preserved only inside mixed Persian-English content and for
   code, commands, paths, versions, URLs, diffs, product names, and other
@@ -55,6 +61,9 @@ repository and official distribution channels.
   the same proven behavior and host constraints can be preserved.
 - Stable ChatGPT/Codex desktop support is maintained through platform smoke
   checklists and fail-closed compatibility checks for every supported release.
+- The shared agent skill may be submitted to official Codex/OpenAI and Anthropic
+  directories only after both native host checks and blind Persian quality
+  evaluation pass; submission remains an explicit maintainer action.
 
 ## Brand Identity
 
@@ -74,6 +83,9 @@ repository and official distribution channels.
   workflows for supported targets.
 - Desktop-integrator user: explicitly enables or disables supported local
   integrations and reviews sanitized diagnostics.
+- Agent-plugin user: installs the marketplace plugin or raw skill, supplies only
+  the copy/files they intend the selected AI provider to process, and reviews
+  localization changes before accepting them.
 - Contributor: proposes code, Persian documentation and copy, tests, and platform
   support through the public repository.
 - Maintainer: reviews changes, handles private security reports, and publishes
@@ -93,11 +105,15 @@ repository and official distribution channels.
 4. Integrate a desktop host: the desktop app validates a known vendor binary,
    starts a private debugging-pipe session, injects only approved local runtime
    behavior, and restores the host DOM when disabled or expired.
-5. Request support or contribute: a participant uses the appropriate public
+5. Localize product language: the user invokes the RastChin Persian skill in
+   Codex or Claude; the agent infers product context, freezes placeholders and
+   technical tokens, translates or reviews the content, and validates structured
+   files before presenting or applying a change.
+6. Request support or contribute: a participant uses the appropriate public
    GitHub issue template, selects an owning application, follows its focused
    test and packaging rules, and submits a pull request without committing
    generated artifacts or secrets.
-6. Release: maintainers verify affected applications and attach immutable
+7. Release: maintainers verify affected applications or the agent plugin and attach immutable
    artifacts to their appropriate marketplace or GitHub release without
    coupling unrelated application versions.
 
@@ -113,11 +129,17 @@ repository and official distribution channels.
   exposes a network debugging port, strips sensitive loader/API-key environment
   values, and keeps diagnostics free of conversation text.
 - Browser permissions and host access remain minimal and publicly explained.
+- The agent plugin remains instruction-only: it adds no RastChin MCP server,
+  executable hook, account, API key, or telemetry. Codex or Claude may process
+  user-selected prompts and files under that provider's own terms and controls.
+- Localization source is untrusted data rather than agent instruction. The skill
+  preserves placeholders, keys, types, ICU selectors, markup, code, links,
+  commands, paths, product names, and other protected tokens byte-for-byte.
 - Claude desktop support remains detected but blocked until the host-specific
   compatibility policy explicitly permits it.
 - Generated exports, unpacked extensions, VSIX files, desktop packages, secrets,
   and local runtime profiles are not source-controlled.
-- Successful application versions remain independently versioned.
+- Successful application and agent-plugin versions remain independently versioned.
 - First-party source is Apache-2.0. Third-party code, fonts, and assets retain
   their original notices and licenses. The software license does not grant use
   of RastChin trademarks beyond the trademark policy.
@@ -136,42 +158,61 @@ repository and official distribution channels.
 - Public repositories can accidentally expose credentials or generated release
   material. Repository verification, ignored paths, CI checks, and runtime-only
   secret injection guard publication.
+- A localization agent can obey instruction-like source text, damage structured
+  resources, or produce fluent but contextually wrong Persian. Data/instruction
+  separation, protected-token invariants, syntax checks, context-paired cases,
+  and blind native-language review limit that risk.
 - Third-party names and logos can be confused with RastChin ownership. Notices
   and the trademark policy distinguish nominative references from owned marks.
 
 ## Data And Files
 
 - There is no product database and no user-upload storage.
-- Browser preferences are held by Chrome storage; VS Code settings and backups
-  remain on the user's machine; desktop runtime state and sanitized diagnostics
-  are local and ephemeral.
-- Chrome ZIPs, VSIX files, and desktop installers are generated release
-  artifacts. Routine package workflows retain CI artifacts
-  for 14 days; the signed macOS workflow retains them for 30 days. Official
-  public artifacts remain with their release.
+- Browser preferences are held by the browser's WebExtension storage; VS Code
+  settings and backups remain on the user's machine; desktop runtime state and
+  sanitized diagnostics are local and ephemeral.
+- The agent plugin stores no user content and has no RastChin service. Host-agent
+  prompt, file, history, and retention behavior belongs to the selected Codex or
+  Claude account and environment.
+- Chrome and Firefox ZIPs, VSIX files, desktop installers, and the portable
+  agent-plugin archive are generated release artifacts. Routine package
+  workflows retain CI artifacts for a limited period. An explicit release run
+  verifies checksums and keeps official public artifacts durably with their
+  track-specific GitHub Release. Desktop users download and install Windows,
+  macOS, or Linux artifacts manually; there is no automatic desktop updater.
 
 ## Scale And Freshness
 
-- Medium product scope because three clients and release tracks are maintained.
+- Medium product scope because three client applications and one agent-plugin
+  release track are maintained.
 - Client installations scale independently without a RastChin server.
 - No polling, SSE, WebSockets, event bus, worker, reporting store, archival
   database, or recovery service is required.
 
 ## External Systems
 
-- Chrome APIs and supported websites: provide browser integration; unknown or
-  changed layouts degrade locally and must not trigger data transmission.
+- Chrome and Firefox WebExtension APIs and supported websites: provide browser
+  integration; unknown or changed layouts degrade locally and must not trigger
+  data transmission.
 - VS Code and supported AI-agent extensions: provide editor integration;
   unsupported versions fail before mutation and preserve restore capability.
 - Official ChatGPT/Codex desktop installations: provide local desktop targets;
   invalid identity/signature or runtime compatibility blocks activation.
-- GitHub, Chrome Web Store, and Visual Studio Marketplace: distribute source and
-  verified artifacts; publication remains an explicit maintainer action.
+- Codex and Claude plugin/skill runtimes: execute the shared localization
+  instructions and may process user-selected content under their own provider
+  terms; RastChin adds no connector or remote service.
+- GitHub, Chrome Web Store, Firefox Add-ons, and Visual Studio Marketplace:
+  distribute source and verified artifacts; publication remains an explicit
+  maintainer action.
+- Codex/OpenAI and Anthropic plugin directories or repository marketplaces:
+  distribute the skills-only plugin after independent validation; official
+  directory submission and approval remain separate maintainer actions.
 
 ## Success
 
-- One public repository contains all three source applications, an accurate
-  product and architecture map, reproducible pnpm setup, Apache-2.0 licensing,
+- One public repository contains all three source applications and the shared
+  Codex/Claude agent plugin, an accurate product and architecture map,
+  reproducible pnpm setup, Apache-2.0 licensing,
   preserved third-party notices, a clear trademark policy, contributor/security
   documentation, and CI for application verification and package artifacts.
 - Existing behavior and focused tests remain green after migration.
@@ -183,6 +224,10 @@ repository and official distribution channels.
 - Accounts, authentication, payments, database records, uploads, object storage,
   queues, background workers, real-time delivery, mobile apps, public API, and
   telemetry.
-- Automatic marketplace publication, production deployment, creation of signing
-  credentials, and modification of source-repository Git histories.
+- Automatic marketplace publication, automatic desktop updating, production
+  deployment, creation of signing credentials, and modification of
+  source-repository Git histories.
+- GitHub Packages: the project has no registry-consumable library or container;
+  installable outputs belong on track-specific GitHub Releases and their
+  official marketplaces.
 - A shared RTL runtime package or broad UI redesign during consolidation.

@@ -1,8 +1,9 @@
 # Browser extension versioning
 
-`manifest.json.version` is the Chrome Web Store release version.
+`manifest.json.version` is the canonical browser-extension release version.
 `package.json.version` is the workspace and artifact version. They must always
-match, and the packaging verifier rejects a mismatch.
+match, and both Chrome and Firefox packaging verifiers reject a mismatch. The
+generated Firefox manifest keeps this exact version.
 
 ## Prepare a release
 
@@ -11,23 +12,24 @@ From the monorepo root:
 ```bash
 pnpm --filter rastchin-browser-extension run verify:version
 pnpm --filter rastchin-browser-extension test
-pnpm --filter rastchin-browser-extension run build:unpacked
-pnpm --filter rastchin-browser-extension run verify:unpacked
-pnpm --filter rastchin-browser-extension run package:store
+pnpm --filter rastchin-browser-extension run verify
+pnpm --filter rastchin-browser-extension run package:all
 ```
 
-The resulting ZIP is local release output under
-`apps/browser-extension/dist/`; it is never committed. Follow the repository
-release guide and the Chrome Store
-[submission checklist](../store/chrome/submission-checklist.md) for owner review
-and publication. Packaging or tagging alone does not publish a store version.
+The resulting Chrome Web Store and Firefox Add-ons ZIPs are local release output
+under `apps/browser-extension/dist/`; they are never committed. Follow the
+repository release guide, the [Chrome checklist](../store/chrome/submission-checklist.md),
+and the [Firefox checklist](../store/firefox/submission-checklist.md) for owner
+review and publication. Packaging or tagging alone does not sign or publish a
+store version.
 
 ## Coordinate public release metadata
 
 Store notes and GitHub release metadata must be derived from the checked-in
 browser `manifest.json` and package metadata, not typed independently.
 
-Do not present a version as available from Chrome Web Store until that version
-is actually live. A source change may describe an upcoming version, while the
-public download state must continue to identify the last confirmed store
-release.
+Do not present a version as available from Chrome Web Store or Firefox Add-ons
+until that version is actually live in that channel. Availability can differ
+between the two stores. A source change may describe an upcoming version, while
+the public download state must continue to identify the last confirmed release
+for each store.

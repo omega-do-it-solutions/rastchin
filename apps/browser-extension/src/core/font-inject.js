@@ -48,8 +48,8 @@
     // instead of receiving inline "Vazirmatn" that would override its table font.
     const RESPONSE_SKIP_SELECTORS = {
         "claude.ai": '.font-claude-message, .font-claude-response, [data-test-render-count], [role="article"], table, [role="table"]',
-        "chatgpt.com": '[data-message-author-role], [data-testid="conversation-turn"]',
-        "chat.openai.com": '[data-message-author-role], [data-testid="conversation-turn"]'
+        "chatgpt.com": '[data-message-author-role], [data-message-id], [data-testid^="conversation-turn"], main article',
+        "chat.openai.com": '[data-message-author-role], [data-message-id], [data-testid^="conversation-turn"], main article'
     };
 
     function responseSkipSelector() {

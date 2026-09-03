@@ -40,7 +40,22 @@
     // auto-direction.
     const CHATGPT_RESPONSE_SKIP = [
         '[data-message-author-role]',
-        '[data-testid="conversation-turn"]'
+        '[data-message-id]',
+        '[data-testid^="conversation-turn"]',
+        'main article'
+    ].join(', ');
+
+    // Linear's ProseMirror document can contain multiple paragraphs with
+    // different base directions. The Linear adapter handles those blocks
+    // individually; setting direction on the editor root would make an English
+    // paragraph inherit RTL from an earlier Persian paragraph.
+    const LINEAR_EDITOR_SKIP = '.ProseMirror';
+
+    // Meta AI document surfaces receive per-block direction from their adapter.
+    // Keep chat composers eligible for normal auto-direction.
+    const META_DOCUMENT_EDITOR_SKIP = [
+        '[role="document"] [contenteditable]:not([contenteditable="false"])',
+        '[data-testid*="document"] [contenteditable]:not([contenteditable="false"])'
     ].join(', ');
 
     function isGeminiHost() {
@@ -56,6 +71,21 @@
         return host === 'chatgpt.com' || host === 'chat.openai.com';
     }
 
+    function isLinearHost() {
+        return window.location.hostname === 'linear.app';
+    }
+
+    function isMetaAiHost() {
+        const host = window.location.hostname;
+        return host === 'meta.ai' || host === 'www.meta.ai';
+    }
+
+    function isBlockManagedEditor(el) {
+        if (isLinearHost() && el.closest(LINEAR_EDITOR_SKIP)) return true;
+        if (isMetaAiHost() && el.closest(META_DOCUMENT_EDITOR_SKIP)) return true;
+        return false;
+    }
+
     function isChatgptResponseTarget(el) {
         return isChatgptHost() && !!el.closest(CHATGPT_RESPONSE_SKIP);
     }
@@ -64,6 +94,7 @@
         if (!(el instanceof HTMLElement)) return false;
         if (isGeminiHost() && el.closest(GEMINI_UI_SKIP)) return true;
         if (isClaudeHost() && el.closest(CLAUDE_RESPONSE_SKIP)) return true;
+        if (isBlockManagedEditor(el)) return true;
         return false;
     }
 
@@ -72,6 +103,7 @@
         if (isGeminiHost() && el.closest(GEMINI_UI_SKIP)) return true;
         if (isClaudeHost() && el.closest(CLAUDE_RESPONSE_SKIP)) return true;
         if (isChatgptResponseTarget(el)) return true;
+        if (isBlockManagedEditor(el)) return true;
         return false;
     }
 

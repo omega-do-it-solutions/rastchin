@@ -77,11 +77,13 @@ fork.
 
 ## Third-party marks
 
-Names and logos for OpenAI, ChatGPT, Codex, Anthropic, Claude, Google, Chrome,
-Chromium, Microsoft, Visual Studio Code, GitHub, Electron, browsers, websites,
-operating systems, and other services belong to their respective owners.
-RastChin uses them only to describe compatibility or identify a supported host.
-This project does not claim those marks and is not endorsed by their owners.
+Names and logos for OpenAI, ChatGPT, Codex, Anthropic, Claude, Meta, Meta AI,
+Linear, Google, Chrome,
+Chromium, Mozilla, Firefox, Microsoft, Visual Studio Code, GitHub, Electron,
+browsers, websites, operating systems, and other services belong to their
+respective owners. RastChin uses them only to describe compatibility or identify
+a supported host. This project does not claim those marks and is not endorsed by
+their owners.
 
 ## Questions and permission requests
 

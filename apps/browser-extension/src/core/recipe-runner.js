@@ -25,6 +25,18 @@ var RastChinRecipe = (() => {
             || suffixes.some(suffix => typeof suffix === 'string' && hostname.endsWith(suffix));
     }
 
+    function allowsOpaqueRelatedFrame(recipe) {
+        if (recipe.allowOpaqueOriginFrames !== true) return false;
+        if (window.location?.hostname) return false;
+        try {
+            return window.top !== window;
+        } catch (_) {
+            // Reading the WindowProxy identity is normally allowed across origins,
+            // but fail closed if a host hardens access further.
+            return false;
+        }
+    }
+
     function isDebugEnabled() {
         try {
             return localStorage.getItem('rastchin:debug') === '1';
@@ -133,7 +145,7 @@ var RastChinRecipe = (() => {
             console.warn?.(`RastChin: unsupported recipe version ${recipe.version}`);
             return null;
         }
-        if (!hostMatchesRecipe(recipe, window.location.hostname)) return null;
+        if (!hostMatchesRecipe(recipe, window.location.hostname) && !allowsOpaqueRelatedFrame(recipe)) return null;
 
         const codeGuard = (recipe.codeGuardSelectors || []).join(', ');
         const engine = new RTLEngine(buildEngineConfig(recipe));

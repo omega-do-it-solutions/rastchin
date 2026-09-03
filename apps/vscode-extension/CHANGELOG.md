@@ -6,15 +6,38 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.14] - 2026-09-01
+
+### Fixed
+
+- Restored the `Re-apply Patches` action in RastChin's Extensions-view context
+  menu by matching VS Code's normalized lowercase installed extension ID while
+  preserving the existing `OmegaDoITSolutions` Marketplace publisher identity.
+
+## [0.3.13] - 2026-09-01
+
+### Added
+
+- Added a read-only patch-health flow that checks active Codex and Claude Code
+  targets on startup, after extension-registry changes, and when the VS Code
+  window regains focus.
+- Missing or stale compatible patches now offer `Re-apply Now`, `Later`, and
+  `View Details`; `Later` snoozes only that exact target problem for 24 hours,
+  while a newer agent version is reported immediately.
+- Unsupported target layouts now produce a diagnostic-only warning and remain
+  fail-closed instead of offering a misleading repair action.
+
 ### Changed
 
 - Moved the extension source into the public RastChin pnpm monorepo at
   `apps/vscode-extension` while preserving the Marketplace identity
-  `OmegaDoITSolutions.rastchin-vscode` and version `0.3.12`.
+  `OmegaDoITSolutions.rastchin-vscode`.
 - Relicensed RastChin-owned source under Apache-2.0. The complete upstream MIT
   and Vazirmatn OFL terms remain bundled and are documented in
   `THIRD_PARTY_NOTICES.md`.
 - Updated development and packaging documentation for Node.js 24 and pnpm.
+- Re-apply now performs a second read-only verification after writing before it
+  clears the recovery status and notification state.
 
 ## [0.3.12] - 2026-08-29
 
@@ -208,6 +231,8 @@ The release links below point to the legacy standalone repository that created
 versions through `0.3.12`. They are retained as historical provenance; new
 source changes and release documentation live in the RastChin monorepo.
 
+[0.3.14]: https://github.com/omega-do-it-solutions/rastchin/releases/tag/vscode-v0.3.14
+[0.3.13]: https://github.com/omega-do-it-solutions/rastchin/releases/tag/vscode-v0.3.13
 [0.2.1]: https://github.com/omega-do-it-solutions/rastchin-vscode/releases/tag/v0.2.1
 [0.2.0]: https://github.com/omega-do-it-solutions/rastchin-vscode/releases/tag/v0.2.0
 [0.3.0]: https://github.com/omega-do-it-solutions/rastchin-vscode/releases/tag/v0.3.0

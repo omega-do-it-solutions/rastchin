@@ -1,10 +1,9 @@
 'use strict';
 // Regression suite for src/background/service-worker.js. Run:
 // `node test/service-worker.test.js` (or `pnpm test`). Exits non-zero on failure.
-// Covers: welcome page on fresh install (not update), side-panel toolbar-click
-// opt-in where chrome.sidePanel exists, and graceful no-op where it does not
-// (for example, Chromium forks that load the manifest but omit the API fall
-// back to action.default_popup).
+// Covers: welcome page on fresh install (not update), Chrome side-panel
+// toolbar-click opt-in, Firefox sidebar toolbar-click behavior, and graceful
+// no-op where neither sidebar API exists.
 
 const fs = require('fs');
 const path = require('path');
@@ -54,15 +53,48 @@ function makeChrome({ withSidePanel, panelBehaviorImpl } = {}) {
     return { chrome, calls };
 }
 
-function loadWorker(chromeMock) {
+function makeFirefox({ sidebarOpenImpl } = {}) {
+    const calls = {
+        installedListeners: [],
+        createdTabs: [],
+        actionListeners: [],
+        sidebarOpens: []
+    };
+    const browser = {
+        runtime: {
+            onInstalled: {
+                addListener(fn) { calls.installedListeners.push(fn); }
+            },
+            getURL: p => `moz-extension://test/${p}`
+        },
+        tabs: {
+            create(opts) { calls.createdTabs.push(opts); }
+        },
+        action: {
+            onClicked: {
+                addListener(fn) { calls.actionListeners.push(fn); }
+            }
+        },
+        sidebarAction: {
+            open() {
+                calls.sidebarOpens.push(true);
+                return sidebarOpenImpl ? sidebarOpenImpl() : Promise.resolve();
+            }
+        }
+    };
+    return { browser, calls };
+}
+
+function loadWorker({ chrome, browser }) {
     const ctx = {
-        chrome: chromeMock,
         console: {
             warn: (...args) => { loadWorker.lastWarn = args; },
             log() {},
             error() {}
         }
     };
+    if (chrome) ctx.chrome = chrome;
+    if (browser) ctx.browser = browser;
     vm.createContext(ctx);
     vm.runInContext(source, ctx);
     return ctx;
@@ -71,7 +103,7 @@ function loadWorker(chromeMock) {
 // --- sidePanel available: opts into toolbar-click behavior ------------------
 {
     const { chrome, calls } = makeChrome({ withSidePanel: true });
-    loadWorker(chrome);
+    loadWorker({ chrome });
     check('sidePanel: behavior set exactly once', calls.panelBehaviors.length, 1);
     check('sidePanel: openPanelOnActionClick=true', calls.panelBehaviors[0], { openPanelOnActionClick: true });
 }
@@ -81,7 +113,7 @@ function loadWorker(chromeMock) {
     const { chrome, calls } = makeChrome({ withSidePanel: false });
     let threw = false;
     try {
-        loadWorker(chrome);
+        loadWorker({ chrome });
     } catch (_) {
         threw = true;
     }
@@ -97,17 +129,41 @@ function loadWorker(chromeMock) {
     });
     let threw = false;
     try {
-        loadWorker(chrome);
+        loadWorker({ chrome });
     } catch (_) {
         threw = true;
     }
     check('rejection: worker load never throws', threw, false);
 }
 
+// --- Firefox: toolbar click opens the manifest-declared sidebar ------------
+{
+    const { browser, calls } = makeFirefox();
+    loadWorker({ browser });
+    check('Firefox: action listener registered once', calls.actionListeners.length, 1);
+    calls.actionListeners[0]();
+    check('Firefox: sidebar opened from toolbar click', calls.sidebarOpens.length, 1);
+}
+
+// --- Firefox sidebar rejection is contained -------------------------------
+{
+    const { browser, calls } = makeFirefox({
+        sidebarOpenImpl: () => Promise.reject(new Error('sidebar unavailable'))
+    });
+    let threw = false;
+    try {
+        loadWorker({ browser });
+        calls.actionListeners[0]();
+    } catch (_) {
+        threw = true;
+    }
+    check('Firefox rejection: toolbar handler never throws', threw, false);
+}
+
 // --- install flow unchanged: welcome opens on install, not on update ---------
 {
     const { chrome, calls } = makeChrome({ withSidePanel: true });
-    loadWorker(chrome);
+    loadWorker({ chrome });
     check('install: one onInstalled listener registered', calls.installedListeners.length, 1);
 
     calls.installedListeners[0]({ reason: 'install' });

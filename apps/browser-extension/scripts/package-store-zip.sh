@@ -21,8 +21,8 @@ pnpm test
 pnpm run build:unpacked
 pnpm run verify:unpacked
 
-rm -rf "$DIST"
 mkdir -p "$DIST"
+rm -f "$ZIP"
 
 node scripts/create-store-zip.js "$APP_ROOT/unpacked" "$ZIP"
 

@@ -11,6 +11,7 @@ coverage/
 next-env.d.ts
 out/
 unpacked/
+unpacked-firefox/
 ready-to-upload/
 release-artifacts/
 *.vsix
