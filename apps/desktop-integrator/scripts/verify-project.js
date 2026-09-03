@@ -29,7 +29,8 @@ const requiredRepositoryFiles = [
     'LICENSE', 'NOTICE', 'TRADEMARK.md',
     '.github/workflows/ci.yml',
     '.github/workflows/package-desktop.yml',
-    '.github/workflows/release-desktop-macos.yml'
+    '.github/workflows/release-desktop-macos.yml',
+    '.github/workflows/release-github.yml'
 ];
 
 const failures = [];
@@ -141,6 +142,31 @@ for (const marker of [
 ]) {
     if (!signedWorkflow.includes(marker)) {
         failures.push(`Signed macOS workflow is missing required control: ${marker}`);
+    }
+}
+const githubReleaseWorkflowPath = path.join(repositoryRoot, '.github/workflows/release-github.yml');
+const githubReleaseWorkflow = fs.existsSync(githubReleaseWorkflowPath)
+    ? fs.readFileSync(githubReleaseWorkflowPath, 'utf8')
+    : '';
+const macReleaseJob = githubReleaseWorkflow.match(/\n  desktop-macos:\n([\s\S]*?)\n  desktop-linux:/)?.[1] || '';
+const macReleaseJobHeader = macReleaseJob.split('\n    steps:\n', 1)[0];
+for (const marker of [
+    "if: env.MACOS_RELEASE_MODE == 'ad-hoc'",
+    'CSC_IDENTITY_AUTO_DISCOVERY: "false"',
+    "if: env.MACOS_RELEASE_MODE == 'signed'",
+    'CSC_LINK: ${{ secrets.MACOS_CSC_LINK }}',
+    'pnpm --filter rastchin-desktop-integrator package:mac:release'
+]) {
+    if (!macReleaseJob.includes(marker)) {
+        failures.push(`GitHub macOS release job is missing required mode isolation: ${marker}`);
+    }
+}
+for (const secretName of [
+    'CSC_LINK', 'CSC_KEY_PASSWORD', 'APPLE_ID',
+    'APPLE_APP_SPECIFIC_PASSWORD', 'APPLE_TEAM_ID'
+]) {
+    if (macReleaseJobHeader.includes(`${secretName}:`)) {
+        failures.push(`GitHub macOS release job must not expose ${secretName} to ad-hoc steps.`);
     }
 }
 const bakedPolicy = packageJson.build?.extraMetadata?.rastchinBuild;

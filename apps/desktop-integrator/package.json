@@ -2,7 +2,7 @@
   "name": "rastchin-desktop-integrator",
   "productName": "RastChin Desktop Integrator",
   "desktopName": "rastchin-desktop-integrator",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Cross-platform, local-only RTL integration manager for supported AI desktop apps.",
   "private": true,
   "main": "src/main/index.js",
