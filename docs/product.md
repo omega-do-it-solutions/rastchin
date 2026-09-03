@@ -178,8 +178,12 @@ repository and official distribution channels.
   agent-plugin archive are generated release artifacts. Routine package
   workflows retain CI artifacts for a limited period. An explicit release run
   verifies checksums and keeps official public artifacts durably with their
-  track-specific GitHub Release. Desktop users download and install Windows,
-  macOS, or Linux artifacts manually; there is no automatic desktop updater.
+  track-specific GitHub Release. A reviewed change to exactly one product
+  version on `main` starts that Release automatically; other pushes are no-ops.
+  Desktop users download and install Windows, macOS, or Linux artifacts
+  manually; there is no automatic desktop updater. Public macOS artifacts may
+  be explicitly published ad-hoc with a Gatekeeper warning or through the
+  preferred Developer ID signing and Apple notarization mode.
 
 ## Scale And Freshness
 
@@ -202,8 +206,9 @@ repository and official distribution channels.
   instructions and may process user-selected content under their own provider
   terms; RastChin adds no connector or remote service.
 - GitHub, Chrome Web Store, Firefox Add-ons, and Visual Studio Marketplace:
-  distribute source and verified artifacts; publication remains an explicit
-  maintainer action.
+  distribute source and verified artifacts; a reviewed version bump on `main`
+  automatically publishes only the matching GitHub Release, while marketplace
+  publication remains a separate maintainer action.
 - Codex/OpenAI and Anthropic plugin directories or repository marketplaces:
   distribute the skills-only plugin after independent validation; official
   directory submission and approval remain separate maintainer actions.

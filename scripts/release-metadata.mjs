@@ -147,21 +147,40 @@ export function validateReleaseSummary(summary) {
   return normalized;
 }
 
-export function renderReleaseNotes(metadata, summary) {
+function desktopReleaseCopy(metadata, macosMode) {
+  if (metadata.track !== "desktop") return metadata;
+  if (macosMode === "signed") return metadata;
+  if (macosMode !== "ad-hoc") {
+    throw new Error(`macOS release mode must be ad-hoc or signed; received ${JSON.stringify(macosMode)}.`);
+  }
+
+  return {
+    ...metadata,
+    installation:
+      "به‌روزرسانی خودکار فعال نیست؛ فایل مناسب را دانلود و به‌صورت دستی نصب کنید. بستهٔ macOS فعلاً ad-hoc است؛ در اولین اجرا ممکن است Gatekeeper هشدار توسعه‌دهندهٔ ناشناس نشان دهد و کاربر باید از روش رسمی Open Anyway در تنظیمات Privacy & Security استفاده کند.",
+    limitations:
+      "این مسیر هیچ فروشگاه سیستم‌عامل یا سرویس auto-update را منتشر یا فعال نمی‌کند. فایل‌های Windows فعلاً بدون امضای کد هستند و بستهٔ macOS نیز Developer ID و notarization اپل ندارد؛ بنابراین Windows SmartScreen و macOS Gatekeeper ممکن است هشدار نشان دهند.",
+    verification:
+      "آزمون و سیاست ایمنی روی runnerهای بومی اجرا شده، نوع و تعداد خروجی‌ها بررسی شده و امضای ad-hoc بسته‌های macOS پیش از انتشار تأیید شده است.",
+  };
+}
+
+export function renderReleaseNotes(metadata, summary, { macosMode = "signed" } = {}) {
   const normalizedSummary = validateReleaseSummary(summary);
+  const releaseCopy = desktopReleaseCopy(metadata, macosMode);
   return `## تغییرات این نسخه
 
 ${normalizedSummary}
 
 ## دریافت و نصب
 
-${metadata.download}
+${releaseCopy.download}
 
-${metadata.installation}
+${releaseCopy.installation}
 
 ## محدودیت انتشار
 
-${metadata.limitations}
+${releaseCopy.limitations}
 
 ## حریم خصوصی و مجوزها
 
@@ -169,7 +188,7 @@ ${metadata.limitations}
 
 ## راستی‌آزمایی
 
-پیش از انتشار، \`pnpm check\`، بررسی مخزن عمومی و audit وابستگی‌ها اجرا شده‌اند. ${metadata.verification}
+پیش از انتشار، \`pnpm check\`، بررسی مخزن عمومی و audit وابستگی‌ها اجرا شده‌اند. ${releaseCopy.verification}
 
 فایل‌های \`SHA256SUMS-*.txt\` برای بررسی یکپارچگی همهٔ فایل‌های دانلودی کنار artifactها قرار دارند.
 
@@ -211,7 +230,9 @@ async function runCli() {
   if (process.env.RELEASE_NOTES_PATH) {
     await writeFile(
       process.env.RELEASE_NOTES_PATH,
-      renderReleaseNotes(metadata, summary),
+      renderReleaseNotes(metadata, summary, {
+        macosMode: process.env.MACOS_RELEASE_MODE || "signed",
+      }),
       "utf8",
     );
   }

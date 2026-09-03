@@ -29,7 +29,7 @@
 
 هر برنامه و افزونهٔ عامل نسخه و مسیر انتشار مستقل دارد. نسخهٔ ریشه، یعنی `0.1.0`، زیرساخت مونوریپو را توصیف می‌کند و نسخهٔ هماهنگ همهٔ خروجی‌ها نیست.
 
-خروجی‌های عمومی و checksum آن‌ها در [GitHub Releases](https://github.com/omega-do-it-solutions/rastchin/releases) با tag مستقل هر برنامه منتشر می‌شوند. نصب نسخه‌های Windows، ‏macOS و Linux دستی است و برنامهٔ دسکتاپ در حال حاضر auto-update ندارد. انتشار فایل در GitHub به‌معنی انتشار خودکار در marketplaceها نیست.
+خروجی‌های عمومی و checksum آن‌ها در [GitHub Releases](https://github.com/omega-do-it-solutions/rastchin/releases) با tag مستقل هر برنامه منتشر می‌شوند. تغییر نسخهٔ یک برنامه پس از review و merge در `main` انتشار همان مسیر را خودکار آغاز می‌کند. نصب نسخه‌های Windows، ‏macOS و Linux دستی است و برنامهٔ دسکتاپ در حال حاضر auto-update ندارد. بستهٔ macOS در حالت پیش‌فرض ad-hoc ممکن است هشدار Gatekeeper نشان دهد؛ حالت امضا و notarization اپل نیز برای انتشار مورداعتماد پشتیبانی می‌شود. انتشار فایل در GitHub به‌معنی انتشار خودکار در marketplaceها نیست.
 
 ## حریم خصوصی و ایمنی
 

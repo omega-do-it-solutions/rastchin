@@ -1,6 +1,17 @@
 name: GitHub release
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/browser-extension/manifest.json"
+      - "apps/browser-extension/package.json"
+      - "apps/vscode-extension/package.json"
+      - "apps/desktop-integrator/package.json"
+      - "plugins/rastchin-persian/.codex-plugin/plugin.json"
+      - "plugins/rastchin-persian/.claude-plugin/plugin.json"
+      - "plugins/rastchin-persian/evals/cases.json"
+      - ".claude-plugin/marketplace.json"
   workflow_dispatch:
     inputs:
       track:
@@ -25,12 +36,20 @@ on:
         required: true
         default: false
         type: boolean
+      macos_mode:
+        description: macOS distribution mode (desktop track only)
+        required: true
+        default: ad-hoc
+        type: choice
+        options:
+          - ad-hoc
+          - signed
 
 permissions:
   contents: read
 
 concurrency:
-  group: github-release-${{ inputs.track }}-${{ inputs.version }}
+  group: github-release-${{ github.ref }}
   cancel-in-progress: false
 
 env:
@@ -44,50 +63,66 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     outputs:
-      track: ${{ steps.metadata.outputs.track }}
-      version: ${{ steps.metadata.outputs.version }}
-      tag: ${{ steps.metadata.outputs.tag }}
-      title: ${{ steps.metadata.outputs.title }}
+      should_release: ${{ steps.request.outputs.should_release }}
+      track: ${{ steps.request.outputs.track }}
+      version: ${{ steps.request.outputs.version }}
+      tag: ${{ steps.request.outputs.tag }}
+      title: ${{ steps.request.outputs.title }}
+      summary: ${{ steps.request.outputs.summary }}
+      prerelease: ${{ steps.request.outputs.prerelease }}
+      macos_mode: ${{ steps.request.outputs.macos_mode }}
     steps:
       - name: Require the reviewed main branch
         if: github.ref != 'refs/heads/main'
         run: |
-          echo "GitHub releases must be dispatched from main; received $GITHUB_REF." >&2
+          echo "GitHub releases must run from main; received $GITHUB_REF." >&2
           exit 1
       - name: Check out the exact release commit
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Install pnpm
-        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
-        with:
-          version: ${{ env.PNPM_VERSION }}
-          run_install: false
       - name: Install Node.js
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
+          package-manager-cache: false
+      - name: Resolve manual or automatic release request
+        id: request
+        env:
+          AFTER_SHA: ${{ github.sha }}
+          AUTO_MACOS_RELEASE_MODE: ${{ vars.MACOS_RELEASE_MODE || 'ad-hoc' }}
+          BEFORE_SHA: ${{ github.event.before }}
+          MANUAL_MACOS_RELEASE_MODE: ${{ inputs.macos_mode }}
+          MANUAL_PRERELEASE: ${{ inputs.prerelease }}
+          MANUAL_SUMMARY: ${{ inputs.summary }}
+          MANUAL_TRACK: ${{ inputs.track }}
+          MANUAL_VERSION: ${{ inputs.version }}
+        run: node scripts/release-request.mjs
+      - name: Report a non-release push
+        if: steps.request.outputs.should_release != 'true'
+        env:
+          RELEASE_SKIP_REASON: ${{ steps.request.outputs.reason }}
+        run: echo "$RELEASE_SKIP_REASON"
+      - name: Install pnpm
+        if: steps.request.outputs.should_release == 'true'
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
       - name: Install frozen dependencies
+        if: steps.request.outputs.should_release == 'true'
         run: pnpm install --frozen-lockfile
       - name: Run repository release gates
+        if: steps.request.outputs.should_release == 'true'
         run: |
           pnpm check
           pnpm audit:prod
           pnpm audit --audit-level high
-      - name: Validate track, version, and immutable tag
-        id: metadata
-        env:
-          RELEASE_SUMMARY: ${{ inputs.summary }}
-          RELEASE_TRACK: ${{ inputs.track }}
-          RELEASE_VERSION: ${{ inputs.version }}
-        run: |
-          set -euo pipefail
-          node scripts/release-metadata.mjs "$RELEASE_TRACK" "$RELEASE_VERSION"
       - name: Require a new immutable tag
+        if: steps.request.outputs.should_release == 'true'
         env:
-          RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
+          RELEASE_TAG: ${{ steps.request.outputs.tag }}
         run: |
           set -euo pipefail
           remote_tag="$(git ls-remote --tags origin "refs/tags/$RELEASE_TAG")"
@@ -98,7 +133,7 @@ jobs:
 
   browser:
     name: Package browser extensions
-    if: inputs.track == 'browser'
+    if: needs.preflight.outputs.should_release == 'true' && needs.preflight.outputs.track == 'browser'
     needs: preflight
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -138,7 +173,7 @@ jobs:
 
   vscode:
     name: Package VS Code extension
-    if: inputs.track == 'vscode'
+    if: needs.preflight.outputs.should_release == 'true' && needs.preflight.outputs.track == 'vscode'
     needs: preflight
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -180,7 +215,7 @@ jobs:
 
   agent:
     name: Package Persian agent plugin
-    if: inputs.track == 'agent'
+    if: needs.preflight.outputs.should_release == 'true' && needs.preflight.outputs.track == 'agent'
     needs: preflight
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -222,7 +257,7 @@ jobs:
 
   desktop-windows:
     name: Package desktop for Windows
-    if: inputs.track == 'desktop'
+    if: needs.preflight.outputs.should_release == 'true' && needs.preflight.outputs.track == 'desktop'
     needs: preflight
     runs-on: windows-2022
     timeout-minutes: 50
@@ -273,8 +308,8 @@ jobs:
           retention-days: 7
 
   desktop-macos:
-    name: Sign, notarize, and package desktop for macOS
-    if: inputs.track == 'desktop'
+    name: Package desktop for macOS
+    if: needs.preflight.outputs.should_release == 'true' && needs.preflight.outputs.track == 'desktop'
     needs: preflight
     runs-on: macos-14
     timeout-minutes: 95
@@ -284,6 +319,7 @@ jobs:
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      MACOS_RELEASE_MODE: ${{ needs.preflight.outputs.macos_mode }}
     steps:
       - name: Check out source
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -300,6 +336,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - name: Require signing and notarization credentials
+        if: env.MACOS_RELEASE_MODE == 'signed'
         run: |
           set -euo pipefail
           test -n "$CSC_LINK"
@@ -309,11 +346,16 @@ jobs:
           test -n "$APPLE_TEAM_ID"
       - name: Install frozen dependencies
         run: pnpm install --frozen-lockfile
-      - name: Test, verify, sign, notarize, and package macOS builds
+      - name: Test, verify, and package macOS builds
         run: |
+          set -euo pipefail
           pnpm --filter rastchin-desktop-integrator test
           pnpm --filter rastchin-desktop-integrator verify
-          pnpm --filter rastchin-desktop-integrator package:mac:release
+          if [ "$MACOS_RELEASE_MODE" = "signed" ]; then
+            pnpm --filter rastchin-desktop-integrator package:mac:release
+          else
+            CSC_IDENTITY_AUTO_DISCOVERY=false pnpm --filter rastchin-desktop-integrator package:mac
+          fi
       - name: Verify and stage public macOS assets
         run: |
           set -euo pipefail
@@ -321,15 +363,37 @@ jobs:
           test "$(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-Integrator-*-macOS-*.dmg' | wc -l | tr -d ' ')" -eq 2
           test "$(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-Integrator-*-macOS-*.zip' | wc -l | tr -d ' ')" -eq 2
 
+          verify_app() {
+            local app="$1"
+            codesign --verify --deep --strict --verbose=2 "$app"
+            if [ "$MACOS_RELEASE_MODE" = "signed" ]; then
+              codesign --display --verbose=4 "$app" 2>&1 | grep -q '^Authority=Developer ID Application:'
+              spctl --assess --type exec --verbose=2 "$app"
+              xcrun stapler validate "$app"
+            else
+              codesign --display --verbose=4 "$app" 2>&1 | grep -q '^Signature=adhoc$'
+            fi
+          }
+
           verified_apps=0
           while IFS= read -r -d '' app; do
-            codesign --verify --deep --strict --verbose=2 "$app"
-            codesign --display --verbose=4 "$app" 2>&1 | grep -q '^Authority=Developer ID Application:'
-            spctl --assess --type exec --verbose=2 "$app"
-            xcrun stapler validate "$app"
+            verify_app "$app"
             verified_apps=$((verified_apps + 1))
           done < <(find "$dist" -maxdepth 2 -name '*.app' -print0)
           test "$verified_apps" -eq 2
+
+          verified_dmgs=0
+          while IFS= read -r -d '' dmg; do
+            mount_dir="$(mktemp -d)"
+            hdiutil attach -nobrowse -readonly -mountpoint "$mount_dir" "$dmg" >/dev/null
+            app="$(find "$mount_dir" -maxdepth 1 -name '*.app' -print -quit)"
+            test -n "$app"
+            verify_app "$app"
+            hdiutil detach "$mount_dir" >/dev/null
+            rmdir "$mount_dir"
+            verified_dmgs=$((verified_dmgs + 1))
+          done < <(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-Integrator-*-macOS-*.dmg' -print0)
+          test "$verified_dmgs" -eq 2
 
           mkdir release-artifacts
           cp "$dist"/RastChin-Desktop-Integrator-*-macOS-*.dmg release-artifacts/
@@ -346,7 +410,7 @@ jobs:
 
   desktop-linux:
     name: Package desktop for Linux
-    if: inputs.track == 'desktop'
+    if: needs.preflight.outputs.should_release == 'true' && needs.preflight.outputs.track == 'desktop'
     needs: preflight
     runs-on: ubuntu-24.04
     timeout-minutes: 65
@@ -400,6 +464,7 @@ jobs:
     if: >-
       always() &&
       needs.preflight.result == 'success' &&
+      needs.preflight.outputs.should_release == 'true' &&
       !contains(needs.*.result, 'failure') &&
       !contains(needs.*.result, 'cancelled')
     needs:
@@ -424,6 +489,7 @@ jobs:
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
       - name: Download verified assets
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -433,9 +499,10 @@ jobs:
       - name: Verify downloaded checksums and prepare notes
         env:
           RELEASE_NOTES_PATH: release-notes.md
-          RELEASE_SUMMARY: ${{ inputs.summary }}
+          RELEASE_SUMMARY: ${{ needs.preflight.outputs.summary }}
           RELEASE_TRACK: ${{ needs.preflight.outputs.track }}
           RELEASE_VERSION: ${{ needs.preflight.outputs.version }}
+          MACOS_RELEASE_MODE: ${{ needs.preflight.outputs.macos_mode }}
         run: |
           set -euo pipefail
           test -n "$(find release-artifacts -maxdepth 1 -type f -print -quit)"
@@ -447,7 +514,7 @@ jobs:
       - name: Publish GitHub Release and immutable tag
         env:
           GH_TOKEN: ${{ github.token }}
-          PRERELEASE: ${{ inputs.prerelease }}
+          PRERELEASE: ${{ needs.preflight.outputs.prerelease }}
           RELEASE_TAG: ${{ needs.preflight.outputs.tag }}
           RELEASE_TITLE: ${{ needs.preflight.outputs.title }}
         run: |
