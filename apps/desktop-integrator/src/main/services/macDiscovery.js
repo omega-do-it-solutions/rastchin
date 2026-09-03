@@ -10,15 +10,16 @@ const { summarizeTargets } = require('./discoverySummary');
 const { verifyMacAppBundle } = require('./macTrust');
 
 const execFileAsync = promisify(execFile);
+const macPath = path.posix;
 
 function applicationRoots(homeDir = os.homedir()) {
-    return ['/Applications', path.join(homeDir, 'Applications')];
+    return ['/Applications', macPath.join(homeDir, 'Applications')];
 }
 
 function runningProcessNames(stdout) {
     return new Set(String(stdout || '')
         .split(/\r?\n/)
-        .map(value => path.basename(value.trim()))
+        .map(value => macPath.basename(value.trim()))
         .filter(Boolean));
 }
 
@@ -73,7 +74,7 @@ async function discoverMacApps(options = {}) {
     for (const target of TARGETS) {
         for (const root of roots) {
             for (const bundle of target.macBundles || []) {
-                const bundlePath = path.join(root, bundle.name);
+                const bundlePath = macPath.join(root, bundle.name);
                 if (!exists(bundlePath)) continue;
                 try {
                     const trusted = await verifyMacAppBundle(bundlePath, target, {

@@ -7,6 +7,7 @@ const { promisify } = require('node:util');
 const { executableNamesFor } = require('../targets/registry');
 
 const execFileAsync = promisify(execFile);
+const macPath = path.posix;
 
 async function readPlistValue(plistPath, key, options = {}) {
     const exec = options.execFile || execFileAsync;
@@ -21,12 +22,12 @@ function signatureRequirement(identity) {
 }
 
 async function verifyMacAppBundle(bundlePath, target, options = {}) {
-    if (!path.posix.isAbsolute(bundlePath || '') || !String(bundlePath).endsWith('.app')) {
+    if (!macPath.isAbsolute(bundlePath || '') || !String(bundlePath).endsWith('.app')) {
         throw new Error('A validated absolute macOS application bundle is required.');
     }
     const exists = options.exists || fs.existsSync;
     const exec = options.execFile || execFileAsync;
-    const plistPath = path.join(bundlePath, 'Contents', 'Info.plist');
+    const plistPath = macPath.join(bundlePath, 'Contents', 'Info.plist');
     if (!exists(plistPath)) throw new Error('The macOS application Info.plist is missing.');
 
     const identity = target.macIdentity || {};
@@ -54,7 +55,7 @@ async function verifyMacAppBundle(bundlePath, target, options = {}) {
     if (!allowedNames.includes(executableName)) {
         throw new Error(`Unexpected macOS executable for ${target.name}: ${executableName || '(empty)'}`);
     }
-    const executable = path.join(bundlePath, 'Contents', 'MacOS', executableName);
+    const executable = macPath.join(bundlePath, 'Contents', 'MacOS', executableName);
     if (!exists(executable)) throw new Error('The signed macOS application executable is missing.');
 
     let version = '';
