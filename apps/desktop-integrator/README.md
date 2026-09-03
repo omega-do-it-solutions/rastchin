@@ -93,9 +93,9 @@ pnpm --filter rastchin-desktop-integrator package:mac
 pnpm --filter rastchin-desktop-integrator package:linux
 ```
 
-فرمان `package:mac` و گردش‌کار عادی CI مربوط به macOS، خروجی داخلی با امضای ad-hoc می‌سازند. CI بستهٔ کامل برنامه را پیش از بسته‌بندی و از داخل هر DMG بررسی می‌کند. امضای ad-hoc ساختار برنامه را معتبر می‌کند، اما اعتماد Developer ID یا notarization فراهم نمی‌کند.
+فرمان `package:mac` و گردش‌کار عادی CI مربوط به macOS، خروجی با امضای ad-hoc می‌سازند. CI بستهٔ کامل برنامه را پیش از بسته‌بندی و از داخل هر DMG بررسی می‌کند. امضای ad-hoc ساختار برنامه را معتبر می‌کند، اما اعتماد Developer ID یا notarization فراهم نمی‌کند. گردش‌کار `GitHub release` می‌تواند همین فایل‌ها را بدون secret منتشر کند، اما یادداشت انتشار باید هشدار Gatekeeper را شفاف بیان کند.
 
-برای دانلود نهایی کاربر Mac، اعتبارنامه‌های Developer ID و notarization اپل را مطابق `docs/MACOS-SMOKE.md` تنظیم و سپس اجرا کنید:
+برای دانلود نهایی بدون هشدار Gatekeeper، اعتبارنامه‌های Developer ID و notarization اپل را مطابق `docs/MACOS-SMOKE.md` تنظیم و سپس اجرا کنید:
 
 ```bash
 pnpm --filter rastchin-desktop-integrator package:mac:release
@@ -113,7 +113,7 @@ pnpm --filter rastchin-desktop-integrator package:mac:release
 
 خروجی‌های بسته‌بندی‌شده سیاست runtime را در خود دارند و با اجرای عادی کار می‌کنند؛ کاربران متغیر محیطی توسعه را تنظیم نمی‌کنند.
 
-ساخت امضانشدهٔ ویندوز ممکن است هشدار SmartScreen ایجاد کند. خروجی‌های داخلی macOS با امضای ad-hoc ممکن است همچنان به تأیید صریح **Open Anyway** نیاز داشته باشند. ساخت عمومی macOS به امضای Developer ID، ‏notarization و stapling نیاز دارد؛ گردش‌کار `macOS signed release` این مسیر را اجباری می‌کند. کاربران لینوکس بهتر است DEB یا RPM سازگار با توزیع خود را انتخاب کنند؛ AppImage گزینهٔ قابل‌حمل است.
+ساخت امضانشدهٔ ویندوز ممکن است هشدار SmartScreen ایجاد کند. خروجی macOS با امضای ad-hoc ممکن است همچنان به تأیید صریح **Open Anyway** نیاز داشته باشد. حالت قابل‌اعتماد macOS به امضای Developer ID، ‏notarization و stapling نیاز دارد؛ گردش‌کار `Signed macOS desktop package` این مسیر را اجباری می‌کند. کاربران لینوکس بهتر است DEB یا RPM سازگار با توزیع خود را انتخاب کنند؛ AppImage گزینهٔ قابل‌حمل است.
 
 ## مشارکت، مجوز و نشان‌های تجاری
 

@@ -51,3 +51,14 @@ test("release notes require a user-visible summary and document manual desktop i
   assert.match(notes, /SHA256SUMS/);
   assert.match(notes, /tag جابه‌جا نخواهد شد/);
 });
+
+test("ad-hoc macOS release notes disclose Gatekeeper and missing notarization", async () => {
+  const metadata = await getCurrentReleaseMetadata({ track: "desktop" });
+  const notes = renderReleaseNotes(metadata, "انتشار آزمایشی دسکتاپ.", {
+    macosMode: "ad-hoc",
+  });
+
+  assert.match(notes, /Gatekeeper/);
+  assert.match(notes, /Open Anyway/);
+  assert.match(notes, /notarization اپل ندارد/);
+});

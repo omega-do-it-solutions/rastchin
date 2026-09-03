@@ -15,8 +15,10 @@ pnpm --filter rastchin-desktop-integrator verify
 pnpm --filter rastchin-desktop-integrator package:mac
 ```
 
-The last command creates internal ad-hoc-signed artifacts. Public artifacts
-must follow the signed release path below.
+The last command creates ad-hoc-signed artifacts. They may be attached to a
+GitHub Release without Apple credentials, but an internet-downloaded copy can
+trigger Gatekeeper's unidentified-developer warning. Use Developer ID signing
+and Apple notarization when a warning-free public installation is required.
 
 ## Preparation
 
@@ -51,12 +53,19 @@ the pinned OpenAI Apple Team ID. It never edits the application bundle.
 
 ## Release validation
 
-The regular `Desktop packages` workflow creates internal ad-hoc-signed artifacts.
-It verifies the unpacked app and the exact app mounted from every generated DMG before
-uploading them. Ad-hoc signatures are not a replacement for Developer ID trust, so
-public DMGs must use the manual `Signed macOS desktop release` workflow with its
-Developer ID and Apple notarization secrets configured; the workflow fails closed
-when credentials are missing. Validate the final artifact:
+The regular `Desktop packages` workflow creates ad-hoc-signed artifacts. It
+verifies the unpacked app and the exact app mounted from every generated DMG
+before uploading them. The `GitHub release` workflow uses the same ad-hoc mode by
+default so a DMG can be published without Apple credentials, and its release
+notes disclose the Gatekeeper limitation. Users can use **Open Anyway** in
+**System Settings → Privacy & Security** after confirming the download and its
+checksum.
+
+For trusted public distribution, set the repository variable
+`MACOS_RELEASE_MODE=signed` and configure the Developer ID and Apple notarization
+secrets from the root `RELEASING.md`. The standalone `Signed macOS desktop
+package` workflow provides the same signing checks without creating a GitHub
+Release. Validate a signed final artifact with:
 
 ```bash
 codesign --verify --deep --strict "/Applications/RastChin Desktop Integrator.app"

@@ -72,6 +72,8 @@ const requiredPaths = [
   "plugins/rastchin-persian/skills/rastchin-persian/references/structured-localization.md",
   "scripts/release-metadata.mjs",
   "scripts/release-metadata.test.mjs",
+  "scripts/release-request.mjs",
+  "scripts/release-request.test.mjs",
   "scripts/verify-rastchin-persian-plugin.mjs",
   "apps/browser-extension/manifest.json",
   "apps/browser-extension/package.json",

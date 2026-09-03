@@ -1,6 +1,6 @@
 # Releasing RastChin
 
-RastChin has four independent release tracks: three applications and one agent plugin. A change to one track does not require unrelated version bumps or artifacts. Marketplace publication remains separate from GitHub publication. The manually dispatched `GitHub release` workflow intentionally combines verified package creation, the immutable track tag, checksums, and one GitHub Release into a single reviewed action.
+RastChin has four independent release tracks: three applications and one agent plugin. A change to one track does not require unrelated version bumps or artifacts. Marketplace publication remains separate from GitHub publication. The `GitHub release` workflow combines verified package creation, the immutable track tag, checksums, and one GitHub Release after a reviewed version change reaches `main`; a manual dispatch remains available for first releases and recovery.
 
 This guide is for maintainers. Contributors should not bump versions unless a maintainer has assigned a release task.
 
@@ -19,7 +19,7 @@ The root package version tracks the repository foundation only. App changelogs r
 
 - Start from a clean, reviewed commit on `main` with the frozen lockfile install passing.
 - Release only from CI artifacts or a documented, equivalent clean build on the required target OS.
-- Never publish automatically as a side effect of `push`, `pull_request`, or a packaging command. Publication requires an explicit `GitHub release` workflow dispatch from `main`.
+- Never publish from a pull request, feature branch, ordinary source change, or packaging command. A push to `main` publishes only when exactly one track's authoritative version changes; otherwise the release workflow is a successful no-op. Manual publication is limited to an explicit workflow dispatch from `main`.
 - Never put marketplace tokens, signing certificates, notarization credentials, host passwords, or deployment keys in Git or build logs.
 - Preserve `LICENSE`, `NOTICE`, all third-party license text, and the exact package identity in every artifact.
 - Describe permissions, privacy, compatibility limitations, breaking behavior, and manual migration or restore steps truthfully.
@@ -40,17 +40,29 @@ git status --short
 
 Review dependency audit output even when it is below the blocking threshold. Confirm generated outputs are ignored and the source tree contains no `.env`, signing, package, or local-profile files.
 
-## Create a GitHub Release
+## Automatic GitHub Releases
 
-After the release change has been reviewed and merged:
+For a normal release:
+
+1. Change exactly one product's authoritative version and all matching version sources listed above.
+2. Update the affected changelog and release-facing compatibility, privacy, permission, migration, and limitation notes.
+3. Open a pull request and complete review and CI.
+4. Merge into `main`. The `GitHub release` workflow compares the previous and current `main` commits. If the selected product's version changed, it verifies the repository, creates the track tag, packages the product, generates checksums, and publishes the Release automatically.
+5. Do not bump two independent product versions in one merge. The automatic workflow rejects that case so each Release retains a clear commit and artifact set; merge them separately or use manual dispatches.
+
+Changing a manifest without changing its version does not publish anything. This prevents documentation, metadata, workflow, and ordinary bug-fix merges from recreating an existing Release.
+
+## Manual first release or recovery
+
+Use the manual path when the current version existed before automatic detection was added, or when a verified automatic run must be retried:
 
 1. Open **Actions → GitHub release → Run workflow**.
 2. Select the `main` branch, the release track, and the exact numeric version from that track's authoritative manifest.
-3. Enter a concise user-visible summary for the release notes and select prerelease only when the artifact is not stable.
+3. Enter a concise user-visible summary, select prerelease only when the artifact is not stable, and choose the macOS mode for a desktop release.
 4. Run the workflow once. It reruns the repository checks and dependency audits, rejects an existing tag, builds only the selected track, verifies the package, creates SHA-256 checksum files, and publishes the tag and Release from the exact `main` commit.
 5. Open the public [GitHub Releases page](https://github.com/omega-do-it-solutions/rastchin/releases), download an artifact, verify its checksum, and complete the track's post-release smoke check.
 
-The GitHub publication step uses the workflow's short-lived `GITHUB_TOKEN` with job-scoped `contents: write`; no personal GitHub token is required. A desktop release additionally requires the Apple signing/notarization secrets documented below. The workflow does not publish to Chrome Web Store, Firefox Add-ons, Visual Studio Marketplace, an OS store, or an agent directory.
+The GitHub publication step uses the workflow's short-lived `GITHUB_TOKEN` with job-scoped `contents: write`; no personal GitHub token is required. The workflow does not publish to Chrome Web Store, Firefox Add-ons, Visual Studio Marketplace, an OS store, or an agent directory.
 
 RastChin does not use GitHub Packages. Its public outputs are installable ZIP, VSIX, EXE, DMG, AppImage, DEB, RPM, and plugin archive files rather than reusable packages for a registry. The source repository and durable GitHub Release assets are the appropriate distribution surfaces; an empty Packages section is expected.
 
@@ -106,14 +118,16 @@ The `VS Code extension package` workflow creates a finite-retention VSIX artifac
    ```
 
 4. Complete the matching Windows, macOS, and Linux smoke checklists. Verify official-target trust, process discovery, supported/unsupported states, enable/disable, cleanup, emergency disable, sanitized diagnostics, and vendor-file integrity.
-5. Treat ordinary macOS packages as internal ad-hoc artifacts only. A public desktop run of the `GitHub release` workflow uses Developer ID signing, notarization, stapling, and post-package verification before the macOS files can be attached. The standalone `Signed macOS desktop release` workflow remains a packaging-only path for inspecting signed CI artifacts.
+5. The default `ad-hoc` GitHub release mode requires no Apple account or secret and attaches verified DMG/ZIP files, but the Release must disclose that downloaded builds may trigger Gatekeeper's unidentified-developer warning. The `signed` mode uses Developer ID signing, notarization, stapling, and post-package verification before attachment. The standalone `Signed macOS desktop package` workflow remains available for inspecting signed CI artifacts.
 6. Confirm every installer contains the baked stable runtime policy, Apache/NOTICE/third-party files, and matching app/version/architecture metadata before attaching it to a GitHub release.
 
 Windows and macOS packages must be built and verified on their native CI runners. Cross-building is not evidence of host compatibility. GitHub Release files are downloaded and installed manually; RastChin does not currently provide an automatic desktop updater.
 
 The current Windows artifacts are not code-signed and may show a Microsoft SmartScreen warning. Add an organization-owned Windows signing service or certificate before claiming a trusted Windows publisher; never weaken or suppress the operating-system warning in product guidance.
 
-The public macOS release job requires these GitHub Actions repository secrets:
+Local testing and public download testing are different: files built on the same Mac usually lack the quarantine metadata added to an internet download. Gatekeeper evaluates downloaded applications and trusts normal distribution outside the Mac App Store when the application is signed with Developer ID and notarized by Apple. Until that is configured, users may need the official **Open Anyway** control in **System Settings → Privacy & Security** for an ad-hoc build.
+
+Automatic desktop releases use `ad-hoc` mode by default. To switch them to trusted distribution, create the repository Actions variable `MACOS_RELEASE_MODE` with the value `signed` and add these GitHub Actions repository secrets:
 
 - `MACOS_CSC_LINK`
 - `MACOS_CSC_KEY_PASSWORD`
@@ -149,8 +163,9 @@ The public macOS release job requires these GitHub Actions repository secrets:
 6. Verify the installed copy contains both manifests, the shared skill and all
    referenced files, `LICENSE`, and `NOTICE`, with no hook, executable, MCP
    configuration, secret, or private path.
-7. Dispatch the `agent` track so the workflow creates `agent-v<version>` from
-   the reviewed commit and publishes the portable archive and checksum.
+7. Merge the synchronized agent version change so the workflow creates
+   `agent-v<version>` from the reviewed commit and publishes the portable archive
+   and checksum. Use manual dispatch only for a first release or recovery.
    Repository marketplace availability follows the source/tag; submission to an
    official OpenAI/Codex or Anthropic directory is a separate manual action and
    must not be inferred from validation or tagging.
@@ -161,7 +176,7 @@ modify or manage Claude Desktop.
 
 ## Publish and verify
 
-For each track, the workflow creates the prefixed version tag, standard release-note structure, verified artifacts, and checksums. The maintainer-provided summary must describe the user-visible changes and call out any security fix, permission/privacy change, migration, or additional limitation that the standard text cannot infer.
+For each track, the workflow creates the prefixed version tag, standard release-note structure, verified artifacts, and checksums. A manual run uses the maintainer-provided summary; an automatic run includes the merged change's commit subject. Changelogs and the commit subject must describe user-visible changes and call out any security fix, permission/privacy change, migration, or additional limitation that the standard text cannot infer.
 
 After publication:
 
