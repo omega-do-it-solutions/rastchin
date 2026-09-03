@@ -70,6 +70,8 @@ const requiredPaths = [
   "plugins/rastchin-persian/skills/rastchin-persian/references/calibration-examples.md",
   "plugins/rastchin-persian/skills/rastchin-persian/references/persian-product-style.md",
   "plugins/rastchin-persian/skills/rastchin-persian/references/structured-localization.md",
+  "scripts/release-metadata.mjs",
+  "scripts/release-metadata.test.mjs",
   "scripts/verify-rastchin-persian-plugin.mjs",
   "apps/browser-extension/manifest.json",
   "apps/browser-extension/package.json",
@@ -103,6 +105,7 @@ const requiredPaths = [
   ".github/workflows/package-browser.yml",
   ".github/workflows/package-desktop.yml",
   ".github/workflows/package-vscode.yml",
+  ".github/workflows/release-github.yml",
   ".github/workflows/release-desktop-macos.yml",
 ];
 

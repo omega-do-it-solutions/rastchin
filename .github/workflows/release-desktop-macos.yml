@@ -1,4 +1,4 @@
-name: Signed macOS desktop release
+name: Signed macOS desktop package
 
 on:
   workflow_dispatch:

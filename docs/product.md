@@ -174,10 +174,12 @@ repository and official distribution channels.
 - The agent plugin stores no user content and has no RastChin service. Host-agent
   prompt, file, history, and retention behavior belongs to the selected Codex or
   Claude account and environment.
-- Chrome and Firefox ZIPs, VSIX files, and desktop installers are generated
-  release artifacts. Routine package workflows retain CI artifacts
-  for 14 days; the signed macOS workflow retains them for 30 days. Official
-  public artifacts remain with their release.
+- Chrome and Firefox ZIPs, VSIX files, desktop installers, and the portable
+  agent-plugin archive are generated release artifacts. Routine package
+  workflows retain CI artifacts for a limited period. An explicit release run
+  verifies checksums and keeps official public artifacts durably with their
+  track-specific GitHub Release. Desktop users download and install Windows,
+  macOS, or Linux artifacts manually; there is no automatic desktop updater.
 
 ## Scale And Freshness
 
@@ -222,6 +224,10 @@ repository and official distribution channels.
 - Accounts, authentication, payments, database records, uploads, object storage,
   queues, background workers, real-time delivery, mobile apps, public API, and
   telemetry.
-- Automatic marketplace publication, production deployment, creation of signing
-  credentials, and modification of source-repository Git histories.
+- Automatic marketplace publication, automatic desktop updating, production
+  deployment, creation of signing credentials, and modification of
+  source-repository Git histories.
+- GitHub Packages: the project has no registry-consumable library or container;
+  installable outputs belong on track-specific GitHub Releases and their
+  official marketplaces.
 - A shared RTL runtime package or broad UI redesign during consolidation.
