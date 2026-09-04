@@ -27,7 +27,7 @@ window.RASTCHIN_PLATFORMS = [
     { id: 'qwen', name: 'Qwen', storageKey: 'qwenEnabled', hosts: ['qwen.ai', 'chat.qwen.ai'], url: 'https://chat.qwen.ai', icon: 'Qwen.svg', category: 'ai' },
     { id: 'arena', name: 'Arena', storageKey: 'arenaEnabled', hosts: ['arena.ai', 'www.arena.ai'], url: 'https://arena.ai', icon: 'Arena.svg', category: 'ai' },
     { id: 'trello', name: 'Trello', storageKey: 'trelloEnabled', hosts: ['trello.com', 'www.trello.com'], url: 'https://trello.com', icon: 'Trello.svg', category: 'work' },
-    { id: 'notion', name: 'Notion', storageKey: 'notionEnabled', hosts: ['notion.so', 'www.notion.so', 'app.notion.so', '*.notion.site'], url: 'https://www.notion.so', icon: 'Notion.svg', category: 'work' },
+    { id: 'notion', name: 'Notion', storageKey: 'notionEnabled', hosts: ['notion.so', 'www.notion.so', 'app.notion.so', 'app.notion.com', '*.notion.site'], url: 'https://www.notion.so', icon: 'Notion.svg', category: 'work' },
     { id: 'linear', name: 'Linear', storageKey: 'linearEnabled', hosts: ['linear.app'], url: 'https://linear.app', icon: 'Linear.svg', category: 'work' },
     { id: 'github', name: 'GitHub', storageKey: 'githubEnabled', hosts: ['github.com'], url: 'https://github.com', icon: 'GitHub.svg', category: 'work' },
     { id: 'vsMarketplace', name: 'VS Marketplace', storageKey: 'vsMarketplaceEnabled', hosts: ['marketplace.visualstudio.com'], url: 'https://marketplace.visualstudio.com/vscode', icon: 'VisualStudioMarketplace.svg', category: 'work' },

@@ -116,10 +116,12 @@ var RTLEngine = class {
         this.enabled = true;
         this.pendingNodes = new Set();
         this.rafId = null;
+        this.scanMicrotaskQueued = false;
         this.observer = null;
         this.styledElements = new Map();
         this.initialized = false;
         this.observeCharacterData = this.config.observeCharacterData !== false;
+        this.scanBeforePaint = this.config.scanBeforePaint === true;
         this.lastMutationAt = new WeakMap();
         this.settleTimers = new WeakMap();
 
@@ -214,6 +216,15 @@ var RTLEngine = class {
     scheduleScan(node) {
         if (!node) return;
         this.pendingNodes.add(node);
+        if (this.scanBeforePaint) {
+            if (this.scanMicrotaskQueued) return;
+            this.scanMicrotaskQueued = true;
+            queueMicrotask(() => {
+                this.scanMicrotaskQueued = false;
+                this.processQueue();
+            });
+            return;
+        }
         if (this.rafId !== null) return;
         this.rafId = requestAnimationFrame(() => this.processQueue());
     }

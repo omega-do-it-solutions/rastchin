@@ -62,12 +62,16 @@ check('selectors: message-id fallback', exported.messageSelectors.includes('[dat
 check('selectors: semantic article fallback', exported.messageSelectors.includes('main article'), true);
 check('selectors: direct main paragraph fallback', exported.messageSelectors.includes('main p'), true);
 check('selectors: document surface fallback', exported.messageSelectors.includes('[role="document"]'), true);
+check('selectors: submitted user text span is supported',
+    exported.contentBlockSelectors.includes('span[data-slot="text"].whitespace-pre-wrap'), true);
 check('guards: code is protected', exported.codeGuardSelectors.includes('code'), true);
 check('guards: composer is protected', exported.uiGuardSelectors.includes('[data-testid*="composer"]'), true);
 
 const css = registeredRecipe.globalCss(registeredRecipe.codeGuardSelectors.join(', '));
 check('css: marked Persian blocks override host alignment', css.includes('html body .rastchin-meta-ai-rtl[dir="rtl"]'), true);
 check('css: Persian blocks use Vazirmatn', css.includes('font-family: "Vazirmatn"'), true);
+check('css: multi-line prompts use per-paragraph bidi direction', css.includes('unicode-bidi: plaintext !important'), true);
+check('css: submitted prompts stay right-aligned', css.includes('text-align: right !important'), true);
 check('css: code remains LTR and monospace', css.includes('direction: ltr !important') && css.includes('ui-monospace'), true);
 check('css: table geometry stays LTR', css.includes('table:has(.rastchin-meta-ai-rtl[dir="rtl"])'), true);
 
@@ -91,9 +95,35 @@ check('css: table geometry stays LTR', css.includes('table:has(.rastchin-meta-ai
     check('chat: English paragraph remains native', english.getAttribute('dir'), null);
     check('chat: Persian-first mixed paragraph becomes RTL', persian.getAttribute('dir'), 'rtl');
     check('chat: Persian paragraph aligns right', persian.style.textAlign, 'right');
+    check('chat: Persian paragraph uses plaintext bidi handling', persian.style.unicodeBidi, 'plaintext');
     check('chat: Persian paragraph gets marker class', persian.classList.contains('rastchin-meta-ai-rtl'), true);
     check('chat: code remains untouched', code.getAttribute('dir'), null);
     check('chat: action control remains untouched', button.getAttribute('dir'), null);
+}
+
+{
+    const submittedText = el(
+        'span',
+        {
+            cls: 'mx-0 outline-none break-words text-response text-inherit whitespace-pre-wrap',
+            attrs: { dir: 'auto', 'data-slot': 'text' }
+        },
+        t('قواعد مهم:\n- این خط فارسی است.\n## English heading: Complete LTR Test\nاین خط دوباره فارسی است.')
+    );
+    const collapseButton = el('button', {}, t('Collapse message'));
+    const submittedPrompt = el(
+        'div',
+        { cls: 'relative' },
+        el('div', { cls: 'pe-8' }, submittedText),
+        collapseButton
+    );
+    registeredRecipe.applyToMessage(submittedPrompt, makeMetaAiEngine());
+    check('submitted prompt: text span becomes RTL-capable', submittedText.getAttribute('dir'), 'rtl');
+    check('submitted prompt: each newline gets an independent bidi paragraph', submittedText.style.unicodeBidi, 'plaintext');
+    check('submitted prompt: block wrapper receives effective right alignment', submittedPrompt.style.textAlign, 'right');
+    check('submitted prompt: collapse button remains untouched', collapseButton.getAttribute('dir'), null);
+    check('submitted prompt: React text remains byte-identical', submittedText.childNodes[0].textContent,
+        'قواعد مهم:\n- این خط فارسی است.\n## English heading: Complete LTR Test\nاین خط دوباره فارسی است.');
 }
 
 {

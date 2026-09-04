@@ -133,6 +133,7 @@ var RastChinRecipe = (() => {
         // names the recipe's actively-streaming turn, left untouched until it settles.
         if (recipe.inlineIsolate !== undefined) config.inlineIsolate = recipe.inlineIsolate;
         if (recipe.observeCharacterData !== undefined) config.observeCharacterData = recipe.observeCharacterData;
+        if (recipe.scanBeforePaint !== undefined) config.scanBeforePaint = recipe.scanBeforePaint;
         if (typeof recipe.streamingSelector === 'string') config.streamingSelector = recipe.streamingSelector;
         return config;
     }
@@ -172,7 +173,7 @@ var RastChinRecipe = (() => {
             style.textContent = typeof recipe.globalCss === 'function'
                 ? recipe.globalCss(codeGuard, cssContext)
                 : (recipe.globalCss || '');
-            document.head.appendChild(style);
+            (document.head || document.documentElement).appendChild(style);
             globalStyle = style;
         }
 
@@ -208,6 +209,12 @@ var RastChinRecipe = (() => {
             enable();
             return { engine, enable, disable, unsubscribe: () => {}, removeDebugOverlay };
         }
+
+        // Some document_start recipes need the product's default-on behavior
+        // before asynchronous chrome.storage resolves, otherwise the page can
+        // paint one LTR frame. The eventual setting callback remains authoritative
+        // and restores every touched element when the platform is disabled.
+        if (recipe.enableBeforeSettings === true) enable();
 
         const unsubscribe = config.subscribe(({ key, enabled }) => {
             if (key !== recipe.storageKey) return;

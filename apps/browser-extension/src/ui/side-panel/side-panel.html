@@ -464,20 +464,123 @@
             padding: 0;
         }
 
-        /* --- footer: outbound link to public GitHub support --- */
+        /* --- footer: related product CTA + public GitHub support --- */
         .panel-footer {
             flex-shrink: 0;
             display: flex;
+            flex-direction: column;
+            gap: 5px;
             justify-content: center;
-            padding: 7px 14px;
+            padding: 8px 14px 7px;
             background: var(--rc-surface);
             border-top: 1px solid var(--rc-line);
         }
 
+        .vscode-cta {
+            width: 100%;
+            min-height: 52px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 10px;
+            color: var(--rc-ink);
+            background: rgba(40, 94, 159, 0.08);
+            border: 1px solid rgba(40, 94, 159, 0.24);
+            border-radius: var(--rc-radius-lg);
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 160ms ease-out, border-color 160ms ease-out, box-shadow 160ms ease-out;
+        }
+
+        .vscode-cta:hover {
+            background: rgba(40, 94, 159, 0.13);
+            border-color: rgba(40, 94, 159, 0.42);
+            box-shadow: 0 4px 14px rgba(40, 94, 159, 0.1);
+        }
+
+        .vscode-cta:active {
+            background: rgba(40, 94, 159, 0.17);
+        }
+
+        .review-cta {
+            width: 100%;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 6px 10px;
+            color: var(--rc-warn);
+            background: rgba(154, 100, 23, 0.07);
+            border: 1px solid rgba(154, 100, 23, 0.22);
+            border-radius: var(--rc-radius);
+            cursor: pointer;
+            font-size: 11.5px;
+            font-weight: 700;
+            line-height: 1.6;
+            text-align: center;
+            transition: background-color 160ms ease-out, border-color 160ms ease-out;
+        }
+
+        .review-cta:hover {
+            background: rgba(154, 100, 23, 0.12);
+            border-color: rgba(154, 100, 23, 0.4);
+        }
+
+        .review-cta:active {
+            background: rgba(154, 100, 23, 0.17);
+        }
+
+        .review-cta svg {
+            width: 18px;
+            height: 18px;
+            flex: 0 0 auto;
+        }
+
+        .vscode-cta__icon {
+            width: 30px;
+            height: 30px;
+            flex: 0 0 auto;
+            padding: 5px;
+            object-fit: contain;
+            background: var(--rc-surface);
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(22, 22, 21, 0.1);
+        }
+
+        .vscode-cta__copy {
+            min-width: 0;
+            flex: 1;
+            display: grid;
+            gap: 1px;
+        }
+
+        .vscode-cta__copy strong {
+            font-size: 12.5px;
+            line-height: 1.5;
+            font-weight: 750;
+        }
+
+        .vscode-cta__copy small {
+            color: var(--rc-blue);
+            font-size: 10.5px;
+            line-height: 1.5;
+            font-weight: 650;
+        }
+
+        .vscode-cta__arrow {
+            width: 18px;
+            height: 18px;
+            flex: 0 0 auto;
+            color: var(--rc-blue);
+        }
+
         .panel-footer__link {
+            align-self: center;
+            min-height: 32px;
             background: none;
             border: none;
-            padding: 4px 8px;
+            padding: 5px 10px;
             font: inherit;
             font-size: 11.5px;
             font-weight: 600;
@@ -563,6 +666,22 @@
     </main>
 
     <footer class="panel-footer">
+        <button type="button" class="vscode-cta" id="vscodePageLink" aria-label="باز کردن صفحهٔ نسخهٔ VS Code راست‌چین">
+            <img class="vscode-cta__icon" src="../../assets/icons/VisualStudioMarketplace.svg" alt="" aria-hidden="true">
+            <span class="vscode-cta__copy">
+                <strong>راست‌چین برای VS Code</strong>
+                <small>راست‌چین‌کردن هوش‌های مصنوعی در VS Code</small>
+            </span>
+            <svg class="vscode-cta__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M9 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4M13 3h8v8M21 3l-9 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+        <button type="button" class="review-cta" id="chromeStoreReviewLink" aria-label="امتیاز دادن به راست‌چین در Chrome Web Store">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="m12 3 2.78 5.63 6.22.9-4.5 4.39 1.06 6.2L12 17.2l-5.56 2.92 1.06-6.2L3 9.53l6.22-.9L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>راست‌چین رو دوست داشتی؟ بهش امتیاز بده.</span>
+        </button>
         <button type="button" class="panel-footer__link" id="panelSupportLink">بازخورد و پشتیبانی</button>
     </footer>
 

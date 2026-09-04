@@ -17,9 +17,11 @@
 (() => {
     const storage = chrome.storage.sync;
     const EXTENSION_KEY = 'extensionEnabled';
-    // Public issue templates own ordinary feedback/support. The in-panel feedback
-    // composer was removed in v1.1.34; a small footer link opens GitHub instead.
-    const SUPPORT_URL = 'https://github.com/omega-do-it-solutions/rastchin/issues/new/choose';
+    // Public website pages own ordinary feedback/support and cross-product info.
+    // The store review link goes directly to the listing's review route.
+    const SUPPORT_URL = 'https://rastchin.tools/feedback/?source=extension';
+    const VSCODE_PAGE_URL = 'https://marketplace.visualstudio.com/items?itemName=OmegaDoITSolutions.rastchin-vscode';
+    const CHROME_STORE_REVIEW_URL = 'https://chromewebstore.google.com/detail/rastchin-%D8%B1%D8%A7%D8%B3%D8%AA%E2%80%8C%DA%86%DB%8C%D9%86-persian/aginnihonhjafmecnbnkjokkaglknagd/reviews';
 
     // YouTube caption settings live IN-PANEL (v1.1.34) — no separate options page
     // trip. Same storage keys + crop-safe preset band as the runtime
@@ -586,13 +588,11 @@
     }
 
     // ----- header / footer actions --------------------------------------------------
-    // The version badge jumps to the in-panel «تازه‌ها» tab. The only outbound link
-    // is the footer «بازخورد و پشتیبانی», which opens GitHub in a new tab
-    // — the in-panel feedback composer (radios / textarea / copy / email) was removed
-    // in v1.1.34. No button opens a separate extension page.
-    function openSupport() {
-        if (chrome.tabs?.create) chrome.tabs.create({ url: SUPPORT_URL });
-        else window.open(SUPPORT_URL, '_blank', 'noopener');
+    // The version badge stays in-panel; the two footer actions open trusted public
+    // destinations without passing any page or user content.
+    function openExternal(url) {
+        if (chrome.tabs?.create) chrome.tabs.create({ url });
+        else window.open(url, '_blank', 'noopener');
     }
 
     function wireActions() {
@@ -602,7 +602,9 @@
             versionBadge.textContent = version ? `v${version}` : '';
             versionBadge.addEventListener('click', () => selectTab('whats-new'));
         }
-        document.getElementById('panelSupportLink')?.addEventListener('click', openSupport);
+        document.getElementById('vscodePageLink')?.addEventListener('click', () => openExternal(VSCODE_PAGE_URL));
+        document.getElementById('chromeStoreReviewLink')?.addEventListener('click', () => openExternal(CHROME_STORE_REVIEW_URL));
+        document.getElementById('panelSupportLink')?.addEventListener('click', () => openExternal(SUPPORT_URL));
     }
 
     // ----- storage sync --------------------------------------------------------------
