@@ -548,6 +548,12 @@
             return;
         }
 
+        // AI Studio runs this script at document_start. Its setting defaults to
+        // enabled, so attach before the async storage snapshot to prevent a
+        // one-frame fallback-font flash; a stored disabled value still performs
+        // the normal complete cleanup as soon as it arrives.
+        if (window.location?.hostname === "aistudio.google.com") enable();
+
         const unsubscribe = config.subscribe(({ enabled }) => {
             if (enabled) {
                 enable();

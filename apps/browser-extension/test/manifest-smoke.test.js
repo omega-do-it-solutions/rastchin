@@ -13,7 +13,7 @@
 //     (and that file is the LAST js entry, so its deps load first), includes the
 //     mandatory core runtime deps (controller + rtl-engine + bidi-isolate +
 //     recipe-runner), declares at
-//     least one https match, and runs at document_end
+//     least one https match, and uses its explicitly approved run timing
 //   - no platform file is registered more than once, and every src/platforms/*.js
 //     on disk is registered (no orphan)
 //   - each platform recipe's declared hosts[] are all covered by that entry's
@@ -153,17 +153,21 @@ entries.forEach((entry, i) => {
     check(`content_scripts[${i}] has at least one match`, matches.length > 0, true);
     matches.forEach(m => check(`content_scripts[${i}] match is https: ${m}`, /^https:\/\//.test(m), true));
 
-    // Every recipe entry: mandatory core deps and document_end.
+    // Every recipe entry: mandatory core deps. AI Studio starts early to avoid
+    // a visible LTR/default-font frame; other platforms retain document_end.
     CORE_REQUIRED.forEach(dep => check(`content_scripts[${i}] includes core dep ${dep}`, js.includes(dep), true));
     const idxEngine = js.indexOf('src/core/rtl-engine.js');
     const idxBidi = js.indexOf('src/core/bidi-isolate.js');
     const idxRunner = js.indexOf('src/core/recipe-runner.js');
     check(`content_scripts[${i}] loads bidi-isolate after rtl-engine`, idxBidi > idxEngine, true);
     check(`content_scripts[${i}] loads bidi-isolate before recipe-runner`, idxBidi < idxRunner, true);
-    check(`content_scripts[${i}] run_at is document_end`, entry.run_at, 'document_end');
+    const expectedRunAt = platformFiles[0] === 'src/platforms/aistudio-rtl.js'
+        ? 'document_start'
+        : 'document_end';
+    check(`content_scripts[${i}] uses approved run_at`, entry.run_at, expectedRunAt);
 });
 
-check('no content_scripts entry uses document_start', entries.filter(e => e.run_at === 'document_start').length, 0);
+check('only AI Studio uses document_start', entries.filter(e => e.run_at === 'document_start').length, 1);
 
 // --- no duplicate registration; no orphan platform files ---
 check('no platform file registered more than once', platformRegistrations.length, new Set(platformRegistrations).size);
@@ -363,21 +367,21 @@ check('side-panel loads the platform registry before its script',
 check('side-panel loads changelog data before its script',
     sidePanelHtml.indexOf('changelog-data.js') >= 0 && sidePanelHtml.indexOf('changelog-data.js') < sidePanelHtml.indexOf('side-panel.js"'), true);
 
-// --- feedback: extension-local composer removed; GitHub owns feedback/support ---
-// Users reach feedback/support via public issue templates. Tabs are exactly
+// --- feedback: extension-local composer removed; the public website owns feedback ---
+// Users reach the sourced first-party feedback page. Tabs are exactly
 // اصلی / تنظیمات / تازه‌ها and no src/ui/feedback page should ship.
 check('side-panel has no feedback tab button', /id="tab-feedback"/.test(sidePanelHtml), false);
 check('side-panel has no feedback view', /id="view-feedback"/.test(sidePanelHtml), false);
 check('side-panel has no feedback request form', /id="requestType"/.test(sidePanelHtml), false);
 check('side-panel has no feedback radio inputs', /name="reqType"/.test(sidePanelHtml), false);
 check('side-panel has exactly three tab buttons', (sidePanelHtml.match(/class="tab"/g) || []).length, 3);
-check('side-panel links to GitHub support', sidePanelHtml.includes('بازخورد و پشتیبانی') && sidePanelHtml.includes('id="panelSupportLink"'), true);
-check('side-panel JS opens the GitHub support url', sidePanelJs.includes("'https://github.com/omega-do-it-solutions/rastchin/issues/new/choose'"), true);
+check('side-panel has the public feedback link', sidePanelHtml.includes('بازخورد و پشتیبانی') && sidePanelHtml.includes('id="panelSupportLink"'), true);
+check('side-panel JS opens the sourced feedback url', sidePanelJs.includes("'https://rastchin.tools/feedback/?source=extension'"), true);
 check('side-panel JS dropped the feedback composer', /REQUEST_TYPES|wireFeedback|emailFeedback/.test(sidePanelJs), false);
 check('feedback HTML page removed from source', fileExists('src/ui/feedback/feedback.html'), false);
 check('feedback JS page removed from source', fileExists('src/ui/feedback/feedback.js'), false);
-check('popup links feedback to GitHub', popupJs.includes('https://github.com/omega-do-it-solutions/rastchin/issues/new?template=feature_request.yml'), true);
-check('whats-new links feedback to GitHub', whatsNewHtml.includes('https://github.com/omega-do-it-solutions/rastchin/issues/new?template=feature_request.yml') && whatsNewJs.includes('https://github.com/omega-do-it-solutions/rastchin/issues/new?template=feature_request.yml'), true);
+check('popup links to the sourced public feedback page', popupJs.includes('https://rastchin.tools/feedback/?source=extension'), true);
+check('whats-new links to the sourced public feedback page', whatsNewHtml.includes('https://rastchin.tools/feedback/?source=extension') && whatsNewJs.includes('https://rastchin.tools/feedback/?source=extension'), true);
 check('extension source has no internal feedback page refs', /src\/ui\/feedback|feedback\/feedback\.html/.test([popupHtml, popupJs, whatsNewHtml, whatsNewJs, sidePanelHtml, sidePanelJs].join('\n')), false);
 check('extension UI has no legacy options page navigation', /src\/ui\/options|options\/options\.html|openOptionsPage/.test([popupJs, welcomeHtml, whatsNewHtml, sidePanelHtml, sidePanelJs].join('\n')), false);
 

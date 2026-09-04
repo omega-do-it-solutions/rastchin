@@ -317,6 +317,8 @@ check('registry: Visual Studio Marketplace item pages match',
     'vsMarketplace');
 check('registry: notion.site suffix matches',
     windowMock.rastchinMatchPlatformFromUrl('https://acme.notion.site/page')?.id, 'notion');
+check('registry: current Notion app host matches',
+    windowMock.rastchinMatchPlatformFromUrl('https://app.notion.com/p/page')?.id, 'notion');
 check('registry: google translate host matches',
     windowMock.rastchinMatchPlatformFromUrl('https://translate.google.com/?sl=fa&tl=en')?.id, 'googleTranslate');
 check('registry: Meta AI host matches',
@@ -530,11 +532,23 @@ element('panelVersion').fire('click');
 check('version badge: selects whats-new tab', element('tab-whats-new').getAttribute('aria-selected'), 'true');
 check('version badge: opens no external tab', createdTabs.length, 0);
 
-// --- footer support link (replaces the removed in-panel feedback composer) -----------
-// The «بازخورد و پشتیبانی» footer link opens GitHub issue templates in a new tab.
+// --- footer external actions ---------------------------------------------------------
+// The promotional CTA opens the RastChin listing in Visual Studio Marketplace.
+element('vscodePageLink').fire('click');
+check('VS Code CTA: opens the Visual Studio Marketplace listing via tabs.create',
+    createdTabs[createdTabs.length - 1]?.url,
+    'https://marketplace.visualstudio.com/items?itemName=OmegaDoITSolutions.rastchin-vscode');
+
+// The rating CTA opens the review tab on the exact Chrome Web Store listing.
+element('chromeStoreReviewLink').fire('click');
+check('Chrome Store CTA: opens the listing review route via tabs.create',
+    createdTabs[createdTabs.length - 1]?.url,
+    'https://chromewebstore.google.com/detail/rastchin-%D8%B1%D8%A7%D8%B3%D8%AA%E2%80%8C%DA%86%DB%8C%D9%86-persian/aginnihonhjafmecnbnkjokkaglknagd/reviews');
+
+// The «بازخورد و پشتیبانی» footer link opens the first-party feedback page.
 element('panelSupportLink').fire('click');
-check('support link: opens GitHub via tabs.create',
-    createdTabs[createdTabs.length - 1]?.url, 'https://github.com/omega-do-it-solutions/rastchin/issues/new/choose');
+check('support link: opens the sourced feedback page via tabs.create',
+    createdTabs[createdTabs.length - 1]?.url, 'https://rastchin.tools/feedback/?source=extension');
 
 // --- in-panel YouTube caption settings (v1.1.33) -------------------------------------
 // The «تنظیمات کامل» / «صفحهٔ تازه‌ها» buttons are gone — navigation is the tab strip
@@ -694,8 +708,20 @@ check('support link: opens GitHub via tabs.create',
     check('side-panel HTML has no feedback radio inputs', /name="reqType"/.test(htmlSource), false);
     check('side-panel HTML has the support link', htmlIds.has('panelSupportLink'), true);
     check('side-panel HTML link target text is بازخورد و پشتیبانی', /بازخورد و پشتیبانی/.test(htmlSource), true);
+    check('side-panel HTML has the VS Code product CTA', htmlIds.has('vscodePageLink'), true);
+    check('side-panel HTML places the VS Code CTA above support',
+        htmlSource.indexOf('id="vscodePageLink"') < htmlSource.indexOf('id="panelSupportLink"'), true);
+    check('side-panel HTML has the Chrome Store review CTA', htmlIds.has('chromeStoreReviewLink'), true);
+    check('side-panel HTML places the review CTA between VS Code and support',
+        htmlSource.indexOf('id="vscodePageLink"') < htmlSource.indexOf('id="chromeStoreReviewLink"')
+        && htmlSource.indexOf('id="chromeStoreReviewLink"') < htmlSource.indexOf('id="panelSupportLink"'), true);
     check('side-panel JS dropped the feedback composer wiring', /wireFeedback|copyFeedback|emailFeedback|REQUEST_TYPES/.test(panelSource), false);
-    check('side-panel JS carries the GitHub support URL', panelSource.includes('https://github.com/omega-do-it-solutions/rastchin/issues/new/choose'), true);
+    check('side-panel JS carries the sourced first-party feedback URL',
+        panelSource.includes('https://rastchin.tools/feedback/?source=extension'), true);
+    check('side-panel JS carries the exact VS Code Marketplace URL',
+        panelSource.includes('https://marketplace.visualstudio.com/items?itemName=OmegaDoITSolutions.rastchin-vscode'), true);
+    check('side-panel JS carries the exact Chrome Store review URL',
+        panelSource.includes('aginnihonhjafmecnbnkjokkaglknagd/reviews'), true);
     // v1.1.33: the large caption-size button is removed from the markup, the JS
     // button list, and the «بزرگ» label — only small + medium remain.
     check('side-panel HTML dropped #capSizeLarge', htmlIds.has('capSizeLarge'), false);

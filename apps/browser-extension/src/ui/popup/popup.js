@@ -2,7 +2,7 @@ const storage = chrome.storage.sync;
 const EXTENSION_KEY = 'extensionEnabled';
 const SIDE_PANEL_PAGE = 'src/ui/side-panel/side-panel.html';
 const WHATS_NEW_PAGE = 'src/ui/whats-new/whats-new.html';
-const FEEDBACK_URL = 'https://github.com/omega-do-it-solutions/rastchin/issues/new?template=feature_request.yml';
+const FEEDBACK_URL = 'https://rastchin.tools/feedback/?source=extension';
 const REPORT_URL = 'https://github.com/omega-do-it-solutions/rastchin/issues/new?template=bug_report.yml';
 const PLATFORM_STORAGE_KEYS = {
   claude: 'claudeEnabled',
@@ -43,7 +43,7 @@ const PLATFORM_HOST_MAP = {
   qwen: ['qwen.ai', 'chat.qwen.ai'],
   arena: ['arena.ai'],
   trello: ['trello.com'],
-  notion: ['notion.so', 'notion.site'],
+  notion: ['notion.so', 'notion.com', 'notion.site'],
   linear: ['linear.app'],
   googleWorkspace: ['docs.google.com/document', 'docs.google.com/spreadsheets'],
   gmail: ['mail.google.com'],

@@ -94,6 +94,11 @@ function loadController(hostname, pathname = '/', options = {}) {
 }
 
 {
+    const { ctx } = loadController('app.notion.com');
+    check('controller: current Notion app host resolves', ctx.window.chatbotConfig.getCurrentPlatformInfo().storageKey, 'notionEnabled');
+}
+
+{
     const { ctx } = loadController('claudeusercontent.com');
     check('controller: claudeusercontent root resolves claudeEnabled',
         ctx.window.chatbotConfig.getCurrentPlatformInfo().storageKey, 'claudeEnabled');

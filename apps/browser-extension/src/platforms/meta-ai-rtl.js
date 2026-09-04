@@ -4,6 +4,7 @@
     const MONO_FONT_STACK = 'ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace';
     const LETTER_REGEX = /\p{L}/u;
     const RTL_CLASS = 'rastchin-meta-ai-rtl';
+    const SUBMITTED_TEXT_SELECTOR = 'span[data-slot="text"].whitespace-pre-wrap';
 
     // Meta AI is a React application whose generated prose can appear in normal
     // chat turns, semantic articles, or its document editor. These selectors are
@@ -33,6 +34,10 @@
     ];
 
     const CONTENT_BLOCK_SELECTORS = [
+        // Meta AI's submitted user prompt is a whitespace-preserving span rather
+        // than a semantic paragraph. Scope the selector to its stable data slot
+        // and wrapping class so unrelated UI spans remain untouched.
+        SUBMITTED_TEXT_SELECTOR,
         'p',
         'li',
         'blockquote',
@@ -141,12 +146,32 @@
         return targets;
     }
 
+    function submittedMessageWrapperOf(element) {
+        if (!element?.matches?.(SUBMITTED_TEXT_SELECTOR)) return null;
+        return element.closest?.('.relative') || null;
+    }
+
     function applyMetaAiContent(root, engine) {
         if (!root || root.nodeType !== 1 || !root.isConnected) return true;
         collectTargets(root, engine).forEach(target => {
             const text = engine.collectDirectionText(target).trim();
-            if (engine.needsRTL(text)) engine.applyRTL(target);
-            else engine.restoreElement(target);
+            const submittedMessageWrapper = submittedMessageWrapperOf(target);
+            if (engine.needsRTL(text)) {
+                engine.applyRTL(target);
+                // `text-align` has no layout effect on Meta AI's inline text
+                // span. Apply it to the owning block wrapper, which is the same
+                // surface a user would align manually in DevTools. Remember the
+                // original style so disabling the extension restores the host.
+                if (submittedMessageWrapper && submittedMessageWrapper !== target) {
+                    engine.rememberStyle(submittedMessageWrapper);
+                    submittedMessageWrapper.style.textAlign = 'right';
+                }
+            } else {
+                engine.restoreElement(target);
+                if (submittedMessageWrapper && engine.styledElements?.has(submittedMessageWrapper)) {
+                    engine.restoreElement(submittedMessageWrapper);
+                }
+            }
         });
         return true;
     }
@@ -154,8 +179,11 @@
     const recipe = {
         version: 1,
         storageKey: 'metaAiEnabled',
-        // Do not wrap live React/editor text nodes. Block-level dir plus
-        // unicode-bidi:isolate is sufficient and remains framework-safe.
+        // Do not wrap live React/editor text nodes. Meta AI renders a submitted
+        // multi-line prompt as one plain-text block, so `plaintext` lets every
+        // newline-delimited paragraph choose its own base direction. The whole
+        // submitted message stays right-aligned while English lines and leading
+        // Markdown markers retain their correct LTR ordering.
         inlineIsolate: false,
         streamingSelector: '[data-is-streaming="true"], [data-message-status="in_progress"], [aria-busy="true"]',
         hosts: ['meta.ai', 'www.meta.ai'],
@@ -167,7 +195,7 @@
         applyToMessage: applyMetaAiContent,
         needsRTL: needsMetaAiRTL,
         rtlClass: RTL_CLASS,
-        rtlStyle: { unicodeBidi: 'isolate' },
+        rtlStyle: { textAlign: 'right', unicodeBidi: 'plaintext' },
         globalCss: codeGuard => `
             ${codeGuard},
             ${codeGuard} * {
@@ -179,6 +207,7 @@
             html body .${RTL_CLASS}[dir="rtl"] {
                 direction: rtl !important;
                 text-align: right !important;
+                unicode-bidi: plaintext !important;
                 font-family: ${CONTENT_FONT_STACK} !important;
             }
 

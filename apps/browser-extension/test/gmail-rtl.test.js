@@ -1,7 +1,7 @@
 'use strict';
-// Regression suite for Gmail's font-only recipe contract.
-// Gmail must apply Vazirmatn to Persian text WITHOUT touching direction:
-// no dir / direction / text-align is ever set (Gmail handles direction itself).
+// Regression suite for Gmail's scoped typography and direction contract.
+// Persian subject/snippet text is RTL, while rows, senders and application
+// chrome retain Gmail's own layout direction.
 
 const fs = require('fs');
 const path = require('path');
@@ -60,12 +60,13 @@ check('recipe: single host only', registeredRecipe.hosts.length, 1);
 check('recipe: no host suffixes', registeredRecipe.hostSuffixes, undefined);
 check('recipe: list-row selector', registeredRecipe.messageSelectors.includes('.zA'), true);
 check('recipe: message-body selector', registeredRecipe.messageSelectors.includes('.a3s'), true);
+check('recipe: opened subject selector', registeredRecipe.messageSelectors.includes('.hP'), true);
 check('recipe: compose selector', registeredRecipe.messageSelectors.includes('.Am.Al.editable'), true);
 check('recipe: has custom applyToMessage', typeof registeredRecipe.applyToMessage, 'function');
 check('recipe: has isMessageElement', typeof registeredRecipe.isMessageElement, 'function');
 check('recipe: has scoped code/out-of-scope guard', typeof registeredRecipe.isCodeLike, 'function');
 check('recipe: has disable cleanup', typeof registeredRecipe.onDisable, 'function');
-check('recipe: does not define RTL style overrides', registeredRecipe.rtlStyle, undefined);
+check('recipe: does not use generic engine RTL overrides', registeredRecipe.rtlStyle, undefined);
 
 // --- host gate ---
 check('host: mail.google.com supported', exported.isSupportedHost('mail.google.com'), true);
@@ -74,14 +75,15 @@ check('host: docs.google.com unsupported', exported.isSupportedHost('docs.google
 check('host: unrelated host unsupported', exported.isSupportedHost('example.com'), false);
 check('scope: exports out-of-scope selectors', exported.outOfScopeSelectors.includes('[role="navigation"]'), true);
 
-// --- globalCss is font-only (the core Gmail requirement) ---
+// --- globalCss keeps typography and RTL scoped to marked Gmail text ---
 const css = registeredRecipe.globalCss('code, pre');
 check('css: embeds Vazirmatn font-face', css.includes('@font-face') && css.includes('Vazirmatn'), true);
 check('css: scope class for modified Gmail blocks', css.includes('rastchin-gmail-font'), true);
 check('css: applies font-family', css.includes('font-family') && css.includes('!important'), true);
-check('css: NEVER forces direction', /direction\s*:/.test(css), false);
-check('css: NEVER forces text-align', /text-align\s*:/.test(css), false);
-check('css: NEVER forces unicode-bidi', /unicode-bidi\s*:/.test(css), false);
+check('css: scope class for Gmail RTL text', css.includes('rastchin-gmail-rtl'), true);
+check('css: scoped direction is RTL', css.includes('direction: rtl !important'), true);
+check('css: scoped text alignment is right', css.includes('text-align: right !important'), true);
+check('css: scoped bidi isolation', css.includes('unicode-bidi: isolate !important'), true);
 
 // --- mock DOM helpers (mirror youtube harness style) ---
 function makeClassList(el) {
@@ -143,7 +145,7 @@ check('isMessageElement: message body matches', registeredRecipe.isMessageElemen
 const navEl = asHtmlElement(makeElement({ matchSelectors: ['.gb_T'], textContent: 'Inbox' }));
 check('isMessageElement: chrome element ignored', registeredRecipe.isMessageElement(navEl), false);
 
-// --- applyToMessage applies Vazirmatn to a Persian block but never flips direction ---
+// --- message body gets Vazirmatn without changing the whole body direction ---
 const persianTarget = asHtmlElement(makeElement({
     matchSelectors: ['p'],
     textContent: 'این یک ایمیل فارسی است'
@@ -158,11 +160,44 @@ check('applyToMessage: returns true (owns element)', handled, true);
 check('applyToMessage: persian block gets Vazirmatn', persianBlock.style.getPropertyValue('font-family').includes('Vazirmatn'), true);
 check('applyToMessage: persian block marked', persianBlock.getAttribute('data-rastchin-gmail-font'), 'true');
 check('applyToMessage: persian target gets Vazirmatn', persianTarget.style.getPropertyValue('font-family').includes('Vazirmatn'), true);
-// Font-only guarantees: no direction handling whatsoever.
 check('applyToMessage: persian block no dir attribute', persianBlock.getAttribute('dir'), null);
 check('applyToMessage: persian block no direction style', persianBlock.style.getPropertyValue('direction'), '');
 check('applyToMessage: persian block no text-align style', persianBlock.style.getPropertyValue('text-align'), '');
 check('applyToMessage: persian target no direction style', persianTarget.style.getPropertyValue('direction'), '');
+
+// --- mixed Persian/English inbox subject and snippet become RTL individually ---
+const mixedSubject = asHtmlElement(makeElement({
+    matchSelectors: ['.bog'],
+    textContent: 'Quick Task — آماده‌سازی لپ‌تاپ برای MasterTube'
+}));
+const mixedSnippet = asHtmlElement(makeElement({
+    matchSelectors: ['.y2'],
+    textContent: 'این درخواست مربوط به workflow Codex است'
+}));
+const inboxRow = asHtmlElement(makeElement({
+    matchSelectors: ['.zA'],
+    textContent: `${mixedSubject.textContent} ${mixedSnippet.textContent}`,
+    children: [mixedSubject, mixedSnippet]
+}));
+registeredRecipe.applyToMessage(inboxRow, engine);
+check('inbox: row layout direction untouched', inboxRow.style.getPropertyValue('direction'), '');
+check('inbox: mixed subject marked RTL', mixedSubject.getAttribute('data-rastchin-gmail-rtl'), 'true');
+check('inbox: mixed subject direction', mixedSubject.style.getPropertyValue('direction'), 'rtl');
+check('inbox: mixed subject alignment', mixedSubject.style.getPropertyValue('text-align'), 'right');
+check('inbox: mixed subject bidi isolation', mixedSubject.style.getPropertyValue('unicode-bidi'), 'isolate');
+check('inbox: mixed subject gets Vazirmatn', mixedSubject.style.getPropertyValue('font-family').includes('Vazirmatn'), true);
+check('inbox: mixed snippet marked RTL', mixedSnippet.getAttribute('data-rastchin-gmail-rtl'), 'true');
+
+// --- opened email title is both RTL and rendered with Vazirmatn ---
+const openedSubject = asHtmlElement(makeElement({
+    matchSelectors: ['.hP'],
+    textContent: '1405-05-30-17:16:19 - درخواست برداشت'
+}));
+registeredRecipe.applyToMessage(openedSubject, engine);
+check('opened subject: detected as Gmail text', registeredRecipe.isMessageElement(openedSubject), true);
+check('opened subject: gets Vazirmatn', openedSubject.style.getPropertyValue('font-family').includes('Vazirmatn'), true);
+check('opened subject: marked RTL', openedSubject.getAttribute('data-rastchin-gmail-rtl'), 'true');
+check('opened subject: direction', openedSubject.style.getPropertyValue('direction'), 'rtl');
 
 // --- an English block is left untouched ---
 const englishBlock = asHtmlElement(makeElement({
@@ -178,6 +213,9 @@ registeredRecipe.onDisable();
 check('onDisable: persian block mark removed', persianBlock.getAttribute('data-rastchin-gmail-font'), null);
 check('onDisable: persian block font-family cleared', persianBlock.style.getPropertyValue('font-family'), '');
 check('onDisable: persian target font-family cleared', persianTarget.style.getPropertyValue('font-family'), '');
+check('onDisable: inbox subject RTL mark removed', mixedSubject.getAttribute('data-rastchin-gmail-rtl'), null);
+check('onDisable: inbox subject direction cleared', mixedSubject.style.getPropertyValue('direction'), '');
+check('onDisable: opened subject font cleared', openedSubject.style.getPropertyValue('font-family'), '');
 
 if (failures === 0) {
     console.log(`ALL PASS (${total} assertions)`);

@@ -116,6 +116,7 @@ const recipe = {
     rtlClass: 'rastchin-rtl-text',
     rtlStyle: { unicodeBidi: 'isolate' },
     observeCharacterData: false,
+    scanBeforePaint: true,
     globalCss: codeGuard => `${codeGuard} { direction: ltr !important; }`
 };
 
@@ -131,6 +132,7 @@ const recipe = {
     check('buildEngineConfig: rtlClass passthrough', cfg.rtlClass, recipe.rtlClass);
     check('buildEngineConfig: rtlStyle default unicodeBidi', cfg.rtlStyle.unicodeBidi, 'isolate');
     check('buildEngineConfig: observeCharacterData passthrough', cfg.observeCharacterData, false);
+    check('buildEngineConfig: scanBeforePaint passthrough', cfg.scanBeforePaint, true);
     check('buildEngineConfig: isCodeLike(null) -> true', cfg.isCodeLike(null), true);
     check('buildEngineConfig: isCodeLike(code-matching node) -> true', cfg.isCodeLike({ closest: () => ({}) }), true);
     check('buildEngineConfig: isCodeLike(plain node) -> false', cfg.isCodeLike({ closest: () => null }), false);
@@ -255,6 +257,19 @@ const recipe = {
     check('subscribe: disable restores styles', engine.log.includes('restoreStyles'), true);
     check('subscribe: disable removes <style>', document.head.children.length, 0);
     check('subscribe: disabled flag', engine.enabled, false);
+}
+
+// --- runPlatformRecipe: default-on pre-settings opt-in ---
+{
+    const { api, instances, window, document } = makeCtx({ hostname: 'chat.openai.com', withConfig: true });
+    const handle = api.runPlatformRecipe({ ...recipe, enableBeforeSettings: true });
+    const engine = instances[0];
+    check('pre-settings: opt-in enables immediately', engine.enabled, true);
+    check('pre-settings: opt-in injects style immediately', document.head.children.length, 1);
+    window.subCallback({ key: 'chatgptEnabled', enabled: false });
+    check('pre-settings: stored disabled state remains authoritative', engine.enabled, false);
+    check('pre-settings: stored disabled state restores styles', engine.log.includes('restoreStyles'), true);
+    check('pre-settings: handle is preserved', typeof handle === 'object' && handle !== null, true);
 }
 
 // --- runPlatformRecipe: beforeunload cleanup ---

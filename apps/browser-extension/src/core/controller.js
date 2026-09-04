@@ -30,6 +30,7 @@ const URL_TO_CHATBOT = {
     'notion.so': 'notionEnabled',
     'www.notion.so': 'notionEnabled',
     'app.notion.so': 'notionEnabled',
+    'app.notion.com': 'notionEnabled',
     'notion.site': 'notionEnabled',
     'linear.app': 'linearEnabled',
     'mail.google.com': 'gmailEnabled',

@@ -22,7 +22,7 @@
 
 | برنامه | نسخه | مسئولیت | وضعیت |
 | --- | ---: | --- | --- |
-| [افزونهٔ مرورگر](apps/browser-extension/README.md) | 1.1.71 | رفتار RTL مبتنی بر Manifest V3 برای وب‌سایت‌های صریحاً پشتیبانی‌شده، popup و side panel | بسته‌های مستقل Chrome و Firefox |
+| [افزونهٔ مرورگر](apps/browser-extension/README.md) | 1.1.72 | رفتار RTL مبتنی بر Manifest V3 برای وب‌سایت‌های صریحاً پشتیبانی‌شده، popup و side panel | بسته‌های مستقل Chrome و Firefox |
 | [افزونهٔ VS Code](apps/vscode-extension/README.md) | 0.3.14 | Markdown Preview و یکپارچه‌سازی برگشت‌پذیر Claude Code/Codex با رضایت کاربر | مسیر انتشار مستقل VSIX |
 | [یکپارچه‌ساز دسکتاپ](apps/desktop-integrator/README.md) | 0.3.2 | کشف محلی و یکپارچه‌سازی RTL در حافظه برای برنامه‌های رسمی دسکتاپ پشتیبانی‌شده | پایدار برای ChatGPT/Codex؛ Claude در نسخه‌های آینده |
 | [افزونهٔ عامل و مهارت فارسی](plugins/rastchin-persian/README.md) | 0.1.0 | ترجمه، بازبینی و بومی‌سازی طبیعی رابط محصول با حفظ placeholder، کد، markup و ساختار فایل | یک مهارت مشترک با بسته‌بندی Codex و Claude |

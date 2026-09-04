@@ -28,11 +28,13 @@
         '[data-block-id][class*="notion-callout"]',
         '[data-block-id]',
         '.notion-selectable',
+        '[data-testid="property-value"]',
         '[data-content-editable-leaf="true"]',
         '[contenteditable="true"][spellcheck]'
     ];
 
     const TEXT_TARGET_SELECTORS = [
+        '[data-testid="property-value"]',
         '[data-content-editable-leaf="true"]',
         '[contenteditable="true"][spellcheck]',
         '.notranslate',
@@ -76,6 +78,40 @@
         '[aria-label="Untitled"]'
     ];
 
+    // Database layout containers remain out of scope. Only their actual rich-
+    // text leaves may receive the Persian font; this preserves column sizing,
+    // row controls, selection handles and Notion's own grid direction.
+    const DATABASE_SCOPE_SELECTORS = [
+        '.notion-collection_view-block',
+        '.notion-collection-item',
+        '.notion-table-block',
+        '.notion-table-view',
+        '.notion-board-view',
+        '.notion-calendar-view',
+        '.notion-gallery-view',
+        '.notion-list-view',
+        '.notion-timeline-view',
+        '.notion-database-block',
+        '[data-testid*="database"]'
+    ];
+    const DATABASE_TEXT_SELECTORS = [
+        '[data-testid="property-value"]',
+        '[data-content-editable-leaf="true"]',
+        '.notranslate'
+    ];
+    const DIRECTION_TARGET_SELECTORS = [
+        '[data-testid="property-value"]',
+        '[data-content-editable-leaf="true"]',
+        '[contenteditable="true"][spellcheck]',
+        '.notranslate',
+        'p',
+        'li',
+        'blockquote',
+        'h1',
+        'h2',
+        'h3'
+    ];
+
     const modifiedElements = new Set();
     const originalStyles = new WeakMap();
 
@@ -83,6 +119,7 @@
         return hostname === 'notion.so'
             || hostname === 'www.notion.so'
             || hostname === 'app.notion.so'
+            || hostname === 'app.notion.com'
             || NOTION_HOST_SUFFIXES.some(suffix => hostname.endsWith(suffix));
     }
 
@@ -112,8 +149,42 @@
         return element instanceof HTMLElement && !!element.closest(selectorList(CODE_GUARD_SELECTORS));
     }
 
+    function closestDatabaseTextTarget(element) {
+        if (!(element instanceof HTMLElement)) return false;
+        const target = matchesAny(element, DATABASE_TEXT_SELECTORS)
+            ? element
+            : element.closest(selectorList(DATABASE_TEXT_SELECTORS));
+        if (!(target instanceof HTMLElement)) return null;
+        if (!target.closest(selectorList(DATABASE_SCOPE_SELECTORS))) return null;
+        return target;
+    }
+
+    function isDatabaseTextTarget(element) {
+        const target = closestDatabaseTextTarget(element);
+        return target === element && (target.textContent || '').trim().length > 0;
+    }
+
+    function isWithinDatabaseTextTarget(element) {
+        const target = closestDatabaseTextTarget(element);
+        return !!target && (target.textContent || '').trim().length > 0;
+    }
+
+    function isDirectionTarget(element) {
+        if (!(element instanceof HTMLElement)) return false;
+        if (!matchesAny(element, DIRECTION_TARGET_SELECTORS)) return false;
+        if (!isVisible(element) || isCodeLike(element) || isOutOfScope(element)) return false;
+        const display = window.getComputedStyle(element).display || '';
+        if (display === 'inline' || display === 'inline-block' || display === 'contents') return false;
+        if (display.includes('flex') || display.includes('grid') || display.startsWith('table')) return false;
+        return (element.textContent || '').trim().length > 0;
+    }
+
     function isOutOfScope(element) {
-        return element instanceof HTMLElement && !!element.closest(selectorList(OUT_OF_SCOPE_SELECTORS));
+        if (!(element instanceof HTMLElement)) return false;
+        // Rich-text descendants must remain readable to collectDirectionText;
+        // only the owning property-value itself is styled later.
+        if (isWithinDatabaseTextTarget(element)) return false;
+        return !!element.closest(selectorList(OUT_OF_SCOPE_SELECTORS));
     }
 
     function isNotionTextBlock(element) {
@@ -195,14 +266,21 @@
         const text = engine.collectDirectionText(block).trim();
         if (!PERSIAN_TEXT_REGEX.test(text)) {
             restoreElement(block);
-            getTextTargets(block).forEach(restoreElement);
+            engine.restoreElement?.(block);
+            getTextTargets(block).forEach(target => {
+                restoreElement(target);
+                engine.restoreElement?.(target);
+            });
             return true;
         }
 
         applyFont(block);
-        const targets = getTextTargets(block);
+        const targets = isDatabaseTextTarget(block) ? [block] : getTextTargets(block);
         if (targets.length) {
-            targets.forEach(applyFont);
+            targets.forEach(target => {
+                applyFont(target);
+                if (isDirectionTarget(target)) engine.applyRTL(target);
+            });
         }
         return true;
     }
@@ -215,10 +293,12 @@
     const recipe = {
         version: 1,
         storageKey: 'notionEnabled',
-        hosts: ['notion.so', 'www.notion.so', 'app.notion.so'],
+        hosts: ['notion.so', 'www.notion.so', 'app.notion.so', 'app.notion.com'],
         hostSuffixes: NOTION_HOST_SUFFIXES,
         messageSelectors: TEXT_BLOCK_SELECTORS,
-        excludeSelectors: [...CODE_GUARD_SELECTORS, ...OUT_OF_SCOPE_SELECTORS],
+        // Database selectors are enforced by isCodeLike/isOutOfScope instead of
+        // the engine's static closest() guard so safe text leaves can pass.
+        excludeSelectors: CODE_GUARD_SELECTORS,
         textSelectors: [],
         rtlRegex: PERSIAN_TEXT_REGEX,
         isMessageElement: isNotionTextBlock,
@@ -256,9 +336,14 @@
             recipe,
             isSupportedHost,
             isNotionTextBlock,
+            isDatabaseTextTarget,
+            isWithinDatabaseTextTarget,
+            isDirectionTarget,
+            isOutOfScope,
             getTextTargets,
             textBlockSelectors: TEXT_BLOCK_SELECTORS,
-            outOfScopeSelectors: OUT_OF_SCOPE_SELECTORS
+            outOfScopeSelectors: OUT_OF_SCOPE_SELECTORS,
+            databaseScopeSelectors: DATABASE_SCOPE_SELECTORS
         });
     }
 

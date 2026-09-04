@@ -3,6 +3,8 @@
     const FONT_URL = chrome.runtime.getURL("src/assets/fonts/Vazirmatn[wght].ttf");
     const MODIFIED_ATTR = 'data-rastchin-gmail-font';
     const MODIFIED_CLASS = 'rastchin-gmail-font';
+    const RTL_ATTR = 'data-rastchin-gmail-rtl';
+    const RTL_CLASS = 'rastchin-gmail-rtl';
     const PERSIAN_TEXT_REGEX = /\p{Script=Arabic}/u;
 
     const TEXT_BLOCK_SELECTORS = [
@@ -10,6 +12,7 @@
         '.bog',
         '.y2',
         '.bqe',
+        '.hP',
         '.a3s',
         '.ii.gt',
         '.adn.ads',
@@ -23,6 +26,7 @@
         '.bog',
         '.y2',
         '.bqe',
+        '.hP',
         '.a3s',
         '.ii.gt',
         '.Am.Al.editable',
@@ -33,6 +37,16 @@
         'span',
         'li',
         'blockquote'
+    ];
+
+    // Keep direction changes confined to Gmail's visible subject/snippet text.
+    // Applying RTL to the row or message container would also flip senders,
+    // timestamps, actions, quoted mail and other application layout.
+    const RTL_TARGET_SELECTORS = [
+        '.bog',
+        '.y2',
+        '.bqe',
+        '.hP'
     ];
 
     const CODE_GUARD_SELECTORS = [
@@ -143,7 +157,13 @@
         if (originalStyles.has(element)) return;
         originalStyles.set(element, {
             fontFamily: element.style.getPropertyValue('font-family'),
-            fontFamilyPriority: element.style.getPropertyPriority('font-family')
+            fontFamilyPriority: element.style.getPropertyPriority('font-family'),
+            direction: element.style.getPropertyValue('direction'),
+            directionPriority: element.style.getPropertyPriority('direction'),
+            textAlign: element.style.getPropertyValue('text-align'),
+            textAlignPriority: element.style.getPropertyPriority('text-align'),
+            unicodeBidi: element.style.getPropertyValue('unicode-bidi'),
+            unicodeBidiPriority: element.style.getPropertyPriority('unicode-bidi')
         });
     }
 
@@ -157,15 +177,36 @@
         modifiedElements.add(element);
     }
 
+    function applyRtl(element) {
+        if (!(element instanceof HTMLElement)) return;
+
+        rememberOriginal(element);
+        element.setAttribute(RTL_ATTR, 'true');
+        element.classList.add(RTL_CLASS);
+        setImportant(element, 'direction', 'rtl');
+        setImportant(element, 'text-align', 'right');
+        setImportant(element, 'unicode-bidi', 'isolate');
+        modifiedElements.add(element);
+    }
+
     function restoreElement(element) {
-        if (element.getAttribute?.(MODIFIED_ATTR) !== 'true') return;
+        if (element.getAttribute?.(MODIFIED_ATTR) !== 'true'
+            && element.getAttribute?.(RTL_ATTR) !== 'true') return;
 
         const original = originalStyles.get(element) || {};
         if (original.fontFamily) element.style.setProperty('font-family', original.fontFamily, original.fontFamilyPriority || '');
         else element.style.removeProperty('font-family');
+        if (original.direction) element.style.setProperty('direction', original.direction, original.directionPriority || '');
+        else element.style.removeProperty('direction');
+        if (original.textAlign) element.style.setProperty('text-align', original.textAlign, original.textAlignPriority || '');
+        else element.style.removeProperty('text-align');
+        if (original.unicodeBidi) element.style.setProperty('unicode-bidi', original.unicodeBidi, original.unicodeBidiPriority || '');
+        else element.style.removeProperty('unicode-bidi');
 
         element.removeAttribute(MODIFIED_ATTR);
         element.classList.remove(MODIFIED_CLASS);
+        element.removeAttribute(RTL_ATTR);
+        element.classList.remove(RTL_CLASS);
         originalStyles.delete(element);
         modifiedElements.delete(element);
     }
@@ -181,13 +222,21 @@
         }
 
         applyFont(block);
-        getTextTargets(block).forEach(applyFont);
+        getTextTargets(block).forEach(target => {
+            applyFont(target);
+            if (matchesAny(target, RTL_TARGET_SELECTORS)
+                && PERSIAN_TEXT_REGEX.test(engine.collectDirectionText(target).trim())) {
+                applyRtl(target);
+            }
+        });
+        if (matchesAny(block, RTL_TARGET_SELECTORS)) applyRtl(block);
         return true;
     }
 
     function cleanUpStyles() {
         Array.from(modifiedElements).forEach(restoreElement);
         document.querySelectorAll(`[${MODIFIED_ATTR}="true"]`).forEach(restoreElement);
+        document.querySelectorAll(`[${RTL_ATTR}="true"]`).forEach(restoreElement);
     }
 
     const recipe = {
@@ -229,6 +278,12 @@
             .${MODIFIED_CLASS}[contenteditable="true"] {
                 font-family: "Vazirmatn", system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif !important;
             }
+
+            .${RTL_CLASS} {
+                direction: rtl !important;
+                text-align: right !important;
+                unicode-bidi: isolate !important;
+            }
         `
     };
 
@@ -239,6 +294,7 @@
             isGmailTextBlock,
             getTextTargets,
             textBlockSelectors: TEXT_BLOCK_SELECTORS,
+            rtlTargetSelectors: RTL_TARGET_SELECTORS,
             outOfScopeSelectors: OUT_OF_SCOPE_SELECTORS
         });
     }
