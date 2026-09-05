@@ -6,6 +6,11 @@
     const RTL_CLASS = 'rastchin-linear-rtl';
     const EDITOR_ROOT_SELECTOR = '.ProseMirror';
     const ISSUE_VIEW_SELECTOR = '[data-view-id="issue-view"]';
+    const BOARD_CARD_SELECTOR = 'a[data-board-item="true"][href*="/issue/"]';
+    const EDITOR_SCOPE_ATTRIBUTE = 'data-rastchin-linear-editor';
+    const editorScopes = new Map();
+    let nextEditorScope = 0;
+    let editorStyle = null;
     const ISSUE_TITLE_SELECTORS = [
         '[aria-label="Issue title"]',
         '[aria-label*="Issue"][aria-label*="title"]',
@@ -17,6 +22,7 @@
     // project/initiative content, and agent sessions. The semantic fallbacks
     // cover read-only versions of the same surfaces and issue titles.
     const MESSAGE_SELECTORS = [
+        BOARD_CARD_SELECTOR,
         ISSUE_VIEW_SELECTOR,
         EDITOR_ROOT_SELECTOR,
         '[aria-label="Issue title"]',
@@ -106,6 +112,7 @@
     const ENGINE_EXCLUDE_SELECTORS = [];
 
     const MANAGED_CONTENT_ROOT_SELECTORS = [
+        BOARD_CARD_SELECTOR,
         ISSUE_VIEW_SELECTOR,
         `${ISSUE_VIEW_SELECTOR} [role="textbox"]`,
         EDITOR_ROOT_SELECTOR,
@@ -212,6 +219,18 @@
         if (root.matches?.(ISSUE_TITLE_SELECTOR)) add(root);
         root.querySelectorAll?.(ISSUE_TITLE_SELECTOR).forEach(add);
 
+        // Current board cards put their title in a Text span next to the status
+        // control, without an issue-title label or paragraph. Only select that
+        // text sibling, leaving card layout, identifiers and badges alone.
+        const cards = [...(root.querySelectorAll?.(BOARD_CARD_SELECTOR) || [])];
+        if (root.matches?.(BOARD_CARD_SELECTOR)) cards.push(root);
+        cards.forEach(card => {
+            const row = card.querySelector?.('[data-menu-open]')?.parentElement;
+            row?.querySelectorAll('span[class*="-Text-"]').forEach(span => {
+                if (span.parentElement === row) add(span);
+            });
+        });
+
         // Issue titles and an empty/single-line ProseMirror paragraph may be bare
         // text containers. Only mark the exact discovery/editor root, never a
         // generic descendant div that may own Linear's flex layout.
@@ -224,13 +243,103 @@
         return targets;
     }
 
+    function editorSelector(editor, target, id) {
+        const path = [];
+        let node = target;
+        while (node && node !== editor) {
+            const siblings = [...node.parentElement.childNodes].filter(child => child.nodeType === 1);
+            path.unshift(`${node.tagName.toLowerCase()}:nth-child(${siblings.indexOf(node) + 1})`);
+            node = node.parentElement;
+        }
+        return `[${EDITOR_SCOPE_ATTRIBUTE}="${id}"] > ${path.join(' > ')}`;
+    }
+
+    function updateEditorRules(editor, engine) {
+        let scope = editorScopes.get(editor);
+        if (!scope) {
+            scope = { id: ++nextEditorScope, original: editor.getAttribute(EDITOR_SCOPE_ATTRIBUTE), css: '' };
+            editorScopes.set(editor, scope);
+            // ProseMirror permits attributes on its root. Its content DOM must
+            // not be mutated: that triggers reconciliation and discards RTL.
+            editor.setAttribute(EDITOR_SCOPE_ATTRIBUTE, String(scope.id));
+        }
+        const rules = [];
+        const rtlLists = new Set();
+        collectTargets(editor, engine).forEach(target => {
+            if (target === editor || target.closest(EDITOR_ROOT_SELECTOR) !== editor) return;
+            const rtl = engine.needsRTL(directionTextOf(target, engine));
+            const selector = editorSelector(editor, target, scope.id);
+            // Explicit LTR also prevents English children of Persian list items
+            // from inheriting the parent's direction. No user text enters CSS.
+            rules.push(`html body ${selector} { direction: ${rtl ? 'rtl' : 'ltr'} !important; text-align: ${rtl ? 'right' : 'left'} !important; unicode-bidi: isolate !important; font-family: ${CONTENT_FONT_STACK} !important; }`);
+            if (rtl && target.tagName === 'LI' && target.parentElement.matches('ul, ol')) {
+                rtlLists.add(target.parentElement);
+                if (target.parentElement.matches('ul.list-node')
+                    && target.parentElement.getAttribute('data-type') !== 'todo_list') {
+                    // Linear replaces native bullets with a ::before counter
+                    // positioned using physical left. Mirror its existing inset
+                    // without replacing its content or touching editor nodes.
+                    rules.push(`html body ${selector}::before { left: auto !important; right: calc((-1 * var(--editor-list-inset, 1.5em)) + (var(--editor-bullet-disc-offset, 0.5em) / 2)) !important; }`);
+                }
+            }
+        });
+        // A mixed list keeps its LTR geometry, so reserve space on the opposite
+        // edge too for the markers belonging to its RTL items.
+        rtlLists.forEach(list => rules.push(`html body ${editorSelector(editor, list, scope.id)} { direction: ltr !important; padding-inline-end: 2rem; }`));
+        scope.css = rules.join('\n');
+    }
+
+    function renderEditorRules() {
+        editorScopes.forEach((scope, editor) => {
+            if (!editor.isConnected) {
+                restoreEditorScope(editor, scope);
+                editorScopes.delete(editor);
+            }
+        });
+        const css = [...editorScopes.values()].map(scope => scope.css).join('\n');
+        if (!css) {
+            editorStyle?.parentNode?.removeChild(editorStyle);
+            editorStyle = null;
+            return;
+        }
+        if (!editorStyle) {
+            editorStyle = document.createElement('style');
+            editorStyle.setAttribute('data-rastchin-linear-directions', '');
+            (document.head || document.documentElement).appendChild(editorStyle);
+        }
+        if (editorStyle.textContent !== css) editorStyle.textContent = css;
+    }
+
+    function restoreEditorScope(editor, scope) {
+        if (scope.original === null) editor.removeAttribute(EDITOR_SCOPE_ATTRIBUTE);
+        else editor.setAttribute(EDITOR_SCOPE_ATTRIBUTE, scope.original);
+    }
+
+    function clearEditorRules() {
+        editorScopes.forEach((scope, editor) => restoreEditorScope(editor, scope));
+        editorScopes.clear();
+        renderEditorRules();
+    }
+
     function applyLinearContent(root, engine) {
         if (!root || root.nodeType !== 1 || !root.isConnected) return true;
+        const editors = new Set(root.querySelectorAll(EDITOR_ROOT_SELECTOR));
+        const owner = root.closest(EDITOR_ROOT_SELECTOR);
+        if (owner) editors.add(owner);
         collectTargets(root, engine).forEach(target => {
+            const editor = target.closest(EDITOR_ROOT_SELECTOR);
+            if (editor && target !== editor) {
+                editors.add(editor);
+                return;
+            }
             const text = directionTextOf(target, engine);
             if (engine.needsRTL(text)) applyRTL(target, engine);
             else engine.restoreElement(target);
         });
+        editors.forEach(editor => {
+            if (!isGuarded(editor)) updateEditorRules(editor, engine);
+        });
+        renderEditorRules();
         return true;
     }
 
@@ -247,10 +356,16 @@
         codeGuardSelectors: CODE_GUARD_SELECTORS,
         excludeSelectors: ENGINE_EXCLUDE_SELECTORS,
         applyToMessage: applyLinearContent,
+        onDisable: clearEditorRules,
         needsRTL: needsLinearRTL,
         rtlClass: RTL_CLASS,
         rtlStyle: { unicodeBidi: 'isolate' },
         globalCss: codeGuard => `
+            .ProseMirror {
+                font-family: ${CONTENT_FONT_STACK} !important;
+                caret-color: currentColor;
+            }
+
             ${codeGuard},
             ${codeGuard} * {
                 direction: ltr !important;

@@ -262,6 +262,23 @@ if (!exports_) {
     delete ctx.window.location;
 }
 
+{
+    ctx.window.location = { hostname: 'linear.app' };
+    const editor = new MockElement('div', { className: 'ProseMirror', contenteditable: true });
+    const paragraph = new MockElement('p', { parentElement: editor });
+    const span = new MockElement('span', { parentElement: paragraph });
+    exports_.evaluateTextNode(new MockTextNode('این متن فارسی است', span));
+    exports_.applyFontToElement(paragraph);
+    exports_.updateElementFont(editor);
+    check('Linear: attribution span has no inline font writes', span.style.fontFamily, '');
+    check('Linear: paragraph direct application is skipped', paragraph.style.fontFamily, '');
+    check('Linear: editor uses the recipe stylesheet', editor.style.fontFamily, '');
+    const card = new MockElement('span');
+    exports_.evaluateTextNode(new MockTextNode('عنوان فارسی کارت', card));
+    check('Linear: font still works outside ProseMirror', card.style.fontFamily.includes('Vazirmatn'), true);
+    delete ctx.window.location;
+}
+
 if (failures === 0) {
     console.log(`ALL PASS (${total} assertions)`);
 } else {
