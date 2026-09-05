@@ -47,6 +47,9 @@
     // candidates after wrapper drift, so they stay under the Claude table stylesheet
     // instead of receiving inline "Vazirmatn" that would override its table font.
     const RESPONSE_SKIP_SELECTORS = {
+        // Linear's recipe supplies the font through CSS. Inline writes inside
+        // ProseMirror cause the editor to rebuild its content.
+        "linear.app": '.ProseMirror',
         "claude.ai": '.font-claude-message, .font-claude-response, [data-test-render-count], [role="article"], table, [role="table"]',
         "chatgpt.com": '[data-message-author-role], [data-message-id], [data-testid^="conversation-turn"], main article',
         "chat.openai.com": '[data-message-author-role], [data-message-id], [data-testid^="conversation-turn"], main article'
@@ -183,6 +186,7 @@
         if (!(element instanceof HTMLElement)) return;
         if (!element.isConnected) return;
         if (shouldIgnoreElement(element)) return;
+        if (isResponseTarget(element)) return;
         if (state.trackedElements.has(element)) return;
 
         const computed = window.getComputedStyle(element).fontFamily || "";

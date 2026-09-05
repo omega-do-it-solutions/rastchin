@@ -121,7 +121,7 @@
       "default_path": "src/ui/side-panel/side-panel.html"
    },
    "short_name": "RastChin",
-   "version": "1.1.72",
+   "version": "1.1.74",
    "web_accessible_resources": [ {
       "matches": [ "https://chat.openai.com/*", "https://chatgpt.com/*", "https://meta.ai/*", "https://www.meta.ai/*", "https://claude.ai/*", "https://claudeusercontent.com/*", "https://*.claudeusercontent.com/*", "https://claudemcpcontent.com/*", "https://*.claudemcpcontent.com/*", "https://copilot.microsoft.com/*", "https://github.com/*", "https://marketplace.visualstudio.com/*", "https://gemini.google.com/*", "https://aistudio.google.com/*", "https://perplexity.ai/*", "https://www.perplexity.ai/*", "https://chat.deepseek.com/*", "https://www.deepseek.com/*", "https://deepseek.com/*", "https://notebook.google.com/*", "https://notebooklm.google.com/*", "https://qwen.ai/*", "https://chat.qwen.ai/*", "https://arena.ai/*", "https://www.arena.ai/*", "https://trello.com/*", "https://www.trello.com/*", "https://notion.so/*", "https://www.notion.so/*", "https://app.notion.so/*", "https://app.notion.com/*", "https://*.notion.site/*", "https://linear.app/*", "https://mail.google.com/*", "https://translate.google.com/*", "https://docs.google.com/*", "https://web.whatsapp.com/*", "https://web.telegram.org/*", "https://www.youtube.com/*", "https://m.youtube.com/*" ],
       "resources": [ "src/assets/fonts/*" ]

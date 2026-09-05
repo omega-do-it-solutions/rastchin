@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Linear RTL editor regression</title>
+<script type="importmap">IMPORT_MAP</script>
+<style>
+  @font-face { font-family: Vazirmatn; src: url('/font.ttf'); font-weight: 100 900; }
+  body { background: #111; color: #eee; font: 16px/1.6 system-ui; margin: 2rem auto; max-width: 900px; }
+  .ProseMirror { outline: none; border: 1px solid #555; padding: 1rem; margin: 1rem 0; white-space: pre-wrap; }
+  .ProseMirror p, .ProseMirror li, .ProseMirror h2 { direction: ltr; text-align: start; }
+  /* Observed Linear DOM/CSS: bullets are physical-left pseudo-elements, not
+     native ::marker boxes. Keep this host behavior in the regression fixture. */
+  .editor { --editor-list-inset: 1.5em; --editor-bullet-disc-offset: .5em; --editor-bullet-disc-width: .5em; }
+  .editor ul.list-node { list-style: none; padding-left: var(--editor-list-inset); }
+  .editor ul.list-node > li { position: relative; }
+  .editor ul.list-node:not([data-type="todo_list"]) > li::before {
+    content: counter(editor-ul, disc);
+    left: calc((-1 * var(--editor-list-inset)) + (var(--editor-bullet-disc-offset) / 2));
+    width: var(--editor-bullet-disc-width); text-align: center; position: absolute;
+  }
+  td, th { border: 1px solid #777; padding: .4rem; }
+  table { border-collapse: collapse; }
+  a { color: inherit; }
+  [data-board-item] { display: block; border: 1px solid #555; padding: 1rem; }
+  [data-title-row] { display: flex; gap: .5rem; }
+  [data-title-row] > span { flex: 1; }
+  #results { white-space: pre-wrap; }
+</style>
+<h1>Linear RTL editor regression</h1>
+<pre id="results">Running real ProseMirror checks…</pre>
+<a data-board-item="true" href="/omega-do/issue/OME-64/test">
+  <div data-contextual-menu="true">
+    <div><span id="identifier" class="sc2sx-Text-example">OME-64</span>
+      <div data-title-row><div data-menu-open="false">◌</div><span id="board-title" class="sc2sx-Text-example">آزمایش فارسی و RTL در Linear</span></div>
+    </div>
+    <div><span id="badge" class="sc2sx-Text-example">برچسب فارسی</span></div>
+  </div>
+</a>
+<div id="title"></div>
+<div id="description"></div>
+<script>window.chatbotConfig = { subscribe() { return () => {}; } };</script>
+<script src="/engine.js"></script>
+<script src="/recipe.js"></script>
+<script type="module" src="/test.js"></script>
+</html>

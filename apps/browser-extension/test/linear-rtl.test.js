@@ -12,7 +12,9 @@ const source = fs.readFileSync(
 
 let exported = null;
 let registeredRecipe = null;
+const head = el('head', {});
 const ctx = {
+    document: { head, createElement: tag => el(tag, {}) },
     window: {
         __LINEAR_RTL_TEST__(api) { exported = api; }
     },
@@ -42,6 +44,7 @@ if (!exported || !registeredRecipe) {
 
 function makeLinearEngine() {
     return makeEngine({
+        messageSelectors: registeredRecipe.messageSelectors,
         textSelectors: registeredRecipe.textSelectors,
         excludeSelectors: [...registeredRecipe.excludeSelectors, ...registeredRecipe.codeGuardSelectors],
         rtlRegex: registeredRecipe.rtlRegex,
@@ -172,7 +175,8 @@ check('css: table geometry stays LTR', css.includes('table:has(.rastchin-linear-
     );
     const clickToEditSurface = el('div', { role: 'button' }, titleEditor);
     registeredRecipe.applyToMessage(titleEditor, makeLinearEngine());
-    check('current title: click-to-edit wrapper does not suppress RTL', titleLine.getAttribute('dir'), 'rtl');
+    check('current title: editor content attributes are untouched', titleLine.getAttribute('dir'), null);
+    check('current title: title root is RTL', titleEditor.getAttribute('dir'), 'rtl');
     check('current title: outer click surface remains untouched', clickToEditSurface.getAttribute('dir'), null);
 }
 
@@ -194,8 +198,11 @@ check('css: table geometry stays LTR', css.includes('table:has(.rastchin-linear-
 
     check('editor: root layout remains untouched when child blocks exist', editor.getAttribute('dir'), null);
     check('editor: English paragraph remains native', english.getAttribute('dir'), null);
-    check('editor: Persian issue description becomes RTL', persian.getAttribute('dir'), 'rtl');
-    check('editor: Persian issue description aligns right', persian.style.textAlign, 'right');
+    check('editor: Persian paragraph attributes are untouched', persian.getAttribute('dir'), null);
+    check('editor: Persian paragraph has no inline alignment', persian.style.textAlign || '', '');
+    const scope = editor.getAttribute('data-rastchin-linear-editor');
+    check('editor: Persian rule lives outside content', head.querySelector('style').textContent.includes(`[data-rastchin-linear-editor="${scope}"] > p:nth-child(2) { direction: rtl !important; text-align: right`), true);
+    check('editor: English rule is explicit', head.querySelector('style').textContent.includes(`[data-rastchin-linear-editor="${scope}"] > p:nth-child(1) { direction: ltr`), true);
     check('editor: code block remains untouched', code.getAttribute('dir'), null);
 }
 
@@ -211,7 +218,8 @@ check('css: table geometry stays LTR', css.includes('table:has(.rastchin-linear-
     );
     const clickToEditSurface = el('div', { role: 'button' }, editor);
     registeredRecipe.applyToMessage(editor, makeLinearEngine());
-    check('current description: click-to-edit wrapper does not suppress RTL', persian.getAttribute('dir'), 'rtl');
+    check('current description: editor content attributes are untouched', persian.getAttribute('dir'), null);
+    check('current description: click surface does not suppress editor CSS', editor.hasAttribute('data-rastchin-linear-editor'), true);
     check('current description: nested toolbar content stays untouched', toolbarText.getAttribute('dir'), null);
     check('current description: click surface remains untouched', clickToEditSurface.getAttribute('dir'), null);
 }
@@ -272,6 +280,28 @@ check('css: table geometry stays LTR', css.includes('table:has(.rastchin-linear-
     check('dynamic update: changed English content restores direction', paragraph.getAttribute('dir'), null);
     check('dynamic update: marker class is restored', paragraph.classList.contains('rastchin-linear-rtl'), false);
 }
+
+{
+    const title = el('span', { cls: 'sc2sx-Text-c50a30fa' }, t('آزمایش فارسی در Linear'));
+    const status = el('div', { attrs: { 'data-menu-open': 'false' } });
+    const identifier = el('span', { cls: 'sc2sx-Text-c50a30fa' }, t('OME-64'));
+    const badge = el('span', { cls: 'sc2sx-Text-c50a30fa' }, t('برچسب فارسی'));
+    const card = el('a', { attrs: { 'data-board-item': 'true', href: '/omega-do/issue/OME-64/test' } },
+        el('div', { attrs: { 'data-contextual-menu': 'true' } },
+            el('div', {}, identifier, el('div', {}, status, title)), el('div', {}, badge)));
+    const engine = makeLinearEngine();
+    const candidates = new Set();
+    engine.collectCandidates(card, candidates);
+    check('board: card is discovered by the engine', candidates.has(card), true);
+    candidates.forEach(candidate => registeredRecipe.applyToMessage(candidate, engine));
+    check('board: title is RTL', title.getAttribute('dir'), 'rtl');
+    check('board: card layout is unchanged', card.getAttribute('dir'), null);
+    check('board: identifier is unchanged', identifier.getAttribute('dir'), null);
+    check('board: unrelated Persian badge is unchanged', badge.getAttribute('dir'), null);
+}
+
+registeredRecipe.onDisable();
+check('disable: editor stylesheet removed', head.childNodes.length, 0);
 
 if (failures === 0) {
     console.log(`ALL PASS (${total} assertions)`);

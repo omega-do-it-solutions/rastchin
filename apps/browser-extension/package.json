@@ -1,7 +1,7 @@
 {
   "name": "rastchin-browser-extension",
   "private": true,
-  "version": "1.1.72",
+  "version": "1.1.74",
   "description": "RastChin | راست‌چین — Persian-only RTL & font extension. Dev tooling only; the extension itself has no build step.",
   "license": "Apache-2.0",
   "author": "Omega Do IT Solutions",
@@ -19,6 +19,7 @@
   },
   "scripts": {
     "test": "node test/rtl-engine.test.js && node test/bidi-isolate.test.js && node test/bidi-integration.test.js && node test/recipe-runner.test.js && node test/controller.test.js && node test/auto-direction.test.js && node test/font-inject.test.js && node test/aistudio-rtl.test.js && node test/copilot-rtl.test.js && node test/trello-rtl.test.js && node test/notion-rtl.test.js && node test/github-rtl.test.js && node test/visual-studio-marketplace-rtl.test.js && node test/claude-rtl.test.js && node test/chatgpt-rtl.test.js && node test/meta-ai-rtl.test.js && node test/linear-rtl.test.js && node test/gmail-rtl.test.js && node test/google-translate-rtl.test.js && node test/google-workspace-rtl.test.js && node test/notebooklm-rtl.test.js && node test/whatsapp-rtl.test.js && node test/telegram-rtl.test.js && node test/youtube-rtl.test.js && node test/youtube-prose-rtl.test.js && node test/popup.test.js && node test/side-panel.test.js && node test/service-worker.test.js && node test/firefox-package.test.js && node test/manifest-smoke.test.js",
+    "qa:linear-editor": "node test/browser/linear-editor-server.cjs",
     "build:unpacked": "bash scripts/build-unpacked.sh",
     "build:firefox": "bash scripts/build-firefox.sh",
     "package:store": "bash scripts/package-store-zip.sh",
@@ -33,6 +34,9 @@
     "verify": "pnpm run verify:version && pnpm run verify:store-assets && pnpm run build:unpacked && pnpm run verify:unpacked && pnpm run build:firefox && pnpm run verify:firefox"
   },
   "devDependencies": {
-    "fflate": "0.8.3"
+    "fflate": "0.8.3",
+    "prosemirror-model": "1.25.11",
+    "prosemirror-state": "1.4.4",
+    "prosemirror-view": "1.42.3"
   }
 }
