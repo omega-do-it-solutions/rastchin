@@ -12,6 +12,7 @@ const defaultRepositoryRoot = path.resolve(
 const releaseTracks = {
   browser: {
     label: "Browser extension",
+    titleLabel: "🌐 Browser",
     tagPrefix: "browser-v",
     versionSources: [
       ["apps/browser-extension/package.json", "version"],
@@ -27,6 +28,7 @@ const releaseTracks = {
   },
   vscode: {
     label: "VS Code extension",
+    titleLabel: "🧩 VS Code",
     tagPrefix: "vscode-v",
     versionSources: [["apps/vscode-extension/package.json", "version"]],
     download: "فایل VSIX بررسی‌شده به این Release پیوست شده است.",
@@ -39,6 +41,7 @@ const releaseTracks = {
   },
   desktop: {
     label: "Desktop Integrator",
+    titleLabel: "🖥 Desktop",
     tagPrefix: "desktop-v",
     versionSources: [["apps/desktop-integrator/package.json", "version"]],
     download:
@@ -52,6 +55,7 @@ const releaseTracks = {
   },
   agent: {
     label: "Persian agent plugin",
+    titleLabel: "🤖 Persian Agent",
     tagPrefix: "agent-v",
     versionSources: [
       ["plugins/rastchin-persian/.codex-plugin/plugin.json", "version"],
@@ -117,7 +121,7 @@ export async function getReleaseMetadata({
     track,
     version,
     tag: `${definition.tagPrefix}${version}`,
-    title: `${definition.label} v${version}`,
+    title: `${definition.titleLabel} · v${version}`,
     ...definition,
     sourceVersions,
   };
