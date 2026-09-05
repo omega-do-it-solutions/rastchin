@@ -117,7 +117,7 @@ export async function getReleaseMetadata({
     track,
     version,
     tag: `${definition.tagPrefix}${version}`,
-    title: `RastChin ${definition.label} v${version}`,
+    title: `${definition.label} v${version}`,
     ...definition,
     sourceVersions,
   };
