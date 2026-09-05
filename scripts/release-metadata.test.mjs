@@ -14,17 +14,17 @@ import {
 test("all current release tracks resolve to their independent tags", async () => {
   assert.deepEqual(releaseTrackNames, ["browser", "vscode", "desktop", "agent"]);
 
-  const expectedLabels = {
-    browser: "Browser extension",
-    vscode: "VS Code extension",
-    desktop: "Desktop Integrator",
-    agent: "Persian agent plugin",
+  const expectedTitles = {
+    browser: "🌐 Browser",
+    vscode: "🧩 VS Code",
+    desktop: "🖥 Desktop",
+    agent: "🤖 Persian Agent",
   };
 
   for (const track of releaseTrackNames) {
     const metadata = await getCurrentReleaseMetadata({ track });
     assert.equal(metadata.tag, `${track}-v${metadata.version}`);
-    assert.equal(metadata.title, `${expectedLabels[track]} v${metadata.version}`);
+    assert.equal(metadata.title, `${expectedTitles[track]} · v${metadata.version}`);
     assert.doesNotMatch(metadata.title, /^RastChin\b/);
   }
 });
