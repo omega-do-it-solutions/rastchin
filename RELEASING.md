@@ -1,6 +1,6 @@
 # Releasing RastChin
 
-RastChin has three independent application release tracks. A change to one track does not require unrelated version bumps or artifacts. Marketplace publication remains separate from GitHub publication. The `GitHub release` workflow combines verified package creation, the immutable track tag, checksums, and one GitHub Release after a reviewed version change reaches `main`; a manual dispatch remains available for first releases and recovery.
+RastChin has three independent application release tracks. A change to one track does not require unrelated version bumps or artifacts. GitHub Releases is the only automated publication target. Marketplace publication remains manual and outside the release automation scope. The `GitHub release` workflow combines verified package creation, the immutable track tag, checksums, and one GitHub Release after a reviewed version change reaches `main`; a manual dispatch remains available for first releases and recovery.
 
 This guide is for maintainers. Contributors should not bump versions unless a maintainer has assigned a release task.
 

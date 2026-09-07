@@ -97,9 +97,11 @@ repository and official distribution channels.
    GitHub issue template, selects an owning application, follows its focused
    test and packaging rules, and submits a pull request without committing
    generated artifacts or secrets.
-6. Release: maintainers verify affected applications and attach immutable
-   artifacts to their appropriate marketplace or GitHub release without
-   coupling unrelated application versions.
+6. Release: maintainers verify affected applications. A
+   reviewed version bump merged into `main` automatically publishes immutable
+   artifacts only to the matching GitHub Release, without coupling unrelated
+   application versions. Any marketplace publication is a separate manual
+   maintainer action, not part of release automation.
 
 ## Business Rules
 
@@ -173,9 +175,10 @@ repository and official distribution channels.
 - Official ChatGPT/Codex desktop installations: provide local desktop targets;
   invalid identity/signature or runtime compatibility blocks activation.
 - GitHub, Chrome Web Store, Firefox Add-ons, and Visual Studio Marketplace:
-  distribute source and verified artifacts; a reviewed version bump on `main`
-  automatically publishes only the matching GitHub Release, while marketplace
-  publication remains a separate maintainer action.
+  distribute source and verified artifacts. GitHub Releases is the only
+  automated publication target; a reviewed version bump on `main` publishes
+  only the matching GitHub Release. Marketplace publication remains manual
+  and outside the release automation scope.
 
 ## Success
 
