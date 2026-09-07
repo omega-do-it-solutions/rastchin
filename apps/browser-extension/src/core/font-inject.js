@@ -51,8 +51,12 @@
         // ProseMirror cause the editor to rebuild its content.
         "linear.app": '.ProseMirror',
         "claude.ai": '.font-claude-message, .font-claude-response, [data-test-render-count], [role="article"], table, [role="table"]',
-        "chatgpt.com": '[data-message-author-role], [data-message-id], [data-testid^="conversation-turn"], main article',
-        "chat.openai.com": '[data-message-author-role], [data-message-id], [data-testid^="conversation-turn"], main article'
+        // Gemini owns its syntax-highlighting fonts. Skip its code guards only;
+        // ordinary response prose and the composer still receive Vazirmatn.
+        // Keep in sync with CODE_GUARD_SELECTORS in platforms/gemini-rtl.js.
+        "gemini.google.com": 'code, pre, [data-test-id="code-content"], .code-container, .formatted-code-block-internal-container, [class*="code-block"], [class*="codeBlock"], [role="code"], .monaco-editor, .cm-editor',
+        "chatgpt.com": '[data-message-author-role], [data-message-id], [data-testid^="conversation-turn"], main article, main .wm-app-thread [class*="_messageCopy"]',
+        "chat.openai.com": '[data-message-author-role], [data-message-id], [data-testid^="conversation-turn"], main article, main .wm-app-thread [class*="_messageCopy"]'
     };
 
     function responseSkipSelector() {

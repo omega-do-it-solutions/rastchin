@@ -152,6 +152,21 @@
         if (engine.isExcluded(el)) return;
         if (isInExcludedUi(el)) return;
 
+        // Gemini may mark the entire response RTL. English prose must carry
+        // its own LTR direction: restoring an unset dir would inherit RTL
+        // again. Neutral technical values also need LTR in managed RTL tables.
+        const table = el.closest('table');
+        if (direction === 'ltr' || (direction !== 'rtl' && table && elementDirections.get(table) === 'rtl')) {
+            engine.clearInline?.(el);
+            engine.rememberStyle(el);
+            el.setAttribute('dir', 'ltr');
+            el.style.direction = 'ltr';
+            el.style.textAlign = 'left';
+            el.style.unicodeBidi = 'isolate';
+            elementDirections.set(el, 'ltr');
+            return;
+        }
+
         if (direction !== 'rtl') {
             if (elementDirections.has(el)) {
                 engine.clearInline?.(el);
@@ -168,6 +183,29 @@
 
         engine.applyRTL(el);
         elementDirections.set(el, 'rtl');
+    }
+
+    function applyTableDirection(engine, table) {
+        if (engine.isExcluded(table) || isInExcludedUi(table)) return;
+        const cells = Array.from(table.querySelectorAll('th, td'))
+            .filter(cell => cell.closest('table') === table && !engine.isExcluded(cell));
+        const headers = cells.filter(cell => cell.tagName === 'TH');
+        const firstRow = cells[0]?.closest('tr');
+        // Headers anchor reading order even when data contains long English
+        // values. Headerless tables use their first row, never a nested table.
+        const labels = headers.length ? headers : cells.filter(cell => cell.closest('tr') === firstRow);
+        const labelText = labels.map(cell => engine.stripLtrTokens(engine.collectDirectionText(cell))).join(' ');
+        if (detectDirection(labelText) !== 'rtl') {
+            restoreElement(engine, table);
+            return;
+        }
+
+        // Manage geometry only: do not run inline isolation over an entire
+        // table. Its prose/cells are processed independently below.
+        engine.rememberStyle(table);
+        table.setAttribute('dir', 'rtl');
+        table.style.direction = 'rtl';
+        elementDirections.set(table, 'rtl');
     }
 
     const recipe = {
@@ -189,6 +227,9 @@
         applyToMessage: (el, engine) => {
             if (!el || !(el instanceof HTMLElement) || !el.isConnected) return true;
             if (isInExcludedUi(el)) return true;
+
+            if (el.matches('table')) applyTableDirection(engine, el);
+            el.querySelectorAll('table').forEach(table => applyTableDirection(engine, table));
 
             const candidates = new Set();
 
@@ -247,6 +288,22 @@
                 padding-right: 1.55rem !important;
             }
 
+            ${messageScope} :is(ul, ol)[dir="rtl"] > li[dir="ltr"] {
+                direction: ltr !important;
+                text-align: left !important;
+                padding-inline-start: 1.55rem !important;
+                padding-inline-end: 0 !important;
+                padding-left: 1.55rem !important;
+                padding-right: 0 !important;
+            }
+
+            ${messageScope} :is(ul, ol)[dir="rtl"] > li[dir="ltr"]::before {
+                left: 0 !important;
+                right: auto !important;
+                text-align: left !important;
+                direction: ltr !important;
+            }
+
             ${messageScope} ol[dir="rtl"] {
                 counter-reset: rastchin-gemini-rtl-list;
             }
@@ -277,8 +334,8 @@
                 width: 1.15rem !important;
             }
 
-            ${messageScope} [dir="rtl"] table {
-                direction: rtl;
+            ${messageScope} table[dir="rtl"] {
+                direction: rtl !important;
             }
         `;
         }

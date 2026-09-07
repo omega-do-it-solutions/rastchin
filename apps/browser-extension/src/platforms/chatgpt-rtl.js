@@ -27,6 +27,15 @@
     const MAIN_CONTENT_SELECTORS = CONTENT_BLOCK_SELECTORS.map(selector => `main ${selector}`);
     const LETTER_REGEX = /\p{L}/u;
     const RTL_CLASS = 'rastchin-chatgpt-rtl';
+    // Logged-out /uc/ chats use CSS-module message bodies and a clickable
+    // user bubble. Match the semantic suffix inside the known thread shell,
+    // not the build-specific hash or arbitrary buttons elsewhere on the page.
+    const ANONYMOUS_MESSAGE_SELECTOR = 'main .wm-app-thread [class*="_messageCopy"]';
+    const USER_BUBBLE_SELECTOR = 'main .wm-app-thread button[class*="_userMessage"]';
+    const CONVERSATION_LAYOUT_SELECTOR = [
+        'main .wm-app-thread ol[class*="_messageList"]',
+        'main .wm-app-thread li[class*="_messageTurn"]'
+    ].join(', ');
     const DOCUMENT_ROOT_SELECTORS = [
         '[data-testid*="canvas"]',
         '[data-testid*="artifact"]',
@@ -47,6 +56,7 @@
         '[data-testid="message-text"]',
         '[data-testid^="conversation-turn"]',
         'main article',
+        ANONYMOUS_MESSAGE_SELECTOR,
         ...DOCUMENT_ROOT_SELECTORS,
         ...MAIN_CONTENT_SELECTORS
     ];
@@ -85,7 +95,8 @@
         '[data-message-author-role]',
         '[data-message-id]',
         '[data-testid^="conversation-turn"]',
-        'main article'
+        'main article',
+        ANONYMOUS_MESSAGE_SELECTOR
     ];
 
     const CODE_GUARD_SELECTORS = [
@@ -105,8 +116,6 @@
 
     const CONTENT_UI_GUARD_SELECTORS = [
         ...CODE_GUARD_SELECTORS,
-        'button',
-        '[role="button"]',
         '[role="toolbar"]',
         '[role="menu"]',
         '[role="menuitem"]',
@@ -152,18 +161,33 @@
     function isContentGuarded(element) {
         if (!element || typeof element.closest !== 'function') return true;
         try {
-            return Boolean(element.closest(CONTENT_UI_GUARD));
+            if (element.closest(CONTENT_UI_GUARD)) return true;
+            const button = element.closest('button, [role="button"]');
+            if (!button) return false;
+            const message = element.closest(ANONYMOUS_MESSAGE_SELECTOR);
+            // Only the bubble's prose may change; the clickable layout itself
+            // and any nested action buttons remain untouched.
+            return !message || button === element || !button.matches(USER_BUBBLE_SELECTOR)
+                || message.closest('button, [role="button"]') !== button;
         } catch (_) {
             return true;
         }
     }
 
+    function isLayoutContainer(element) {
+        if (element.matches?.(CONVERSATION_LAYOUT_SELECTOR)) return true;
+        return element.matches?.('div, span')
+            && Boolean(element.querySelector?.(CONTENT_BLOCK_SELECTOR));
+    }
+
     function fallbackTextTarget(element, root) {
-        if (!element || element.tagName === 'DIV') return element;
+        if (!element || element === root || element.tagName === 'DIV') return element;
         let current = element.parentElement;
         while (current) {
             if (current.matches?.(CONTENT_BLOCK_SELECTOR)) return current;
-            if (current.tagName === 'DIV' && !isContentGuarded(current)) return current;
+            if (current.tagName === 'DIV' && !isContentGuarded(current)) {
+                return isLayoutContainer(current) ? element : current;
+            }
             if (current === root) break;
             current = current.parentElement;
         }
@@ -174,6 +198,13 @@
         const targets = new Set();
         const add = element => {
             if (!element || isContentGuarded(element)) return;
+            if (isLayoutContainer(element)) {
+                // Streaming can turn a previously bare prose DIV into a
+                // Markdown wrapper. Remove our old direction before English
+                // siblings inherit it; never force direction on turn layouts.
+                engine.restoreElement(element);
+                return;
+            }
             targets.add(element);
         };
 
@@ -184,6 +215,10 @@
         if (root.matches?.('div, span')) fallbackElements.push(root);
         root.querySelectorAll?.('div, span').forEach(element => fallbackElements.push(element));
         fallbackElements.forEach(element => {
+            if (isLayoutContainer(element)) {
+                engine.restoreElement(element);
+                return;
+            }
             const directText = directTextOf(element);
             if (!directText) return;
             const target = fallbackTextTarget(element, root);
@@ -192,7 +227,7 @@
             // collected above; this fallback exists for ChatGPT's plain user/message
             // lines whose text is not wrapped in a paragraph.
             if (engine.needsRTL(directText) || engine.styledElements?.has(target)) {
-                targets.add(target);
+                add(target);
             }
         });
 
