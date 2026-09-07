@@ -15,7 +15,6 @@ body:
         - Browser extension (apps/browser-extension)
         - VS Code extension (apps/vscode-extension)
         - Desktop integrator (apps/desktop-integrator)
-        - Persian agent plugin (plugins/rastchin-persian)
         - Repository, CI, or documentation
         - Unsure
     validations:

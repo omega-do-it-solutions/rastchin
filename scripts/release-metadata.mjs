@@ -53,24 +53,6 @@ const releaseTracks = {
     verification:
       "آزمون و سیاست ایمنی روی runnerهای بومی اجرا شده، نوع و تعداد خروجی‌ها بررسی شده و بسته‌های macOS امضا و notarize شده‌اند.",
   },
-  agent: {
-    label: "Persian agent plugin",
-    titleLabel: "🤖 Persian Agent",
-    tagPrefix: "agent-v",
-    versionSources: [
-      ["plugins/rastchin-persian/.codex-plugin/plugin.json", "version"],
-      ["plugins/rastchin-persian/.claude-plugin/plugin.json", "version"],
-      ["plugins/rastchin-persian/evals/cases.json", "pluginVersion"],
-      [".claude-plugin/marketplace.json", "plugins.0.version"],
-    ],
-    download: "آرشیو قابل‌حمل افزونهٔ فارسی Codex/Claude به این Release پیوست شده است.",
-    installation:
-      "روش پیشنهادی نصب، marketplace همین مخزن است؛ آرشیو پیوست‌شده برای بررسی یا نصب دستی نگه‌داری می‌شود.",
-    limitations:
-      "این Release ثبت یا ارسال خودکار به فهرست‌های رسمی OpenAI یا Anthropic انجام نمی‌دهد.",
-    verification:
-      "هم‌خوانی manifestها، marketplaceها، مهارت مشترک، منابع و مجموعهٔ ارزیابی قطعی بررسی شده است.",
-  },
 };
 
 const strictVersionPattern = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;

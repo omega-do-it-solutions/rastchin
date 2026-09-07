@@ -12,13 +12,12 @@ import {
 } from "./release-metadata.mjs";
 
 test("all current release tracks resolve to their independent tags", async () => {
-  assert.deepEqual(releaseTrackNames, ["browser", "vscode", "desktop", "agent"]);
+  assert.deepEqual(releaseTrackNames, ["browser", "vscode", "desktop"]);
 
   const expectedTitles = {
     browser: "🌐 Browser",
     vscode: "🧩 VS Code",
     desktop: "🖥 Desktop",
-    agent: "🤖 Persian Agent",
   };
 
   for (const track of releaseTrackNames) {
