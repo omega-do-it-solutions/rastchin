@@ -97,8 +97,10 @@ check('composer: prompt textarea descendants are excluded', registeredRecipe.exc
 const css = registeredRecipe.globalCss((registeredRecipe.codeGuardSelectors || []).join(', '), { messageSelectors });
 check('css: code guard stays LTR', /direction:\s*ltr\s*!important/.test(css), true);
 check('css: supplies Vazirmatn response font', css.includes('"Vazirmatn"'), true);
-check('css: response font scoped to the font-inject-skipped containers', css.includes(':is([data-message-author-role], [data-message-id], [data-testid^="conversation-turn"], main article)'), true);
-check('css: response font also targets the container itself (bare-div user bubble)', css.includes(':is([data-message-author-role], [data-message-id], [data-testid^="conversation-turn"], main article),'), true);
+const responseScope = `:is(${exported.responseContainerSelectors.join(', ')})`;
+check('css: response font scoped to the font-inject-skipped containers', css.includes(responseScope), true);
+check('css: response font also targets the container itself (bare-div user bubble)', css.includes(`${responseScope},`), true);
+check('css: guest response inline code uses the scoped monospace rule', css.includes(`${responseScope} :is(code,`), true);
 check('css: response font element list includes div (bare-div user text)', css.includes('h6, div, span,'), true);
 check('css: code keeps a monospace stack inside messages', css.includes('ui-monospace'), true);
 check('css: code descendants keep monospace despite response div/span font rule', /:is\(code,[\s\S]*?\)\s+\*\s*\{[\s\S]*?ui-monospace/.test(css), true);
@@ -118,6 +120,8 @@ check('css: rtl lists get start padding', /\[dir="rtl"\]\s*(?:ul|ol)[\s\S]*paddi
 
 function makeChatGptEngine() {
     return makeEngine({
+        messageSelectors,
+        applyToMessage: registeredRecipe.applyToMessage,
         textSelectors,
         excludeSelectors: [...registeredRecipe.excludeSelectors, ...registeredRecipe.codeGuardSelectors],
         rtlRegex: registeredRecipe.rtlRegex,
@@ -126,6 +130,92 @@ function makeChatGptEngine() {
         needsRTL: registeredRecipe.needsRTL,
         isCodeLike: node => registeredRecipe.codeGuardSelectors.some(selector => node.closest?.(selector))
     });
+}
+
+// Firefox's logged-out /uc/ layout: user text is a prose leaf inside a
+// clickable bubble, and the conversation itself is an OL of message turns.
+// These are sanitized shapes from the live smoke test, not account content.
+{
+    const userText = el('p', { cls: '_test_messageCopy' }, t('این یک آزمون است. English follows.'));
+    const userButton = el('button', { cls: '_test_userMessage' }, userText);
+    const english = el('p', {}, t('This English-first paragraph ends with سلام'));
+    const persian = el('p', {}, t('این یک پاسخ فارسی است.'));
+    const response = el('div', { cls: '_test_messageCopy' }, persian, english);
+    const userTurn = el('li', { cls: '_test_messageTurn' }, userButton);
+    const assistantTurn = el('li', { cls: '_test_messageTurn' }, response);
+    const list = el('ol', { cls: '_test_messageList' }, userTurn, assistantTurn);
+    const main = el('main', {}, el('div', { cls: 'wm-app-thread' }, list));
+    const engine = makeChatGptEngine();
+    const candidates = new Set();
+    engine.collectCandidates(main, candidates);
+    candidates.forEach(node => engine.applyToMessage(node));
+
+    check('guest bubble: Persian-first sent text gets RTL', userText.getAttribute('dir'), 'rtl');
+    check('guest bubble: only text aligns right', userText.style.textAlign, 'right');
+    check('guest bubble: button geometry stays untouched', userButton.getAttribute('dir'), null);
+    check('guest conversation: list geometry stays untouched', list.getAttribute('dir'), null);
+    check('guest conversation: user turn stays untouched', userTurn.getAttribute('dir'), null);
+    check('guest conversation: assistant turn stays untouched', assistantTurn.getAttribute('dir'), null);
+    check('guest response: wrapper does not force English RTL', response.getAttribute('dir'), null);
+    check('guest response: English leaf stays unmanaged', english.getAttribute('dir'), null);
+    check('guest response: Persian leaf is RTL', persian.getAttribute('dir'), 'rtl');
+    check('guest font: new message body is a CSS scope', response.matches(exported.responseContainerSelectors.join(', ')), true);
+    check('guest font: user text is a CSS scope', userText.matches(exported.responseContainerSelectors.join(', ')), true);
+
+    engine.restoreStyles();
+    check('guest disable: sent text direction is restored', userText.getAttribute('dir'), null);
+    check('guest disable: sent text alignment is restored', userText.style.textAlign, '');
+    check('guest disable: response direction is restored', persian.getAttribute('dir'), null);
+}
+
+// Keep all other buttons guarded, including similarly named content outside
+// the known conversation and controls nested in toolbars.
+for (const location of ['unknown', 'toolbar', 'ordinary']) {
+    const text = el('p', { cls: '_test_messageCopy' }, t('این کنترل نباید تغییر کند'));
+    const button = el('button', { cls: location === 'ordinary' ? 'action' : '_test_userMessage' }, text);
+    const container = location === 'toolbar' ? el('div', { role: 'toolbar' }, button) : button;
+    const thread = el('div', { cls: location === 'unknown' ? 'unknown' : 'wm-app-thread' }, container);
+    const main = el('main', {}, thread);
+    const engine = makeChatGptEngine();
+    registeredRecipe.applyToMessage(main, engine);
+    check(`guest guards: ${location} button remains untouched`, text.getAttribute('dir'), null);
+}
+
+// Streaming can reuse a bare DIV for the settled Markdown tree. Its old RTL
+// snapshot must be restored as soon as it becomes a multi-paragraph wrapper.
+{
+    const streamedText = t('پاسخ در حال نمایش');
+    const response = el('div', { cls: '_test_messageCopy' }, streamedText);
+    const main = el('main', {}, el('div', { cls: 'wm-app-thread' }, response));
+    const engine = makeChatGptEngine();
+    registeredRecipe.applyToMessage(response, engine);
+    check('settle: bare prose initially receives RTL', response.getAttribute('dir'), 'rtl');
+    response.removeChild(streamedText);
+    const persian = el('p', {}, t('یک پاراگراف فارسی'));
+    const english = el('p', {}, t('English paragraph with سلام'));
+    response.append(persian, english);
+    const candidates = new Set();
+    engine.collectCandidates(response, candidates);
+    candidates.forEach(node => engine.applyToMessage(node));
+    check('settle: response wrapper relinquishes RTL', response.getAttribute('dir'), null);
+    check('settle: wrapper alignment is restored', response.style.textAlign, '');
+    check('settle: Persian leaf remains RTL', persian.getAttribute('dir'), 'rtl');
+    check('settle: English leaf has no inherited RTL wrapper', english.parentElement.getAttribute('dir'), null);
+    check('settle: text stays intact', engine.collectDirectionText(main).includes('English paragraph with سلام'), true);
+}
+
+// A bare span candidate must not walk OUTSIDE its discovery root and mark a
+// parent that owns unrelated English paragraphs.
+{
+    const span = el('span', {}, t('یک خط فارسی'));
+    const english = el('p', {}, t('English sibling'));
+    const wrapper = el('div', {}, span, english);
+    const engine = makeChatGptEngine();
+    registeredRecipe.applyToMessage(span, engine);
+    check('fallback: standalone span cannot escape its root', wrapper.getAttribute('dir'), null);
+    registeredRecipe.applyToMessage(wrapper, engine);
+    check('fallback: structured wrapper stays unmarked', wrapper.getAttribute('dir'), null);
+    check('fallback: bare Persian span receives direction', span.getAttribute('dir'), 'rtl');
 }
 
 // --- current ChatGPT turn regression ---------------------------------------

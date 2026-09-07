@@ -4,6 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const { El } = require('./engine-harness');
 
 class StyleMap {
     constructor() {
@@ -59,12 +60,9 @@ class MockElement {
         }
         if (selector.includes('[contenteditable]')) return this._contenteditable;
         if (selector.includes('[role="textbox"]')) return this._role === 'textbox';
-        if (selector.startsWith('.')) return this.className.split(/\s+/).filter(Boolean).includes(selector.slice(1));
-        const attrEquals = selector.match(/^\[([\w-]+)=["']?([^"'\]]+)["']?\]$/);
-        if (attrEquals) return this.getAttribute(attrEquals[1]) === attrEquals[2];
-        const attrOnly = selector.match(/^\[([\w-]+)\]$/);
-        if (attrOnly) return this._attrs.has(attrOnly[1]);
-        return this.tagName === selector.toUpperCase();
+        // Share the selector matcher with the engine tests so scoped guest
+        // message selectors exercise actual ancestry, not a string stub.
+        return El.prototype.matches.call(this, selector);
     }
     closest(selector) {
         let node = this;
@@ -226,6 +224,29 @@ if (!exports_) {
     delete ctx.window.location;
 }
 
+for (const hostname of ['chatgpt.com', 'chat.openai.com']) {
+    ctx.window.location = { hostname };
+    const main = new MockElement('main');
+    const thread = new MockElement('div', { className: 'wm-app-thread', parentElement: main });
+    const message = new MockElement('div', { className: '_test_messageCopy', parentElement: thread });
+    const paragraph = new MockElement('p', { computedFont: 'GuestFont', parentElement: message });
+    const code = new MockElement('code', { computedFont: 'monospace', parentElement: paragraph });
+    exports_.evaluateTextNode(new MockTextNode('پاسخ فارسی مهمان', paragraph));
+    exports_.evaluateTextNode(new MockTextNode('const label = "سلام";', code));
+    check(`${hostname} guest: prose uses recipe CSS only`, paragraph.style.fontFamily, '');
+    check(`${hostname} guest: code has no inline Persian font`, code.style.fontFamily, '');
+
+    const bubble = new MockElement('button', { className: '_test_userMessage', parentElement: thread });
+    const userText = new MockElement('p', { className: '_test_messageCopy', parentElement: bubble });
+    exports_.evaluateTextNode(new MockTextNode('پیام فارسی فرستاده‌شده', userText));
+    check(`${hostname} guest: sent text uses recipe CSS only`, userText.style.fontFamily, '');
+
+    const outside = new MockElement('p', { className: '_test_messageCopy', parentElement: main });
+    exports_.evaluateTextNode(new MockTextNode('متن بیرون گفتگو', outside));
+    check(`${hostname} guest: unrelated text keeps the generic font`, outside.style.fontFamily.includes('Vazirmatn'), true);
+    delete ctx.window.location;
+}
+
 {
     // ChatGPT response turns must also skip inline font mutation (recipe stylesheet
     // supplies the Persian font); the composer outside the turns keeps working.
@@ -276,6 +297,37 @@ if (!exports_) {
     const card = new MockElement('span');
     exports_.evaluateTextNode(new MockTextNode('عنوان فارسی کارت', card));
     check('Linear: font still works outside ProseMirror', card.style.fontFamily.includes('Vazirmatn'), true);
+    delete ctx.window.location;
+}
+
+{
+    ctx.window.location = { hostname: 'gemini.google.com' };
+    for (const guard of [
+        { tag: 'code' }, { tag: 'pre' },
+        { attrs: { 'data-test-id': 'code-content' } },
+        { className: 'code-container' },
+        { className: 'formatted-code-block-internal-container' },
+        { className: 'syntax-code-block' }, { className: 'syntax-codeBlock' },
+        { role: 'code' }, { className: 'monaco-editor' }, { className: 'cm-editor' }
+    ]) {
+        const host = new MockElement(guard.tag || 'div', guard);
+        const span = new MockElement('span', { computedFont: 'Google Sans Code, monospace', parentElement: host });
+        const text = new MockTextNode('"سلام"', span);
+        exports_.evaluateTextNode(text);
+        check('Gemini: Persian code span keeps the native font', span.style.fontFamily, '');
+    }
+    const prose = new MockElement('p', 'Google Sans Flex');
+    exports_.evaluateTextNode(new MockTextNode('متن فارسی عادی', prose));
+    check('Gemini: prose still gets Vazirmatn', prose.style.fontFamily.includes('Vazirmatn'), true);
+
+    // A host reparent can move an already-styled text node into a code block.
+    const moved = new MockElement('span', 'Google Sans Code, monospace');
+    const movedText = new MockTextNode('"سلام"', moved);
+    exports_.evaluateTextNode(movedText);
+    check('Gemini: ordinary text initially gets Persian font', moved.style.fontFamily.includes('Vazirmatn'), true);
+    moved.parentElement = new MockElement('code');
+    exports_.updateElementFont(moved);
+    check('Gemini: moving text into code removes the injected font', moved.style.fontFamily, '');
     delete ctx.window.location;
 }
 
