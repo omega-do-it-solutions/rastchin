@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { getCurrentReleaseMetadata, releaseTrackNames } from "./release-metadata.mjs";
-import { selectAutomaticRelease } from "./release-request.mjs";
+import { resolveReleaseRequest, selectAutomaticRelease } from "./release-request.mjs";
 
 async function currentFixture() {
   const currentMetadata = {};
@@ -15,6 +15,18 @@ async function currentFixture() {
   }
   return { currentMetadata, previousVersions };
 }
+
+test("manual release rejects the removed agent track before packaging", async () => {
+  await assert.rejects(
+    resolveReleaseRequest({
+      GITHUB_EVENT_NAME: "workflow_dispatch",
+      MANUAL_TRACK: "agent",
+      MANUAL_VERSION: "0.1.0",
+      MANUAL_SUMMARY: "Publish a retired track",
+    }),
+    /Unknown release track "agent"\. Expected one of: browser, vscode, desktop\./,
+  );
+});
 
 test("automatic release is a no-op when a manifest changes without a version bump", async () => {
   const fixture = await currentFixture();

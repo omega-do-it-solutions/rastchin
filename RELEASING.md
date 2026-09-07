@@ -1,6 +1,6 @@
 # Releasing RastChin
 
-RastChin has four independent release tracks: three applications and one agent plugin. A change to one track does not require unrelated version bumps or artifacts. Marketplace publication remains separate from GitHub publication. The `GitHub release` workflow combines verified package creation, the immutable track tag, checksums, and one GitHub Release after a reviewed version change reaches `main`; a manual dispatch remains available for first releases and recovery.
+RastChin has three independent application release tracks. A change to one track does not require unrelated version bumps or artifacts. Marketplace publication remains separate from GitHub publication. The `GitHub release` workflow combines verified package creation, the immutable track tag, checksums, and one GitHub Release after a reviewed version change reaches `main`; a manual dispatch remains available for first releases and recovery.
 
 This guide is for maintainers. Contributors should not bump versions unless a maintainer has assigned a release task.
 
@@ -11,7 +11,6 @@ This guide is for maintainers. Contributors should not bump versions unless a ma
 | Browser extension | `apps/browser-extension/manifest.json` and matching `package.json` | `browser-v<version>` | Chrome Web Store and Firefox Add-ons ZIPs |
 | VS Code extension | `apps/vscode-extension/package.json` | `vscode-v<version>` | `rastchin-vscode-<version>.vsix` |
 | Desktop integrator | `apps/desktop-integrator/package.json` | `desktop-v<version>` | OS- and architecture-specific installers/packages |
-| Persian agent plugin | matching Codex/Claude manifests in `plugins/rastchin-persian` | `agent-v<version>` | Repository marketplace entry and shared portable skill |
 
 The root package version tracks the repository foundation only. App changelogs remain with their applications; [CHANGELOG.md](CHANGELOG.md) records repository-wide changes.
 
@@ -62,9 +61,9 @@ Use the manual path when the current version existed before automatic detection 
 4. Run the workflow once. It reruns the repository checks and dependency audits, rejects an existing tag, builds only the selected track, verifies the package, creates SHA-256 checksum files, and publishes the tag and Release from the exact `main` commit.
 5. Open the public [GitHub Releases page](https://github.com/omega-do-it-solutions/rastchin/releases), download an artifact, verify its checksum, and complete the track's post-release smoke check.
 
-The GitHub publication step uses the workflow's short-lived `GITHUB_TOKEN` with job-scoped `contents: write`; no personal GitHub token is required. The workflow does not publish to Chrome Web Store, Firefox Add-ons, Visual Studio Marketplace, an OS store, or an agent directory.
+The GitHub publication step uses the workflow's short-lived `GITHUB_TOKEN` with job-scoped `contents: write`; no personal GitHub token is required. The workflow does not publish to Chrome Web Store, Firefox Add-ons, Visual Studio Marketplace, or an OS store.
 
-RastChin does not use GitHub Packages. Its public outputs are installable ZIP, VSIX, EXE, DMG, AppImage, DEB, RPM, and plugin archive files rather than reusable packages for a registry. The source repository and durable GitHub Release assets are the appropriate distribution surfaces; an empty Packages section is expected.
+RastChin does not use GitHub Packages. Its public outputs are installable ZIP, VSIX, EXE, DMG, AppImage, DEB, and RPM files rather than reusable packages for a registry. The source repository and durable GitHub Release assets are the appropriate distribution surfaces; an empty Packages section is expected.
 
 ## Browser extension
 
@@ -134,45 +133,6 @@ Automatic desktop releases use `ad-hoc` mode by default. To switch them to trust
 - `APPLE_ID`
 - `APPLE_APP_SPECIFIC_PASSWORD`
 - `APPLE_TEAM_ID`
-
-## Persian agent plugin
-
-1. Update the matching versions in both plugin manifests, the Claude marketplace
-   entry, `evals/cases.json`, this release guide, and the relevant changelog. The
-   Codex and Claude wrappers must continue to point to one shared skill tree.
-2. Confirm the plugin remains skills-only unless a separately reviewed product
-   decision explicitly adds executable behavior, authentication, an MCP server,
-   or network access.
-3. Run the repository gate and both platform-native validators:
-
-   ```bash
-   pnpm verify:agent-plugin
-   python3 ~/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/rastchin-persian
-   claude plugin validate plugins/rastchin-persian --strict
-   claude plugin validate .
-   ```
-
-4. Add the reviewed repository as a temporary local marketplace in each host,
-   install `rastchin-persian@rastchin`, and start a new session. Test explicit
-   invocation and automatic selection for translation, Persian review, JSON,
-   ICU, HTML, and Markdown cases. Remove the temporary marketplace afterward.
-5. Run the complete corpus and blind quality review in
-   `plugins/rastchin-persian/evals/README.md`. All protected-token invariants must
-   pass, the average score must be at least 17/20, and no case may score below
-   15/20. Record host/model versions and any untested environment honestly.
-6. Verify the installed copy contains both manifests, the shared skill and all
-   referenced files, `LICENSE`, and `NOTICE`, with no hook, executable, MCP
-   configuration, secret, or private path.
-7. Merge the synchronized agent version change so the workflow creates
-   `agent-v<version>` from the reviewed commit and publishes the portable archive
-   and checksum. Use manual dispatch only for a first release or recovery.
-   Repository marketplace availability follows the source/tag; submission to an
-   official OpenAI/Codex or Anthropic directory is a separate manual action and
-   must not be inferred from validation or tagging.
-
-Claude plugin/skill support is separate from the desktop integrator's host
-matrix. Releasing this plugin does not claim that the Electron integrator can
-modify or manage Claude Desktop.
 
 ## Publish and verify
 
