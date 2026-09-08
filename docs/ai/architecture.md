@@ -46,8 +46,10 @@ feature.
   Electron 44, frozen CI installs, and production dependency auditing
 - CI: GitHub Actions for workspace checks, public-repository validation,
   Chrome and Firefox browser ZIPs, VSIX, and Windows/macOS/Linux desktop artifacts;
-  packaging runs after relevant changes reach `main` or by manual dispatch,
-  with no publication
+  version changes on `main` publish only track-specific prereleases, and a
+  confirmation-gated manual workflow copies verified artifacts to the stable
+  product tag after marketplace or desktop distribution approval without changing
+  GitHub's repository-wide Latest pointer
 - Deployment: Chrome Web Store, Firefox Add-ons, Visual Studio Marketplace,
   and GitHub Releases; marketplace publication and signing are explicit
 

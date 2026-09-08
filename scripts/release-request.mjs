@@ -60,8 +60,10 @@ export function selectAutomaticRelease({
   return {
     shouldRelease: true,
     ...metadata,
+    tag: metadata.prereleaseTag,
+    title: metadata.prereleaseTitle,
     summary: validateReleaseSummary(`انتشار خودکار نسخهٔ ${metadata.version}: ${subject}`),
-    prerelease: false,
+    prerelease: true,
     macosMode: validateMacosReleaseMode(macosMode),
   };
 }
@@ -144,8 +146,10 @@ async function resolveManualRequest(environment, repositoryRoot) {
   return {
     shouldRelease: true,
     ...metadata,
+    tag: metadata.prereleaseTag,
+    title: metadata.prereleaseTitle,
     summary: validateReleaseSummary(environment.MANUAL_SUMMARY),
-    prerelease: environment.MANUAL_PRERELEASE === "true",
+    prerelease: true,
     macosMode: validateMacosReleaseMode(environment.MANUAL_MACOS_RELEASE_MODE || "ad-hoc"),
   };
 }

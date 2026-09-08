@@ -99,11 +99,16 @@ export async function getReleaseMetadata({
     throw new Error(`Requested ${track} version ${version} does not match release metadata: ${details}.`);
   }
 
+  const tag = `${definition.tagPrefix}${version}`;
+  const title = `${definition.titleLabel} · v${version}`;
+
   return {
     track,
     version,
-    tag: `${definition.tagPrefix}${version}`,
-    title: `${definition.titleLabel} · v${version}`,
+    tag,
+    title,
+    prereleaseTag: `${tag}-beta`,
+    prereleaseTitle: `${title} · Beta`,
     ...definition,
     sourceVersions,
   };
@@ -208,7 +213,7 @@ async function runCli() {
   if (process.env.GITHUB_OUTPUT) {
     await appendFile(
       process.env.GITHUB_OUTPUT,
-      `track=${metadata.track}\nversion=${metadata.version}\ntag=${metadata.tag}\ntitle=${metadata.title}\n`,
+      `track=${metadata.track}\nversion=${metadata.version}\ntag=${metadata.tag}\ntitle=${metadata.title}\nprerelease_tag=${metadata.prereleaseTag}\nprerelease_title=${metadata.prereleaseTitle}\n`,
       "utf8",
     );
   }

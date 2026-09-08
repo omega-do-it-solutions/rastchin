@@ -22,13 +22,13 @@
 
 | برنامه | نسخه | مسئولیت | وضعیت |
 | --- | ---: | --- | --- |
-| [افزونهٔ مرورگر](apps/browser-extension/README.md) | 1.1.72 | رفتار RTL مبتنی بر Manifest V3 برای وب‌سایت‌های صریحاً پشتیبانی‌شده، popup و side panel | بسته‌های مستقل Chrome و Firefox |
-| [افزونهٔ VS Code](apps/vscode-extension/README.md) | 0.3.14 | Markdown Preview و یکپارچه‌سازی برگشت‌پذیر Claude Code/Codex با رضایت کاربر | مسیر انتشار مستقل VSIX |
-| [یکپارچه‌ساز دسکتاپ](apps/desktop-integrator/README.md) | 0.3.2 | کشف محلی و یکپارچه‌سازی RTL در حافظه برای برنامه‌های رسمی دسکتاپ پشتیبانی‌شده | پایدار برای ChatGPT/Codex؛ Claude در نسخه‌های آینده |
+| [افزونهٔ مرورگر](apps/browser-extension/README.md) | [1.1.74](https://github.com/omega-do-it-solutions/rastchin/releases/tag/browser-v1.1.74) | رفتار RTL مبتنی بر Manifest V3 برای وب‌سایت‌های صریحاً پشتیبانی‌شده، popup و side panel | بسته‌های مستقل Chrome و Firefox |
+| [افزونهٔ VS Code](apps/vscode-extension/README.md) | [0.3.14](https://github.com/omega-do-it-solutions/rastchin/releases/tag/vscode-v0.3.14) | Markdown Preview و یکپارچه‌سازی برگشت‌پذیر Claude Code/Codex با رضایت کاربر | مسیر انتشار مستقل VSIX |
+| [یکپارچه‌ساز دسکتاپ](apps/desktop-integrator/README.md) | [0.3.4](https://github.com/omega-do-it-solutions/rastchin/releases/tag/desktop-v0.3.4) | کشف محلی و یکپارچه‌سازی RTL در حافظه برای برنامه‌های رسمی دسکتاپ پشتیبانی‌شده | پایدار برای ChatGPT/Codex؛ Claude در نسخه‌های آینده |
 
 هر برنامه نسخه و مسیر انتشار مستقل دارد. نسخهٔ ریشه، یعنی `0.1.0`، زیرساخت مونوریپو را توصیف می‌کند و نسخهٔ هماهنگ همهٔ خروجی‌ها نیست.
 
-خروجی‌های عمومی و checksum آن‌ها در [GitHub Releases](https://github.com/omega-do-it-solutions/rastchin/releases) با tag مستقل هر برنامه منتشر می‌شوند. تغییر نسخهٔ یک برنامه پس از review و merge در `main` انتشار همان مسیر را خودکار آغاز می‌کند. نصب نسخه‌های Windows، ‏macOS و Linux دستی است و برنامهٔ دسکتاپ در حال حاضر auto-update ندارد. بستهٔ macOS در حالت پیش‌فرض ad-hoc ممکن است هشدار Gatekeeper نشان دهد؛ حالت امضا و notarization اپل نیز برای انتشار مورداعتماد پشتیبانی می‌شود. انتشار فایل در GitHub به‌معنی انتشار خودکار در marketplaceها نیست.
+خروجی‌ها و checksum آن‌ها در [GitHub Releases](https://github.com/omega-do-it-solutions/rastchin/releases) با tag مستقل هر برنامه منتشر می‌شوند. تغییر نسخهٔ یک برنامه پس از review و merge در `main`، یک prerelease بررسی‌شده با پسوند `-beta` می‌سازد و آن را به‌عنوان Latest سراسری مخزن علامت نمی‌زند. پس از انتشار در marketplace مربوط یا تأیید بسته‌های دسکتاپ، نگه‌دارنده workflow «Promote product release» را برای همان برنامه و نسخه اجرا می‌کند. این مرحله همان artifactهای بررسی‌شده را با tag پایدار برنامه منتشر می‌کند، اما Latest سراسری GitHub معیار نسخهٔ جاری برنامه‌ها نیست؛ لینک نسخهٔ جاری هر برنامه مستقیماً به tag پایدار همان برنامه می‌رود. نصب نسخه‌های Windows، ‏macOS و Linux دستی است و برنامهٔ دسکتاپ در حال حاضر auto-update ندارد.
 
 ## حریم خصوصی و ایمنی
 

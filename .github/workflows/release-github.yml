@@ -26,11 +26,6 @@ on:
         description: User-visible changes for the release notes
         required: true
         type: string
-      prerelease:
-        description: Mark the GitHub Release as a prerelease
-        required: true
-        default: false
-        type: boolean
       macos_mode:
         description: macOS distribution mode (desktop track only)
         required: true
@@ -89,7 +84,6 @@ jobs:
           AUTO_MACOS_RELEASE_MODE: ${{ vars.MACOS_RELEASE_MODE || 'ad-hoc' }}
           BEFORE_SHA: ${{ github.event.before }}
           MANUAL_MACOS_RELEASE_MODE: ${{ inputs.macos_mode }}
-          MANUAL_PRERELEASE: ${{ inputs.prerelease }}
           MANUAL_SUMMARY: ${{ inputs.summary }}
           MANUAL_TRACK: ${{ inputs.track }}
           MANUAL_VERSION: ${{ inputs.version }}
@@ -484,6 +478,7 @@ jobs:
             --target "$GITHUB_SHA"
             --title "$RELEASE_TITLE"
             --notes-file release-notes.md
+            --latest=false
           )
           if [ "$PRERELEASE" = "true" ]; then
             arguments+=(--prerelease)

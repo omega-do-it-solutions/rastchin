@@ -23,7 +23,9 @@ test("all current release tracks resolve to their independent tags", async () =>
   for (const track of releaseTrackNames) {
     const metadata = await getCurrentReleaseMetadata({ track });
     assert.equal(metadata.tag, `${track}-v${metadata.version}`);
+    assert.equal(metadata.prereleaseTag, `${track}-v${metadata.version}-beta`);
     assert.equal(metadata.title, `${expectedTitles[track]} · v${metadata.version}`);
+    assert.equal(metadata.prereleaseTitle, `${expectedTitles[track]} · v${metadata.version} · Beta`);
     assert.doesNotMatch(metadata.title, /^RastChin\b/);
   }
 });

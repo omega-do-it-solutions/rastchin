@@ -28,6 +28,21 @@ test("manual release rejects the removed agent track before packaging", async ()
   );
 });
 
+test("manual packaging always creates a prerelease", async () => {
+  const metadata = await getCurrentReleaseMetadata({ track: "browser" });
+  const request = await resolveReleaseRequest({
+    GITHUB_EVENT_NAME: "workflow_dispatch",
+    MANUAL_TRACK: "browser",
+    MANUAL_VERSION: metadata.version,
+    MANUAL_SUMMARY: "Package a reviewed browser candidate",
+    MANUAL_MACOS_RELEASE_MODE: "ad-hoc",
+  });
+
+  assert.equal(request.shouldRelease, true);
+  assert.equal(request.prerelease, true);
+  assert.equal(request.tag, `browser-v${metadata.version}-beta`);
+});
+
 test("automatic release is a no-op when a manifest changes without a version bump", async () => {
   const fixture = await currentFixture();
   const request = selectAutomaticRelease({
@@ -50,7 +65,8 @@ test("automatic release selects the one track whose version changed", async () =
 
   assert.equal(request.shouldRelease, true);
   assert.equal(request.track, "vscode");
-  assert.equal(request.prerelease, false);
+  assert.equal(request.prerelease, true);
+  assert.equal(request.tag, `vscode-v${request.version}-beta`);
   assert.equal(request.macosMode, "ad-hoc");
   assert.match(request.summary, /feat: improve Persian rendering/);
 });

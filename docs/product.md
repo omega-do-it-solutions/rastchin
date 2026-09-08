@@ -97,11 +97,14 @@ repository and official distribution channels.
    GitHub issue template, selects an owning application, follows its focused
    test and packaging rules, and submits a pull request without committing
    generated artifacts or secrets.
-6. Release: maintainers verify affected applications. A
-   reviewed version bump merged into `main` automatically publishes immutable
-   artifacts only to the matching GitHub Release, without coupling unrelated
-   application versions. Any marketplace publication is a separate manual
-   maintainer action, not part of release automation.
+6. Release: maintainers verify affected applications. A reviewed version bump
+   merged into `main` automatically publishes immutable artifacts as a
+   prerelease only for the matching product track, without coupling unrelated
+   application versions or changing GitHub's repository-wide Latest pointer.
+   Marketplace publication remains a separate manual maintainer action. After
+   that publication, a guarded manual workflow copies the verified artifacts to
+   the stable product tag without treating the repository-wide Latest badge as
+   product state.
 
 ## Business Rules
 
@@ -120,6 +123,8 @@ repository and official distribution channels.
 - Generated exports, unpacked extensions, VSIX files, desktop packages, secrets,
   and local runtime profiles are not source-controlled.
 - Successful application versions remain independently versioned.
+- Product-specific stable tags and direct release URLs are authoritative; the
+  repository-wide GitHub Latest release is not a cross-product version signal.
 - First-party source is Apache-2.0. Third-party code, fonts, and assets retain
   their original notices and licenses. The software license does not grant use
   of RastChin trademarks beyond the trademark policy.
