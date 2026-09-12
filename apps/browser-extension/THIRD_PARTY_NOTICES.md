@@ -21,3 +21,7 @@ Names and icons for supported websites are used only to identify compatibility
 and remain the property of their respective owners. They are not licensed as
 RastChin trademarks or as RastChin-authored artwork under Apache-2.0. Their use
 does not imply affiliation, sponsorship, or endorsement.
+
+The Twitch Glitch logo in `src/assets/icons/Twitch.svg` uses the purple variant
+from [Twitch's official brand assets](https://brand.twitch.com/). Its original
+geometry and colors are preserved.

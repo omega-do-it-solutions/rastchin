@@ -115,6 +115,9 @@ repository and official distribution channels.
   exposes a network debugging port, strips sensitive loader/API-key environment
   values, and keeps diagnostics free of conversation text.
 - Browser permissions and host access remain minimal and publicly explained.
+- Kick and Twitch browser support improves Persian chat messages, drafts,
+  stream titles and channel descriptions locally. Each site has its own toggle;
+  usernames, emotes, player controls and third-party player frames are preserved.
 - Claude desktop support remains detected but blocked until the host-specific
   compatibility policy explicitly permits it.
 - Generated exports, unpacked extensions, VSIX files, desktop packages, secrets,

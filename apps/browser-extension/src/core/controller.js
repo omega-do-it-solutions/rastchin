@@ -39,7 +39,11 @@ const URL_TO_CHATBOT = {
     'web.whatsapp.com': 'whatsappEnabled',
     'web.telegram.org': 'telegramEnabled',
     'www.youtube.com': 'youtubeEnabled',
-    'm.youtube.com': 'youtubeEnabled'
+    'm.youtube.com': 'youtubeEnabled',
+    'www.twitch.tv': 'twitchEnabled',
+    'twitch.tv': 'twitchEnabled',
+    'kick.com': 'kickEnabled',
+    'www.kick.com': 'kickEnabled'
 };
 
 const SUFFIX_TO_CHATBOT = [

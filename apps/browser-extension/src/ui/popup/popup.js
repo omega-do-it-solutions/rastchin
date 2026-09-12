@@ -26,7 +26,9 @@ const PLATFORM_STORAGE_KEYS = {
   googleTranslate: 'googleTranslateEnabled',
   whatsapp: 'whatsappEnabled',
   telegram: 'telegramEnabled',
-  youtube: 'youtubeEnabled'
+  youtube: 'youtubeEnabled',
+  twitch: 'twitchEnabled',
+  kick: 'kickEnabled'
 };
 const PLATFORM_HOST_MAP = {
   claude: ['claude.ai'],
@@ -50,7 +52,9 @@ const PLATFORM_HOST_MAP = {
   googleTranslate: ['translate.google.com'],
   whatsapp: ['web.whatsapp.com'],
   telegram: ['web.telegram.org'],
-  youtube: ['youtube.com']
+  youtube: ['youtube.com'],
+  twitch: ['www.twitch.tv', 'twitch.tv'],
+  kick: ['kick.com', 'www.kick.com']
 };
 const PLATFORM_KEYS = Object.values(PLATFORM_STORAGE_KEYS);
 
@@ -202,7 +206,8 @@ function detectPlatformFromUrl(urlString) {
       const normalizedRule = rule.toLowerCase();
       const [domain, ...pathParts] = normalizedRule.split('/');
       const pathPrefix = pathParts.length ? `/${pathParts.join('/')}` : '';
-      const hostMatches = hostname === domain || hostname.endsWith(`.${domain}`);
+      const exactHostOnly = platform === 'twitch' || platform === 'kick';
+      const hostMatches = hostname === domain || (!exactHostOnly && hostname.endsWith(`.${domain}`));
       if (!hostMatches) return false;
       return !pathPrefix || parsed.pathname.toLowerCase().startsWith(pathPrefix);
     });

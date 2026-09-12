@@ -36,7 +36,9 @@ window.RASTCHIN_PLATFORMS = [
     { id: 'whatsapp', name: 'WhatsApp', storageKey: 'whatsappEnabled', hosts: ['web.whatsapp.com'], url: 'https://web.whatsapp.com', icon: 'WhatsApp.svg', category: 'comm' },
     { id: 'telegram', name: 'Telegram', storageKey: 'telegramEnabled', hosts: ['web.telegram.org'], url: 'https://web.telegram.org', icon: 'Telegram.svg', category: 'comm' },
     { id: 'googleWorkspace', name: 'Google Docs/Sheets', storageKey: 'googleWorkspaceEnabled', hosts: ['docs.google.com/document', 'docs.google.com/spreadsheets'], url: 'https://docs.google.com', icon: 'GoogleWorkspace.svg', category: 'work' },
-    { id: 'youtube', name: 'YouTube', storageKey: 'youtubeEnabled', hosts: ['www.youtube.com', 'm.youtube.com'], url: 'https://www.youtube.com', icon: 'YouTube.svg', category: 'video' }
+    { id: 'youtube', name: 'YouTube', storageKey: 'youtubeEnabled', hosts: ['www.youtube.com', 'm.youtube.com'], url: 'https://www.youtube.com', icon: 'YouTube.svg', category: 'video' },
+    { id: 'twitch', name: 'Twitch', storageKey: 'twitchEnabled', hosts: ['www.twitch.tv', 'twitch.tv'], url: 'https://www.twitch.tv', icon: 'Twitch.svg', category: 'video' },
+    { id: 'kick', name: 'Kick', storageKey: 'kickEnabled', hosts: ['kick.com', 'www.kick.com'], url: 'https://kick.com', icon: 'Kick.svg', category: 'video' }
 ];
 
 window.RASTCHIN_PLATFORM_CATEGORIES = [

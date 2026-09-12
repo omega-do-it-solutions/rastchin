@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kick / Twitch RTL regression</title>
+<style>
+  body { background:#17171c; color:#eee; font:16px/1.55 system-ui; max-width:960px; padding:24px; margin:auto; }
+  .columns { display:flex; flex-wrap:wrap; gap:24px; }
+  section { flex:1 1 280px; min-width:0; border:1px solid #555; padding:16px; border-radius:8px; }
+  button { color:#ccafff; background:transparent; border:0; font-weight:bold; }
+  a { color:#8bceff; }
+  .row { padding:8px 0; overflow-wrap:anywhere; }
+  [contenteditable] { border:1px solid #777; padding:10px; min-height:30px; white-space:pre-wrap; }
+  [contenteditable] p { margin:0; }
+  [data-emote-id] { display:inline-block; }
+  pre { white-space:pre-wrap; }
+  #results { padding:16px; background:#24242c; }
+  #results[data-result="pass"] { border-inline-start:4px solid #53fc18; }
+  #results[data-result="fail"] { border-inline-start:4px solid #f55; }
+</style>
+<h1>Kick / Twitch RTL regression</h1>
+<p>Synthetic messages only. Nothing is sent to either platform.</p>
+<pre id="results" role="status">Running…</pre>
+<div class="columns">
+<section id="twitch-fixture"><h2>Twitch</h2>
+  <p data-a-target="stream-title">عنوان فارسی پخش زنده</p>
+  <div class="row"><button>demo_user</button>: <span id="twitch-message" data-a-target="chat-line-message-body" dir="auto">سلام به همه! نسخه v1.2 را در <a href="https://example.com">https://example.com</a> ببینید. <span data-emote-id="test">🎮</span></span></div>
+  <div class="row"><button>another_user</button>: <span id="twitch-english" data-a-target="chat-line-message-body" dir="auto">Hello everyone, including فارسی speakers!</span></div>
+  <div data-a-target="chat-input" contenteditable="true" role="textbox" aria-label="Twitch test composer"><div data-slate-node="element" aria-hidden="true"><span data-slate-node="text">سلام، این یک پیش‌نویس است.</span></div></div>
+</section>
+<section id="channel-chatroom"><h2>Kick</h2>
+  <span data-testid="livestream-title">عنوان فارسی پخش زنده</span>
+  <div id="chatroom-messages">
+    <div class="row" data-index="0"><button>demo_user</button>: <span id="kick-message" class="leading-[1.55] font-normal">سلام به همه! نسخه v1.2 را در <a href="https://example.com">https://example.com</a> ببینید. <span data-emote-id="test">🎮</span></span></div>
+    <div class="row" data-index="1"><button>another_user</button>: <span id="kick-english" class="leading-[1.55] font-normal">Hello everyone, including فارسی speakers!</span></div>
+  </div>
+  <div data-testid="chat-input" contenteditable="true" role="textbox" aria-label="Kick test composer"><p class="editor-paragraph">سلام، این یک پیش‌نویس است.</p></div>
+</section>
+</div>
+<script>window.chrome = { runtime: { getURL: () => '/font.ttf' } }; window.chatbotConfig = { subscribe() { return () => {}; } };</script>
+<script src="/core/rtl-engine.js"></script>
+<script src="/core/recipe-runner.js"></script>
+<script src="/core/streaming-text.js"></script>
+<script src="/test.js"></script>
+</html>
