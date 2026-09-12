@@ -115,6 +115,9 @@ repository and official distribution channels.
   exposes a network debugging port, strips sensitive loader/API-key environment
   values, and keeps diagnostics free of conversation text.
 - Browser permissions and host access remain minimal and publicly explained.
+- Google Search browser support improves Persian search inputs, results and AI
+  responses locally while preserving English-first content. It has its own
+  toggle, and search queries and result content are never stored or transmitted.
 - Kick and Twitch browser support improves Persian chat messages, drafts,
   stream titles and channel descriptions locally. Each site has its own toggle;
   usernames, emotes, player controls and third-party player frames are preserved.
