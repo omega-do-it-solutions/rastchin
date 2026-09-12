@@ -148,6 +148,18 @@ for (const [host, key] of [
 }
 
 {
+    const { ctx } = loadController('www.google.com', '/search');
+    check('controller: www.google.com resolves googleSearchEnabled',
+        ctx.window.chatbotConfig.getCurrentPlatformInfo().storageKey, 'googleSearchEnabled');
+}
+
+{
+    const { ctx } = loadController('google.com', '/search');
+    check('controller: bare google.com resolves googleSearchEnabled',
+        ctx.window.chatbotConfig.getCurrentPlatformInfo().storageKey, 'googleSearchEnabled');
+}
+
+{
     const { ctx } = loadController('marketplace.visualstudio.com', '/items');
     check('controller: Visual Studio Marketplace resolves vsMarketplaceEnabled',
         ctx.window.chatbotConfig.getCurrentPlatformInfo().storageKey, 'vsMarketplaceEnabled');
@@ -216,7 +228,7 @@ for (const [host, key] of [
     const registryKeys = new Set([...registrySource.matchAll(/storageKey: '([^']+)'/g)].map(m => m[1]));
     const urlMapBlock = (source.match(/URL_TO_CHATBOT = \{([\s\S]*?)\}/) || [, ''])[1];
     const controllerKeys = [...new Set([...urlMapBlock.matchAll(/:\s*'([^']+)'/g)].map(m => m[1]))];
-    check('parity: controller maps all 24 platform keys', controllerKeys.length, 24);
+    check('parity: controller maps all 25 platform keys', controllerKeys.length, 25);
     controllerKeys.forEach(key => check(`parity: registry knows ${key}`, registryKeys.has(key), true));
 }
 

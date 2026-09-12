@@ -23,6 +23,7 @@ const PLATFORM_STORAGE_KEYS = {
   linear: 'linearEnabled',
   googleWorkspace: 'googleWorkspaceEnabled',
   gmail: 'gmailEnabled',
+  googleSearch: 'googleSearchEnabled',
   googleTranslate: 'googleTranslateEnabled',
   whatsapp: 'whatsappEnabled',
   telegram: 'telegramEnabled',
@@ -49,6 +50,7 @@ const PLATFORM_HOST_MAP = {
   linear: ['linear.app'],
   googleWorkspace: ['docs.google.com/document', 'docs.google.com/spreadsheets'],
   gmail: ['mail.google.com'],
+  googleSearch: ['google.com', 'www.google.com'],
   googleTranslate: ['translate.google.com'],
   whatsapp: ['web.whatsapp.com'],
   telegram: ['web.telegram.org'],
@@ -206,7 +208,7 @@ function detectPlatformFromUrl(urlString) {
       const normalizedRule = rule.toLowerCase();
       const [domain, ...pathParts] = normalizedRule.split('/');
       const pathPrefix = pathParts.length ? `/${pathParts.join('/')}` : '';
-      const exactHostOnly = platform === 'twitch' || platform === 'kick';
+      const exactHostOnly = platform === 'twitch' || platform === 'kick' || platform === 'googleSearch';
       const hostMatches = hostname === domain || (!exactHostOnly && hostname.endsWith(`.${domain}`));
       if (!hostMatches) return false;
       return !pathPrefix || parsed.pathname.toLowerCase().startsWith(pathPrefix);

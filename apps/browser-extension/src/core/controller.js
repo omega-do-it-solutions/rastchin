@@ -34,6 +34,8 @@ const URL_TO_CHATBOT = {
     'notion.site': 'notionEnabled',
     'linear.app': 'linearEnabled',
     'mail.google.com': 'gmailEnabled',
+    'google.com': 'googleSearchEnabled',
+    'www.google.com': 'googleSearchEnabled',
     'translate.google.com': 'googleTranslateEnabled',
     'docs.google.com': 'googleWorkspaceEnabled',
     'web.whatsapp.com': 'whatsappEnabled',

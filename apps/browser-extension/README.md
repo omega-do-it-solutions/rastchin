@@ -9,7 +9,7 @@
 
 ## محیط‌های پشتیبانی‌شده
 
-manifest در حال حاضر ChatGPT، ‏Meta AI، ‏Claude، ‏Microsoft Copilot، ‏Gemini، ‏Google AI Studio، ‏Perplexity، ‏DeepSeek، ‏NotebookLM، ‏Qwen، ‏Arena، ‏GitHub، ‏Visual Studio Marketplace، ‏Trello، ‏Notion، ‏Linear، ‏Gmail، ‏Google Translate، ‏Google Docs و Sheets، ‏WhatsApp Web، ‏Telegram Web و YouTube را پوشش می‌دهد. سطح پشتیبانی در سایت‌ها متفاوت است: برخی مدیریت کامل جهت را دریافت می‌کنند و برخی عمداً فقط بهبود محدود تایپوگرافی یا زیرنویس دارند.
+manifest در حال حاضر ChatGPT، ‏Meta AI، ‏Claude، ‏Microsoft Copilot، ‏Gemini، ‏Google AI Studio، ‏Google Search و پاسخ‌های AI آن، ‏Perplexity، ‏DeepSeek، ‏NotebookLM، ‏Qwen، ‏Arena، ‏GitHub، ‏Visual Studio Marketplace، ‏Trello، ‏Notion، ‏Linear، ‏Gmail، ‏Google Translate، ‏Google Docs و Sheets، ‏WhatsApp Web، ‏Telegram Web و YouTube را پوشش می‌دهد. سطح پشتیبانی در سایت‌ها متفاوت است: برخی مدیریت کامل جهت را دریافت می‌کنند و برخی عمداً فقط بهبود محدود تایپوگرافی یا زیرنویس دارند.
 
 فایل `manifest.json` مرجع اصلی میزبان‌ها و ماژول‌های تزریق‌شدهٔ تحت پشتیبانی است.
 

@@ -305,7 +305,7 @@ flushPendingQueries();
 check('post-detect: toggle re-enabled', element('siteToggle').disabled, false);
 
 // --- registry sanity ---------------------------------------------------------
-check('registry: 24 platforms', windowMock.RASTCHIN_PLATFORMS.length, 24);
+check('registry: 25 platforms', windowMock.RASTCHIN_PLATFORMS.length, 25);
 check('registry: Meta AI is present', windowMock.RASTCHIN_PLATFORMS.some(platform => platform.id === 'metaAi'), true);
 check('registry: Linear is present', windowMock.RASTCHIN_PLATFORMS.some(platform => platform.id === 'linear'), true);
 check('registry: github.com/copilot belongs to GitHub',
@@ -321,6 +321,10 @@ check('registry: current Notion app host matches',
     windowMock.rastchinMatchPlatformFromUrl('https://app.notion.com/p/page')?.id, 'notion');
 check('registry: google translate host matches',
     windowMock.rastchinMatchPlatformFromUrl('https://translate.google.com/?sl=fa&tl=en')?.id, 'googleTranslate');
+check('registry: Google Search host matches',
+    windowMock.rastchinMatchPlatformFromUrl('https://www.google.com/search?q=%D9%81%D8%A7%D8%B1%D8%B3%DB%8C')?.id, 'googleSearch');
+check('registry: Maps is not claimed by Google Search',
+    windowMock.rastchinMatchPlatformFromUrl('https://maps.google.com/'), null);
 check('registry: Meta AI host matches',
     windowMock.rastchinMatchPlatformFromUrl('https://www.meta.ai/')?.id, 'metaAi');
 check('registry: Linear issue routes match',
@@ -344,10 +348,10 @@ check('init: active tab query scoped to the panel window', lastQueryOptions, { a
 // --- initial render (active tab = claude, claudeEnabled=false) ---------------
 check('init: site name resolves to Claude', element('siteName').textContent, 'Claude');
 check('init: toggle off (platform disabled)', element('siteToggle').checked, false);
-check('init: total metric in Persian digits', element('totalPlatformCount').textContent, '۲۴');
-check('init: active metric counts 23 of 24', element('activePlatformCount').textContent, '۲۳');
+check('init: total metric in Persian digits', element('totalPlatformCount').textContent, '۲۵');
+check('init: active metric counts 24 of 25', element('activePlatformCount').textContent, '۲۴');
 check('init: version badge from manifest', element('panelVersion').textContent, `v${MANIFEST_VERSION}`);
-check('init: platform grid rendered', element('platformGrid').children.length, 24);
+check('init: platform grid rendered', element('platformGrid').children.length, 25);
 {
     const chips = documentMock.querySelectorAll('.platform-chip');
     const current = chips.filter(chip => chip.classList.contains('is-current'));
@@ -478,7 +482,7 @@ element('siteToggle').fire('change', { target: element('siteToggle') });
 
 // Readable but unsupported URLs (for example Chrome Web Store, which Chromium
 // blocks from content-script injection) must stay unsupported, not bind to one
-// of the 24 platform toggles.
+// of the 25 platform toggles.
 setActiveTab(5, 'https://chromewebstore.google.com/detail/rastchin/example', null);
 triggerActivation(5);
 check('unsupported readable site: Chrome Web Store remains unsupported', element('siteName').textContent, 'این سایت پشتیبانی نمی‌شود');
@@ -488,13 +492,13 @@ check('unsupported readable site: no current platform chip',
 // --- settings tab ----------------------------------------------------------------
 {
     const rows = element('settingsList').querySelectorAll('input');
-    check('settings: 24 switches rendered', rows.length, 24);
+    check('settings: 25 switches rendered', rows.length, 25);
     const gmail = rows.find(input => input.dataset.storageKey === 'gmailEnabled');
     check('settings: gmail switch defaults on', gmail.checked, true);
     gmail.checked = false;
     gmail.fire('change');
     check('settings: gmail write payload', writes[writes.length - 1].gmailEnabled, false);
-    check('settings: active metric drops after disable', element('activePlatformCount').textContent, '۲۳');
+    check('settings: active metric drops after disable', element('activePlatformCount').textContent, '۲۴');
     // The storage echo of our own write must NOT rebuild the list (that would
     // destroy the focused input mid-interaction).
     storageChangeListeners.forEach(fn => fn({ gmailEnabled: { newValue: false } }, 'sync'));
@@ -510,7 +514,7 @@ check('unsupported readable site: no current platform chip',
 
 // --- external storage change re-renders -------------------------------------------
 storageChangeListeners.forEach(fn => fn({ youtubeEnabled: { newValue: false } }, 'sync'));
-check('storage sync: active metric reflects external change', element('activePlatformCount').textContent, '۲۲');
+check('storage sync: active metric reflects external change', element('activePlatformCount').textContent, '۲۳');
 
 // --- whats-new tab -----------------------------------------------------------------
 {
