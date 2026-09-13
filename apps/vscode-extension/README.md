@@ -1,4 +1,22 @@
-# راست‌چین برای VS Code
+<p align="center">
+  <img src="../../docs/assets/rastchin-logo.png" alt="لوگوی پلکانی راست‌چین" width="112">
+</p>
+
+<h1 align="center">RastChin | راست‌چین برای VS Code</h1>
+
+<p align="center">
+  خوانایی بهتر فارسی در Markdown Preview و محیط‌های پشتیبانی‌شدهٔ Claude Code و Codex
+</p>
+
+<p align="center">
+  <a href="https://github.com/omega-do-it-solutions/rastchin/actions/workflows/ci.yml"><img alt="وضعیت CI" src="https://github.com/omega-do-it-solutions/rastchin/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="مجوز Apache 2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue.svg"></a>
+  <a href="https://code.visualstudio.com/"><img alt="Visual Studio Code" src="https://img.shields.io/badge/VS_Code-extension-007ACC.svg"></a>
+</p>
+
+این README دو بخش دارد: بخش نخست برای شناخت، نصب و استفادهٔ عادی از افزونه است و بخش دوم جزئیات فنی توسعه، آزمون و بسته‌بندی را ارائه می‌کند.
+
+## بخش اول: معرفی و راهنمای استفاده
 
 راست‌چین خوانایی RTL فارسی را در Markdown Preview نرم‌افزار VS Code و webviewهای پشتیبانی‌شدهٔ Claude Code و Codex بهتر می‌کند. این افزونه عمداً فقط فارسی را پشتیبانی می‌کند و کد، فرمان، URL، نشانی ایمیل، مسیر، خروجی ترمینال و diff را LTR و monospace نگه می‌دارد.
 
@@ -8,7 +26,11 @@
 
 راست‌چین هیچ‌گاه فایل `workbench.html` یا `product.json` خود VS Code را تغییر نمی‌دهد.
 
-## محیط‌های پشتیبانی‌شده
+### نصب و استفاده
+
+افزونه را از Visual Studio Marketplace یا فایل VSIX رسمی موجود در [GitHub Releases](https://github.com/omega-do-it-solutions/rastchin/releases) نصب کنید. پشتیبانی Markdown Preview بلافاصله فعال می‌شود. یکپارچه‌سازی Claude Code و Codex به‌دلیل نداشتن API رسمی استایل‌دهی، فقط با اقدام و تأیید صریح شما فعال می‌شود.
+
+### محیط‌های پشتیبانی‌شده
 
 - Markdown Preview در VS Code از طریق contribution pointهای رسمی Markdown.
 - webview گفت‌وگوی Claude Code.
@@ -17,7 +39,7 @@
 
 فونت Vazirmatn در VSIX قرار دارد؛ بنابراین استفاده از افزونه به دانلود فونت یا درخواست شبکه نیاز ندارد.
 
-## فعال‌سازی امن agent
+### فعال‌سازی امن agent
 
 پشتیبانی Markdown Preview پس از نصب فعال است. پشتیبانی از webviewهای agent یک patch سازگاری صریح است، زیرا این افزونه‌ها API رسمی برای استایل‌دهی ارائه نمی‌کنند:
 
@@ -30,7 +52,7 @@
 
 راست‌چین پیش از هر نوشتن، افزونهٔ فعال را از registry افزونه‌های VS Code پیدا می‌کند و نسخه و چیدمان هدف را اعتبارسنجی می‌کند. چیدمان ناشناخته، ناقص یا تغییریافته با وضعیت `UNSUPPORTED` به‌صورت امن رد می‌شود. هر هدف در یک تراکنش فایل جداگانه با فرادادهٔ پشتیبان، جایگزینی اتمیک و rollback پس از هر خطای نوشتن مدیریت می‌شود.
 
-## به‌روزرسانی و بازیابی
+### به‌روزرسانی و بازیابی
 
 به‌روزرسانی Claude Code یا Codex ممکن است فایل‌های patchشدهٔ آن‌ها را جایگزین کند. راست‌چین در startup، پس از تغییر registry افزونه‌ها و هنگام بازگشت focus به پنجره، نسخه و فایل‌های فعال را به‌صورت فقط‌خواندنی بررسی می‌کند. اگر patch سازگار حذف یا قدیمی شده باشد، اعلان **Re-apply Now**، **Later** و **View Details** نمایش داده می‌شود. **Later** همان مشکل و نسخه را ۲۴ ساعت به تعویق می‌اندازد، اما نسخهٔ جدیدتر agent فوراً دوباره بررسی می‌شود. چیدمان ناشناخته فقط diagnostics نشان می‌دهد و هرگز به‌صورت حدسی patch نمی‌شود.
 
@@ -42,7 +64,7 @@ RastChin for VS Code: Disable / Restore Patches
 
 بازیابی، هش‌ها و فراداده را بررسی می‌کند تا پشتیبان قدیمی نتواند نسخهٔ جدیدتر agent را downgrade کند. hook حذف افزونه نیز برای بازیابی تلاش می‌کند. توجه کنید یکپارچه‌سازی agent لایهٔ سازگاری است؛ تغییر عمدهٔ چیدمان بالادستی ممکن است تا انتشار adapter بازبینی‌شده بدون پشتیبانی بماند.
 
-## فرمان‌ها
+### فرمان‌ها
 
 - `RastChin for VS Code: Status`
 - `RastChin for VS Code: Inspect Agent Patch Plan`
@@ -50,7 +72,7 @@ RastChin for VS Code: Disable / Restore Patches
 - `RastChin for VS Code: Disable / Restore Patches`
 - `RastChin for VS Code: Clean Legacy Extension Patches`
 
-## تنظیمات
+### تنظیمات
 
 - `persianRtlClean.patchClaudeCode`
 - `persianRtlClean.patchCodex`
@@ -60,7 +82,9 @@ RastChin for VS Code: Disable / Restore Patches
 
 کلیدهای قدیمی `persianRtlClean.*` عمداً برای سازگاری نصب و تنظیمات حفظ شده‌اند.
 
-## نقشهٔ کد
+## بخش دوم: راهنمای فنی و توسعه
+
+### نقشهٔ کد
 
 ```text
 src/extension.js             فعال‌سازی VS Code، فرمان‌ها، رابط و چرخهٔ عمر
@@ -79,7 +103,7 @@ docs/PHASE2-SMOKE.md         ماتریس راستی‌آزمایی دستی آ�
 
 تغییر adapterهای agent باید آگاه از نسخه/چیدمان بماند و به‌صورت امن از هدف ناشناخته عبور نکند. selector یا جست‌وجوی فایل‌سیستم را فقط برای عبور دادن نسخهٔ ناشناختهٔ agent گسترده نکنید. قواعد تأیید، پشتیبان، هش، rollback و بازیابی را همراه آزمون حفظ کنید.
 
-## توسعهٔ محلی
+### توسعهٔ محلی
 
 از Node.js 24 و pnpm 11 استفاده کنید. در ریشهٔ مونوریپو اجرا کنید:
 
@@ -98,7 +122,7 @@ pnpm --filter rastchin-vscode run dev
 
 بررسی‌های احراز هویت‌شده و رندرشده توسط میزبان که با jsdom قابل‌اثبات نیستند در [ماتریس آزمون دود دستی](docs/PHASE2-SMOKE.md) مستند شده‌اند. برای این بررسی‌ها از پوشهٔ user-data و افزونهٔ ایزولهٔ VS Code استفاده کنید.
 
-## بسته‌بندی VSIX
+### بسته‌بندی VSIX
 
 در ریشهٔ مونوریپو اجرا کنید:
 
@@ -109,11 +133,11 @@ pnpm --filter rastchin-vscode run package
 
 فایل تولیدشده `apps/vscode-extension/rastchin-vscode-<version>.vsix` است. بسته شامل مجوز Apache، اعلان پروژه، اعلان‌های اشخاص ثالث، متن کامل MIT بالادستی و متن OFL فونت Vazirmatn است. فایل‌های VSIX خروجی انتشار تولیدشده‌اند و نباید commit شوند. بسته‌بندی چیزی را در Visual Studio Marketplace منتشر نمی‌کند.
 
-## مشارکت و امنیت
+### مشارکت و امنیت
 
 پیش از کار روی adapter، [راهنمای مشارکت](../../CONTRIBUTING.md) مخزن را بخوانید. آسیب‌پذیری‌ها، به‌ویژه موارد مربوط به کشف هدف، اعتماد به مسیر، پشتیبان یا بازیابی را از فرایند خصوصی [SECURITY.md](../../SECURITY.md) گزارش کنید.
 
-## مجوز، اشخاص ثالث و نشان‌های تجاری
+### مجوز، اشخاص ثالث و نشان‌های تجاری
 
 سورس راست‌چین تحت [مجوز Apache 2.0](LICENSE) است. کد MIT بالادستیِ نگه‌داری‌شده و فونت Vazirmatn تحت شرایط خود باقی می‌مانند؛ [اعلان‌های اشخاص ثالث](THIRD_PARTY_NOTICES.md) را ببینید.
 
