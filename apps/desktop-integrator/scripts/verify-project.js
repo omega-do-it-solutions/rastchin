@@ -14,6 +14,7 @@ const required = [
     'assets/fonts/Vazirmatn-Bold.woff2', 'assets/fonts/Vazirmatn-OFL.txt',
     'assets/targets/chatgpt.png', 'assets/targets/claude.png',
     'src/main/index.js', 'src/main/preload.js', 'src/main/buildPolicy.js',
+    'src/main/windowActivation.js',
     'src/main/services/windowsDiscovery.js',
     'src/main/services/macDiscovery.js', 'src/main/services/linuxDiscovery.js',
     'src/main/services/platformDiscovery.js', 'src/main/services/discoverySummary.js',
@@ -82,8 +83,8 @@ const approvedIcon = 'assets/rastchin-desktop-icon-approved.png';
 if (packageJson.build?.win?.icon !== approvedIcon) failures.push('Windows package icon is not configured.');
 if (packageJson.build?.mac?.icon !== approvedIcon) failures.push('macOS package icon is not configured.');
 if (packageJson.build?.linux?.icon !== approvedIcon) failures.push('Linux package icon is not configured.');
-if (packageJson.desktopName !== 'rastchin-desktop-integrator') {
-    failures.push('Linux desktopName must be a stable application id.');
+if (packageJson.desktopName !== 'rastchin-desktop-app') {
+    failures.push('Linux desktopName must match the renamed application and remain stable.');
 }
 if (packageJson.build?.linux?.syncDesktopName !== true) {
     failures.push('Linux packages must synchronize the desktop file name with Electron app_id.');

@@ -4,6 +4,7 @@ const path = require('node:path');
 const { app, BrowserWindow, ipcMain, shell, Tray, Menu, nativeImage } = require('electron');
 const { IntegrationManager } = require('./services/integrationManager');
 const { resolveBuildPolicy } = require('./buildPolicy');
+const { revealWindow } = require('./windowActivation');
 const packageMetadata = require('../../package.json');
 
 let mainWindow = null;
@@ -106,9 +107,7 @@ function createWindow() {
 }
 
 function showMainWindow() {
-    if (!mainWindow || mainWindow.isDestroyed()) createWindow();
-    else mainWindow.show();
-    mainWindow?.focus();
+    if (!revealWindow(mainWindow, app)) createWindow();
 }
 
 function createTray() {

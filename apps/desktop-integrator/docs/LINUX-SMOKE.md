@@ -19,8 +19,9 @@ Do not run the integrator or these commands as root.
 
 ## Supported host applications
 
-RastChin's supported Linux matrix covers Ubuntu 24.04/26.04, Debian 13, and Fedora
-43/44 on x64 and arm64. RastChin accepts only the official package identity:
+RastChin's supported Linux matrix covers Ubuntu 24.04/26.04, Zorin OS 18, Debian
+13, and Fedora 43/44 on x64 and arm64. RastChin accepts only the official package
+identity:
 
 - DEB/RPM package: `chatgpt`
 - Package launcher: `/usr/bin/chatgpt`
@@ -35,7 +36,7 @@ action remains disabled because the required renderer connection is not supporte
 Install the RastChin package matching the distribution:
 
 ```bash
-# Ubuntu / Debian
+# Ubuntu / Zorin OS / Debian
 sudo apt install ./RastChin-Desktop-App-*-Linux-*.deb
 
 # Fedora
