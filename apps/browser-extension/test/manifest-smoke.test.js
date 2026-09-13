@@ -349,8 +349,10 @@ check('parity: runtime min constant is the small preset', /MIN_FONT_SIZE\s*=\s*C
 check('parity: runtime max constant is the medium preset (large removed)', /MAX_FONT_SIZE\s*=\s*CAPTION_SIZE_PRESETS\.medium/.test(youtubeRtlJs), true);
 check('parity: runtime snaps legacy caption sizes to nearest preset',
     /function nearestCaptionSizePreset/.test(youtubeRtlJs) && /captionSettings\.fontSize\s*=\s*nearestCaptionSizePreset/.test(youtubeRtlJs), true);
-check('youtube captions style every visible segment, not only RTL text',
-    /markCaptionSegment\(element,\s*isNeutralPunctuationSegment\(text\)/.test(youtubeRtlJs), true);
+check('youtube captions leave English-only cues native',
+    /if\s*\(!hasRtlCaptionText\)\s*\{\s*segments\.forEach\(restoreElement\);\s*return;/.test(youtubeRtlJs), true);
+check('youtube caption font preserves Latin glyphs with Roboto fallback',
+    /font-family:\s*"RastChinCaptionVazirmatn",\s*"Roboto",\s*Arial,\s*sans-serif/.test(youtubeRtlJs), true);
 check('youtube captions keep direction as a separate segment-scoped class',
     /CAPTION_DIR_RTL_CLASS/.test(youtubeRtlJs) && /CAPTION_DIR_LTR_CLASS/.test(youtubeRtlJs), true);
 check('youtube captions do not force CSS direction on caption segments',

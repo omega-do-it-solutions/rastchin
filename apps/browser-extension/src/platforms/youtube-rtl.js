@@ -90,8 +90,11 @@
     // the two paths never share styling or bookkeeping.
     const PROSE_CLASS = 'rastchin-youtube-prose-rtl';
     const PROSE_FONT_CLASS = 'rastchin-youtube-prose-font';
-    const SEARCH_RTL_CLASS = 'rastchin-youtube-search-rtl';
-    const PROSE_FONT_STACK = '"Vazirmatn", system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif';
+    const COMMENT_COMPOSER_FONT_CLASS = 'rastchin-youtube-comment-composer-font';
+    // Vazirmatn is unicode-ranged to Persian glyphs below. Keeping YouTube's
+    // native Roboto stack immediately after it preserves Latin words, URLs and
+    // channel names inside mixed Persian/English text.
+    const PROSE_FONT_STACK = '"Vazirmatn", "Roboto", Arial, sans-serif';
     const PROSE_LETTER_REGEX = /\p{L}/u;
 
     // Text-holders only — a leaf title/name node, or a self-contained TEXT block
@@ -131,6 +134,7 @@
         // expander id/tag so they only ever hit the description text leaf, never
         // the #expand/#collapse ("...more") buttons (those are role=button chrome).
         'ytd-text-inline-expander > #content',
+        '#description-inline-expander #expanded',
         '#description-inline-expander #snippet',
         '#description-inline-expander #snippet-text',
         '#description-inline-expander #attributed-snippet-text',
@@ -150,8 +154,12 @@
         // Playlist panel header title (watch + playlist pages)
         'ytd-playlist-panel-renderer #title-form #title',
         'ytd-playlist-panel-video-renderer span#video-title',
-        // Comments are text prose, not YouTube chrome. Keep the selector on the
-        // comment text leaf so author/action rows remain untouched.
+        // Comments are text prose, not YouTube chrome. The expander is the
+        // full-width text region in current YouTube builds; selecting only the
+        // inline #content-text leaf gives it RTL ordering but leaves it anchored
+        // on the left. Buttons inside the expander remain protected chrome.
+        'ytd-comment-view-model #expander',
+        'ytd-comment-renderer #expander',
         'ytd-comment-view-model #content-text',
         'ytd-comment-renderer #content-text',
         // Search suggestions dropdown rows (legacy + polymer + modern view-model).
@@ -174,6 +182,7 @@
     // the typed string lives in .value). It is fenced out of the engine via
     // excludeSelectors and handled by a dedicated input/focusin listener below.
     const SEARCH_INPUT_SELECTOR = 'input#search, input.ytSearchboxComponentInput, ytd-searchbox input[type="text"], form#search-form input[type="text"], input[aria-label*="Search"], input[aria-label*="search"]';
+    const COMMENT_COMPOSER_SELECTOR = '#contenteditable-root[contenteditable="true"]';
     const SEARCH_SUGGESTION_TEXT_SELECTOR = [
         'yt-searchbox .ytSuggestionComponentText',
         '.ytSearchboxComponentSuggestionsContainer .ytSuggestionComponentText',
@@ -223,9 +232,10 @@
     // document listener (so detach removes the exact same function), and the set
     // of inputs we have styled (so onDisable strips them — zero trace).
     const searchInputState = { engine: null, handler: null };
+    const commentComposerState = { engine: null, handler: null };
     const proseSweepState = { engine: null, handler: null, observer: null, heartbeatId: null, timers: new Set() };
     const touchedSearchInputs = new Set();
-    const touchedSearchHosts = new Set();
+    const touchedCommentComposers = new Set();
     const searchInputOriginals = new WeakMap();
     const touchedSuggestionTexts = new Set();
     const suggestionTextOriginals = new WeakMap();
@@ -337,13 +347,10 @@
         return engine.needsRTL(normalized);
     }
 
-    // Caption settings are not Persian-only anymore: YouTube owns caption layout,
-    // clipping, rolling AND base-direction mechanics. RastChin applies only the
-    // chosen display settings to every visible subtitle segment. Direction classes
-    // are kept as inert metadata/debug markers; they intentionally have no CSS
-    // effect because YouTube auto-translate can split RTL captions into many inline
-    // word segments, and forcing direction/unicode-bidi on each segment can break
-    // the native caption renderer.
+    // YouTube owns caption layout, clipping, rolling and base-direction mechanics.
+    // RastChin applies the user's display settings only when the current cue has
+    // RTL text. Direction classes are inert metadata/debug markers; forcing CSS
+    // direction on each word can break YouTube's split auto-translate renderer.
     const CAPTION_RTL_SCRIPT = /[\p{Script=Arabic}\p{Script=Hebrew}]/u;
     function captionSegmentDirection(text, engine, fallback = 'ltr') {
         const normalized = (text || '').trim();
@@ -446,23 +453,26 @@
     function processSingleCaptionWindow(windowEl, engine) {
         restoreElement(windowEl);
         const segments = getCaptionSegments(windowEl);
-        // Every visible subtitle segment receives the user's display settings.
-        // Punctuation-only segments inherit the dominant sibling direction so a
-        // split «?»/«!» uses the same colour/font/size as the cue without changing
-        // YouTube's caption window, background, clipping or rolling behavior.
+        // A Persian/mixed cue receives one consistent colour and size across its
+        // segments, while the unicode-ranged font keeps Latin runs in Roboto.
+        // English-only cues remain completely native.
         const contentSegments = segments.filter(segment => {
             if (isExcludedSegment(segment, engine)) return false;
             const text = getSegmentDirectionText(segment, engine);
             return Boolean(text && !isNeutralPunctuationSegment(text));
         });
-        const windowDirection = contentSegments.some(segment =>
-            captionSegmentDirection(getSegmentDirectionText(segment, engine), engine) === 'rtl') ? 'rtl' : 'ltr';
-        const hasStyledCaptionText = contentSegments.length > 0;
+        const hasRtlCaptionText = contentSegments.some(segment =>
+            captionSegmentDirection(getSegmentDirectionText(segment, engine), engine) === 'rtl');
+        if (!hasRtlCaptionText) {
+            segments.forEach(restoreElement);
+            return;
+        }
+        const windowDirection = 'rtl';
         segments.forEach((segment, index) => {
             const text = getSegmentText(segment, engine);
             const shouldSkipNeutral = isNeutralPunctuationSegment(text) &&
                 isUrlishPunctuationContext(text, segments, index, engine);
-            processCaptionSegment(segment, engine, windowDirection, hasStyledCaptionText && !shouldSkipNeutral);
+            processCaptionSegment(segment, engine, windowDirection, !shouldSkipNeutral);
         });
     }
 
@@ -604,59 +614,6 @@
         return !!(node && typeof node.matches === 'function' && node.matches(SEARCH_INPUT_SELECTOR));
     }
 
-    function searchHostFor(inputEl) {
-        if (!inputEl) return null;
-        let node = inputEl;
-        while (node) {
-            const tag = String(node.tagName || '').toUpperCase();
-            if (tag === 'YT-SEARCHBOX' || tag === 'YTD-SEARCHBOX') return node;
-            if (tag === 'FORM' && node.matches?.('form#search-form')) return node;
-            node = node.parentElement;
-        }
-        return null;
-    }
-
-    function hasActiveRtlSearchInput() {
-        if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return false;
-        try {
-            return Array.from(document.querySelectorAll(SEARCH_INPUT_SELECTOR))
-                .some(input => input?.getAttribute?.('dir') === 'rtl');
-        } catch (_) {
-            return false;
-        }
-    }
-
-    function markSearchHostRTL(inputEl) {
-        const host = searchHostFor(inputEl);
-        if (host) {
-            host.classList?.add?.(SEARCH_RTL_CLASS);
-            touchedSearchHosts.add(host);
-        }
-        document?.documentElement?.classList?.add?.(SEARCH_RTL_CLASS);
-    }
-
-    function clearSearchHostRTL(inputEl) {
-        const host = searchHostFor(inputEl);
-        if (host) {
-            host.classList?.remove?.(SEARCH_RTL_CLASS);
-            touchedSearchHosts.delete(host);
-        }
-        touchedSearchHosts.forEach(touchedHost => {
-            if (!touchedHost || touchedHost.isConnected === false) {
-                touchedSearchHosts.delete(touchedHost);
-                return;
-            }
-            const activeRtlInput = touchedHost.querySelector?.(`${SEARCH_INPUT_SELECTOR}[dir="rtl"]`);
-            if (!activeRtlInput) {
-                touchedHost.classList?.remove?.(SEARCH_RTL_CLASS);
-                touchedSearchHosts.delete(touchedHost);
-            }
-        });
-        if (!hasActiveRtlSearchInput()) {
-            document?.documentElement?.classList?.remove?.(SEARCH_RTL_CLASS);
-        }
-    }
-
     function applySuggestionTextDirection(element, engine) {
         if (!element || typeof element.setAttribute !== 'function') return;
         const activeEngine = engine || proseSweepState.engine || searchInputState.engine;
@@ -728,7 +685,6 @@
             setStyleSafe(inputEl, 'direction', 'rtl');
             setStyleSafe(inputEl, 'text-align', 'right');
             setStyleSafe(inputEl, 'font-family', PROSE_FONT_STACK);
-            markSearchHostRTL(inputEl);
             touchedSearchInputs.add(inputEl);
         } else {
             clearSearchInputDirection(inputEl);
@@ -750,8 +706,56 @@
             removeStyleSafe(inputEl, 'text-align');
             removeStyleSafe(inputEl, 'font-family');
         }
-        clearSearchHostRTL(inputEl);
         touchedSearchInputs.delete(inputEl);
+    }
+
+    function isCommentComposer(node) {
+        return !!(node && typeof node.matches === 'function' && node.matches(COMMENT_COMPOSER_SELECTOR));
+    }
+
+    function clearCommentComposerFont(element) {
+        if (!element) return;
+        element.classList?.remove?.(COMMENT_COMPOSER_FONT_CLASS);
+        touchedCommentComposers.delete(element);
+    }
+
+    function applyCommentComposerFont(element, engine) {
+        if (!isCommentComposer(element)) return;
+        const activeEngine = engine || commentComposerState.engine || proseSweepState.engine;
+        const text = (typeof activeEngine?.collectDirectionText === 'function'
+            ? activeEngine.collectDirectionText(element)
+            : (element.textContent || '')).trim();
+        if (hasProseRtlLetter(text, activeEngine)) {
+            element.classList?.add?.(COMMENT_COMPOSER_FONT_CLASS);
+            touchedCommentComposers.add(element);
+        } else {
+            clearCommentComposerFont(element);
+        }
+    }
+
+    function attachCommentComposer(engine) {
+        commentComposerState.engine = engine;
+        if (typeof document === 'undefined' || typeof document.addEventListener !== 'function') return;
+        if (commentComposerState.handler) return;
+        const handler = event => {
+            const target = event && event.target;
+            if (isCommentComposer(target)) applyCommentComposerFont(target, commentComposerState.engine);
+        };
+        commentComposerState.handler = handler;
+        document.addEventListener('input', handler, true);
+        document.addEventListener('focusin', handler, true);
+        document.querySelectorAll?.(COMMENT_COMPOSER_SELECTOR)
+            .forEach(element => applyCommentComposerFont(element, engine));
+    }
+
+    function detachCommentComposer() {
+        if (typeof document !== 'undefined' && typeof document.removeEventListener === 'function' && commentComposerState.handler) {
+            document.removeEventListener('input', commentComposerState.handler, true);
+            document.removeEventListener('focusin', commentComposerState.handler, true);
+        }
+        commentComposerState.handler = null;
+        commentComposerState.engine = null;
+        Array.from(touchedCommentComposers).forEach(clearCommentComposerFont);
     }
 
     // Drop inputs that detached on an SPA re-mount so the Set can't grow unbounded
@@ -796,14 +800,13 @@
         searchInputState.handler = null;
         searchInputState.engine = null;
         Array.from(touchedSearchInputs).forEach(clearSearchInputDirection);
-        touchedSearchHosts.forEach(host => host?.classList?.remove?.(SEARCH_RTL_CLASS));
-        touchedSearchHosts.clear();
-        document?.documentElement?.classList?.remove?.(SEARCH_RTL_CLASS);
     }
 
     function runProseSweepNow(engine) {
         if (!engine || !engine.enabled || typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return;
         applySearchSuggestionsDirection(engine);
+        document.querySelectorAll(COMMENT_COMPOSER_SELECTOR)
+            .forEach(element => applyCommentComposerFont(element, engine));
         const selector = PROSE_SELECTORS.join(', ');
         try {
             document.querySelectorAll(selector).forEach(el => {
@@ -880,6 +883,7 @@
             const observer = new MutationObserver(mutations => {
                 if (!proseSweepState.engine?.enabled) return;
                 if (mutations.some(mutationTouchesProseSurface)) {
+                    applySearchSuggestionsDirection(proseSweepState.engine);
                     scheduleProseSweeps(proseSweepState.engine);
                 }
             });
@@ -913,10 +917,12 @@
 
     function handleEnable(engine) {
         attachSearchInput(engine);
+        attachCommentComposer(engine);
         attachProseSweeps(engine);
     }
     function handleDisable() {
         detachProseSweeps();
+        detachCommentComposer();
         detachSearchInput();
         cleanUpStyles();
     }
@@ -976,6 +982,15 @@
                 font-weight: 100 900;
                 font-style: normal;
                 font-display: swap;
+                unicode-range:
+                    U+0600-06FF,
+                    U+0750-077F,
+                    U+08A0-08FF,
+                    U+FB50-FDFF,
+                    U+FE70-FEFF,
+                    U+200C,
+                    U+200D,
+                    U+0660-0669;
             }
 
             ${codeGuard} {
@@ -985,7 +1000,7 @@
             }
 
             .ytp-caption-segment.${MODIFIED_CLASS} {
-                font-family: "RastChinCaptionVazirmatn", "Vazirmatn", system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif !important;
+                font-family: "RastChinCaptionVazirmatn", "Roboto", Arial, sans-serif !important;
                 color: var(--rastchin-youtube-caption-color, ${DEFAULT_COLOR}) !important;
                 font-size: var(--rastchin-youtube-caption-font-px, ${DEFAULT_FONT_PX}px) !important;
             }
@@ -1018,28 +1033,11 @@
                 font-family: ${PROSE_FONT_STACK} !important;
             }
 
-            /*
-             * Vazirmatn's Persian glyph metrics read slightly larger/heavier than
-             * YouTube's Roboto stack at the same title sizes. Limit the visual
-             * correction to actual video title leaves and current search suggestion
-             * rows; descriptions and page layout keep their native size/weight.
-             */
-            yt-formatted-string#video-title:is(.${PROSE_CLASS}, .${PROSE_FONT_CLASS}),
-            a#video-title:is(.${PROSE_CLASS}, .${PROSE_FONT_CLASS}),
-            a#video-title-link:is(.${PROSE_CLASS}, .${PROSE_FONT_CLASS}),
-            ytd-watch-metadata h1 yt-formatted-string:is(.${PROSE_CLASS}, .${PROSE_FONT_CLASS}),
-            ytd-playlist-panel-video-renderer span#video-title:is(.${PROSE_CLASS}, .${PROSE_FONT_CLASS}),
-            yt-lockup-metadata-view-model h3 a.ytLockupMetadataViewModelTitle:is(.${PROSE_CLASS}, .${PROSE_FONT_CLASS}),
-            yt-lockup-metadata-view-model h3 .ytAttributedStringHost:is(.${PROSE_CLASS}, .${PROSE_FONT_CLASS}),
-            yt-lockup-metadata-view-model h3 .yt-lockup-metadata-view-model-wiz__title:is(.${PROSE_CLASS}, .${PROSE_FONT_CLASS}) {
-                font-size: min(1em, 17.5px) !important;
-                font-weight: 450 !important;
-                font-synthesis-weight: none !important;
-            }
+            /* YouTube keeps ownership of title size and weight. */
 
-            yt-lockup-metadata-view-model h3 a.ytLockupMetadataViewModelTitle:is(.${PROSE_CLASS}, .${PROSE_FONT_CLASS}) > .ytAttributedStringHost:is(.${PROSE_CLASS}, .${PROSE_FONT_CLASS}) {
-                font-size: 1em !important;
-                font-weight: inherit !important;
+            .${COMMENT_COMPOSER_FONT_CLASS},
+            .${COMMENT_COMPOSER_FONT_CLASS} :is(span, yt-formatted-string, a, b, strong, em, i, bdi) {
+                font-family: ${PROSE_FONT_STACK} !important;
             }
 
             /* Any code-ish run inside flipped prose stays LTR (defence-in-depth;
@@ -1049,24 +1047,6 @@
                 direction: ltr !important;
                 text-align: left !important;
                 unicode-bidi: isolate !important;
-            }
-
-            /*
-             * Search suggestions are a special case: the query text lives in
-             * input.value, and YouTube mounts the suggestion rows in the searchbox
-             * chrome after the input event. The input listener is reliable, so it
-             * marks only the active yt-searchbox host when the query itself is RTL;
-             * this scoped rule then makes the dropdown text readable without
-             * flipping the masthead/search layout or touching unrelated controls.
-             */
-            .${SEARCH_RTL_CLASS} :is(.ytSuggestionComponentText, .ytSuggestionComponentSuggestionText, .sbqs_c, ytd-search-suggestion #text) {
-                direction: rtl !important;
-                text-align: right !important;
-                unicode-bidi: plaintext !important;
-                font-family: ${PROSE_FONT_STACK} !important;
-                font-size: 0.94em !important;
-                font-weight: 400 !important;
-                font-synthesis-weight: none !important;
             }
 
             /* ════════ More-button overlap fix (v1.1.25, bug #2) ════════════════
@@ -1129,10 +1109,17 @@
             applySearchSuggestionsDirection,
             attachSearchInput,
             detachSearchInput,
+            isCommentComposer,
+            applyCommentComposerFont,
+            clearCommentComposerFont,
+            attachCommentComposer,
+            detachCommentComposer,
             proseClass: PROSE_CLASS,
             proseFontClass: PROSE_FONT_CLASS,
+            commentComposerFontClass: COMMENT_COMPOSER_FONT_CLASS,
             proseSelectors: PROSE_SELECTORS,
             searchInputSelector: SEARCH_INPUT_SELECTOR,
+            commentComposerSelector: COMMENT_COMPOSER_SELECTOR,
             uiChromeGuardSelectors: UI_CHROME_GUARD_SELECTORS
         });
     }
