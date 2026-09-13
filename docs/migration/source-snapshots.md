@@ -8,7 +8,7 @@ remain the historical record for work before consolidation.
 | --- | --- | --- |
 | Browser extension | `HotFix/Github` | `bfd2c23dd95cab57e4cf5f3e4cc43bf4999def68` |
 | VS Code extension | `rewrite/versioned-agent-patcher` | `1119327049bae5acb83daef59f66a58187885fdb` |
-| Desktop integrator | `main` | `afd2cbb7815d9c6da3fbf19a8ce85de97de5c566` |
+| Desktop App | `main` | `afd2cbb7815d9c6da3fbf19a8ce85de97de5c566` |
 
 The retained OmegaForge engineering foundation came from commit
 `81f964181be92e0ce31d04502fc421199f52d1a1`, tagged `v0.9.0`.

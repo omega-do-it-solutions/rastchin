@@ -9,7 +9,8 @@ const required = [
     'package.json', 'LICENSE', 'NOTICE', 'THIRD_PARTY_NOTICES.md', 'README.md',
     'docs/WINDOWS-SMOKE.md',
     'docs/MACOS-SMOKE.md', 'docs/LINUX-SMOKE.md',
-    'assets/icon.png', 'assets/fonts/Vazirmatn-Regular.woff2',
+    'assets/icon.png', 'assets/rastchin-desktop-icon-approved.png',
+    'assets/fonts/Vazirmatn-Regular.woff2',
     'assets/fonts/Vazirmatn-Bold.woff2', 'assets/fonts/Vazirmatn-OFL.txt',
     'assets/targets/chatgpt.png', 'assets/targets/claude.png',
     'src/main/index.js', 'src/main/preload.js', 'src/main/buildPolicy.js',
@@ -58,6 +59,10 @@ for (const relative of ['src/main/services/macDiscovery.js', 'src/main/services/
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 if (packageJson.private !== true) failures.push('The desktop application package must remain private.');
 if (packageJson.license !== 'Apache-2.0') failures.push('package.json must declare Apache-2.0.');
+if (packageJson.productName !== 'RastChin Desktop App'
+    || packageJson.build?.productName !== 'RastChin Desktop App') {
+    failures.push('The packaged product name must be RastChin Desktop App.');
+}
 if (packageJson.repository?.url !== 'git+https://github.com/omega-do-it-solutions/rastchin.git'
     || packageJson.repository?.directory !== 'apps/desktop-integrator') {
     failures.push('package.json must point to the desktop directory in the public monorepo.');
@@ -73,9 +78,10 @@ for (const legalFile of ['LICENSE', 'NOTICE', 'THIRD_PARTY_NOTICES.md']) {
         failures.push(`Packaged applications must include ${legalFile}.`);
     }
 }
-if (packageJson.build?.win?.icon !== 'assets/icon.png') failures.push('Windows package icon is not configured.');
-if (packageJson.build?.mac?.icon !== 'assets/icon.png') failures.push('macOS package icon is not configured.');
-if (packageJson.build?.linux?.icon !== 'assets/icon.png') failures.push('Linux package icon is not configured.');
+const approvedIcon = 'assets/rastchin-desktop-icon-approved.png';
+if (packageJson.build?.win?.icon !== approvedIcon) failures.push('Windows package icon is not configured.');
+if (packageJson.build?.mac?.icon !== approvedIcon) failures.push('macOS package icon is not configured.');
+if (packageJson.build?.linux?.icon !== approvedIcon) failures.push('Linux package icon is not configured.');
 if (packageJson.desktopName !== 'rastchin-desktop-integrator') {
     failures.push('Linux desktopName must be a stable application id.');
 }
@@ -191,12 +197,15 @@ if (!installerName || !portableName || installerName === portableName) {
 if (!installerName?.includes('Setup') || !portableName?.includes('Portable')) {
     failures.push('Windows artifact names must identify Setup and Portable builds.');
 }
+if (!installerName?.includes('Desktop-App') || !portableName?.includes('Desktop-App')) {
+    failures.push('Windows artifact names must use the Desktop App product name.');
+}
 const macName = packageJson.build?.mac?.artifactName || '';
-if (!macName.includes('macOS') || !macName.includes('${arch}')) {
+if (!macName.includes('Desktop-App') || !macName.includes('macOS') || !macName.includes('${arch}')) {
     failures.push('macOS artifact names must identify platform and architecture.');
 }
 const linuxName = packageJson.build?.linux?.artifactName || '';
-if (!linuxName.includes('Linux') || !linuxName.includes('${arch}')) {
+if (!linuxName.includes('Desktop-App') || !linuxName.includes('Linux') || !linuxName.includes('${arch}')) {
     failures.push('Linux artifact names must identify platform and architecture.');
 }
 for (const target of ['AppImage', 'deb', 'rpm']) {

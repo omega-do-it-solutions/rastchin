@@ -20,7 +20,7 @@ The marks covered by this policy include:
 - the names **RastChin** and **راست‌چین**;
 - the ascending-step RastChin symbol and official logo compositions;
 - the names and official identities of RastChin Browser Extension, RastChin for
-  VS Code, and RastChin Desktop Integrator; and
+  VS Code, and RastChin Desktop App; and
 - recognizable variants created and published by the project.
 
 Copyright in the project-owned logo artwork and ownership of these source-

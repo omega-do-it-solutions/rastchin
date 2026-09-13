@@ -65,7 +65,7 @@ function createMacTrayImage() {
 
 function createTrayImage() {
     if (process.platform === 'darwin') return createMacTrayImage();
-    return nativeImage.createFromPath(assetPath('icon.png')).resize({ width: 20, height: 20 });
+    return nativeImage.createFromPath(assetPath('rastchin-desktop-icon-approved.png')).resize({ width: 20, height: 20 });
 }
 
 function createWindow() {
@@ -76,8 +76,8 @@ function createWindow() {
         minHeight: 620,
         show: false,
         backgroundColor: '#101114',
-        icon: assetPath('icon.png'),
-        title: 'یکپارچه‌ساز دسکتاپ راست‌چین',
+        icon: assetPath('rastchin-desktop-icon-approved.png'),
+        title: 'برنامهٔ دسکتاپ راست‌چین',
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
@@ -122,7 +122,7 @@ function createTray() {
         tray = null;
         return;
     }
-    tray.setToolTip('یکپارچه‌ساز دسکتاپ راست‌چین');
+    tray.setToolTip('برنامهٔ دسکتاپ راست‌چین');
     tray.setContextMenu(Menu.buildFromTemplate([
         { label: 'باز کردن راست‌چین', click: showMainWindow },
         { type: 'separator' },

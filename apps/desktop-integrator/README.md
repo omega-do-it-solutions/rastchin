@@ -1,6 +1,10 @@
-# یکپارچه‌ساز دسکتاپ راست‌چین
+<p align="center">
+  <img src="assets/rastchin-desktop-icon-approved.png" alt="آیکن برنامهٔ دسکتاپ راست‌چین" width="128">
+</p>
 
-یکپارچه‌ساز دسکتاپ راست‌چین، برنامهٔ دسکتاپ در [مونوریپوی عمومی راست‌چین](https://github.com/omega-do-it-solutions/rastchin) است. این برنامه یک ابزار همراه محلی برای بهتر کردن خوانایی فارسی در rendererهای دسکتاپ پشتیبانی‌شدهٔ ChatGPT/Codex روی ویندوز، macOS و لینوکس است. زبان طبیعیِ تحت پشتیبانی فقط فارسی است. برنامه Claude Desktop را تشخیص می‌دهد، اما یکپارچه‌سازی آن را برای انتشار آینده برنامه‌ریزی‌شده نشان می‌دهد، زیرا میزبان فعلی اتصال استایل‌دهی پشتیبانی‌شده‌ای ارائه نمی‌کند. این برنامه یک کلاینت هوش مصنوعی دیگر نیست؛ کاربران همچنان در برنامه‌های رسمی کار می‌کنند.
+# برنامهٔ دسکتاپ راست‌چین
+
+برنامهٔ دسکتاپ راست‌چین یکی از برنامه‌های [مونوریپوی عمومی راست‌چین](https://github.com/omega-do-it-solutions/rastchin) است. این ابزار همراه محلی، خوانایی فارسی را در rendererهای دسکتاپ پشتیبانی‌شدهٔ ChatGPT/Codex روی ویندوز، macOS و لینوکس بهتر می‌کند. زبان طبیعیِ تحت پشتیبانی فقط فارسی است. برنامه Claude Desktop را تشخیص می‌دهد، اما یکپارچه‌سازی آن را برای انتشار آینده برنامه‌ریزی‌شده نشان می‌دهد، زیرا میزبان فعلی اتصال استایل‌دهی پشتیبانی‌شده‌ای ارائه نمی‌کند. این برنامه یک کلاینت هوش مصنوعی دیگر نیست؛ کاربران همچنان در برنامه‌های رسمی کار می‌کنند.
 
 ## وضعیت فعلی
 
@@ -28,7 +32,7 @@
 
 ## گردش‌کار مورد انتظار کاربر
 
-1. یکپارچه‌ساز دسکتاپ راست‌چین را نصب و باز کنید.
+1. برنامهٔ دسکتاپ راست‌چین را نصب و باز کنید.
 2. راست‌چین برنامه‌های رسمی دسکتاپ و نسخهٔ آن‌ها را تشخیص می‌دهد.
 3. برای ChatGPT/Codex، برنامهٔ در حال اجرا را ببندید و روی **فعال‌سازی راست‌چین** کلیک کنید.
 4. راست‌چین ChatGPT/Codex را باز می‌کند و RTL را در حافظه اعمال می‌کند.
@@ -103,13 +107,13 @@ pnpm --filter rastchin-desktop-integrator package:mac:release
 
 خروجی‌ها:
 
-- `RastChin-Desktop-Integrator-Setup-<version>-<arch>.exe`
-- `RastChin-Desktop-Integrator-Portable-<version>-<arch>.exe`
-- `RastChin-Desktop-Integrator-<version>-macOS-<arch>.dmg`
-- `RastChin-Desktop-Integrator-<version>-macOS-<arch>.zip`
-- `RastChin-Desktop-Integrator-<version>-Linux-<arch>.AppImage`
-- `RastChin-Desktop-Integrator-<version>-Linux-<arch>.deb`
-- `RastChin-Desktop-Integrator-<version>-Linux-<arch>.rpm`
+- `RastChin-Desktop-App-Setup-<version>-<arch>.exe`
+- `RastChin-Desktop-App-Portable-<version>-<arch>.exe`
+- `RastChin-Desktop-App-<version>-macOS-<arch>.dmg`
+- `RastChin-Desktop-App-<version>-macOS-<arch>.zip`
+- `RastChin-Desktop-App-<version>-Linux-<arch>.AppImage`
+- `RastChin-Desktop-App-<version>-Linux-<arch>.deb`
+- `RastChin-Desktop-App-<version>-Linux-<arch>.rpm`
 
 خروجی‌های بسته‌بندی‌شده سیاست runtime را در خود دارند و با اجرای عادی کار می‌کنند؛ کاربران متغیر محیطی توسعه را تنظیم نمی‌کنند.
 

@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="media/icon.png" alt="آیکن افزونهٔ VS Code راست‌چین" width="128">
+</p>
+
 # راست‌چین برای VS Code
 
 راست‌چین خوانایی RTL فارسی را در Markdown Preview نرم‌افزار VS Code و webviewهای پشتیبانی‌شدهٔ Claude Code و Codex بهتر می‌کند. این افزونه عمداً فقط فارسی را پشتیبانی می‌کند و کد، فرمان، URL، نشانی ایمیل، مسیر، خروجی ترمینال و diff را LTR و monospace نگه می‌دارد.

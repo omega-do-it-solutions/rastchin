@@ -6,7 +6,7 @@
 
 - [ ] افزونهٔ مرورگر (`apps/browser-extension`)
 - [ ] افزونهٔ VS Code (`apps/vscode-extension`)
-- [ ] یکپارچه‌ساز دسکتاپ (`apps/desktop-integrator`)
+- [ ] برنامهٔ دسکتاپ (`apps/desktop-integrator`)
 - [ ] مخزن مشترک، مستندات، CI یا سیاست انتشار
 
 ## رفتار و ریسک

@@ -54,8 +54,8 @@ jobs:
         shell: pwsh
         run: |
           $dist = "apps/desktop-integrator/dist"
-          $setup = @(Get-ChildItem $dist -Filter 'RastChin-Desktop-Integrator-Setup-*.exe')
-          $portable = @(Get-ChildItem $dist -Filter 'RastChin-Desktop-Integrator-Portable-*.exe')
+          $setup = @(Get-ChildItem $dist -Filter 'RastChin-Desktop-App-Setup-*.exe')
+          $portable = @(Get-ChildItem $dist -Filter 'RastChin-Desktop-App-Portable-*.exe')
           if ($setup.Count -ne 1) { throw "Expected one Setup EXE, found $($setup.Count)." }
           if ($portable.Count -ne 1) { throw "Expected one Portable EXE, found $($portable.Count)." }
       - name: Upload Windows packages
@@ -63,9 +63,9 @@ jobs:
         with:
           name: rastchin-desktop-windows
           path: |
-            apps/desktop-integrator/dist/RastChin-Desktop-Integrator-Setup-*.exe
-            apps/desktop-integrator/dist/RastChin-Desktop-Integrator-Setup-*.exe.blockmap
-            apps/desktop-integrator/dist/RastChin-Desktop-Integrator-Portable-*.exe
+            apps/desktop-integrator/dist/RastChin-Desktop-App-Setup-*.exe
+            apps/desktop-integrator/dist/RastChin-Desktop-App-Setup-*.exe.blockmap
+            apps/desktop-integrator/dist/RastChin-Desktop-App-Portable-*.exe
           if-no-files-found: error
           retention-days: 14
 
@@ -104,8 +104,8 @@ jobs:
         run: |
           set -euo pipefail
           dist="apps/desktop-integrator/dist"
-          test "$(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-Integrator-*-macOS-*.dmg' | wc -l | tr -d ' ')" -eq 2
-          test "$(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-Integrator-*-macOS-*.zip' | wc -l | tr -d ' ')" -eq 2
+          test "$(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-App-*-macOS-*.dmg' | wc -l | tr -d ' ')" -eq 2
+          test "$(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-App-*-macOS-*.zip' | wc -l | tr -d ' ')" -eq 2
 
           verified_apps=0
           while IFS= read -r -d '' app; do
@@ -126,15 +126,15 @@ jobs:
             hdiutil detach "$mount_dir" >/dev/null
             rmdir "$mount_dir"
             verified_dmgs=$((verified_dmgs + 1))
-          done < <(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-Integrator-*-macOS-*.dmg' -print0)
+          done < <(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-App-*-macOS-*.dmg' -print0)
           test "$verified_dmgs" -eq 2
       - name: Upload macOS ad-hoc packages
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: rastchin-desktop-macos-adhoc
           path: |
-            apps/desktop-integrator/dist/RastChin-Desktop-Integrator-*-macOS-*.dmg
-            apps/desktop-integrator/dist/RastChin-Desktop-Integrator-*-macOS-*.zip
+            apps/desktop-integrator/dist/RastChin-Desktop-App-*-macOS-*.dmg
+            apps/desktop-integrator/dist/RastChin-Desktop-App-*-macOS-*.zip
           if-no-files-found: error
           retention-days: 14
 
@@ -172,16 +172,16 @@ jobs:
         run: |
           set -euo pipefail
           dist="apps/desktop-integrator/dist"
-          test "$(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-Integrator-*-Linux-*.AppImage' | wc -l | tr -d ' ')" -eq 2
-          test "$(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-Integrator-*-Linux-*.deb' | wc -l | tr -d ' ')" -eq 2
-          test "$(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-Integrator-*-Linux-*.rpm' | wc -l | tr -d ' ')" -eq 2
+          test "$(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-App-*-Linux-*.AppImage' | wc -l | tr -d ' ')" -eq 2
+          test "$(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-App-*-Linux-*.deb' | wc -l | tr -d ' ')" -eq 2
+          test "$(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-App-*-Linux-*.rpm' | wc -l | tr -d ' ')" -eq 2
       - name: Upload Linux packages
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: rastchin-desktop-linux
           path: |
-            apps/desktop-integrator/dist/RastChin-Desktop-Integrator-*-Linux-*.AppImage
-            apps/desktop-integrator/dist/RastChin-Desktop-Integrator-*-Linux-*.deb
-            apps/desktop-integrator/dist/RastChin-Desktop-Integrator-*-Linux-*.rpm
+            apps/desktop-integrator/dist/RastChin-Desktop-App-*-Linux-*.AppImage
+            apps/desktop-integrator/dist/RastChin-Desktop-App-*-Linux-*.deb
+            apps/desktop-integrator/dist/RastChin-Desktop-App-*-Linux-*.rpm
           if-no-files-found: error
           retention-days: 14
