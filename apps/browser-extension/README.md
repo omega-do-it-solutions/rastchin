@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../../docs/assets/rastchin-logo.png" alt="لوگوی پلکانی راست‌چین" width="112">
+  <img src="docs/assets/rastchin-browser-icon.png" alt="آیکن افزونهٔ مرورگر راست‌چین" width="128">
 </p>
 
 <h1 align="center">افزونهٔ مرورگر RastChin | راست‌چین</h1>

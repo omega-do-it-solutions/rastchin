@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="../../docs/assets/rastchin-logo.png" alt="لوگوی پلکانی راست‌چین" width="112">
+  <img src="assets/rastchin-desktop-icon-approved.png" alt="آیکن برنامهٔ دسکتاپ راست‌چین" width="128">
 </p>
 
-<h1 align="center">یکپارچه‌ساز دسکتاپ RastChin | راست‌چین</h1>
+<h1 align="center">برنامهٔ دسکتاپ RastChin | راست‌چین</h1>
 
 <p align="center">
   خوانایی بهتر فارسی در برنامهٔ رسمی ChatGPT/Codex روی Windows، macOS و Linux
@@ -18,7 +18,7 @@
 
 ## بخش اول: معرفی و راهنمای استفاده
 
-یکپارچه‌ساز دسکتاپ راست‌چین، برنامهٔ دسکتاپ در [مونوریپوی عمومی راست‌چین](https://github.com/omega-do-it-solutions/rastchin) است. این برنامه یک ابزار همراه محلی برای بهتر کردن خوانایی فارسی در rendererهای دسکتاپ پشتیبانی‌شدهٔ ChatGPT/Codex روی ویندوز، macOS و لینوکس است. زبان طبیعیِ تحت پشتیبانی فقط فارسی است. برنامه Claude Desktop را تشخیص می‌دهد، اما یکپارچه‌سازی آن را برای انتشار آینده برنامه‌ریزی‌شده نشان می‌دهد، زیرا میزبان فعلی اتصال استایل‌دهی پشتیبانی‌شده‌ای ارائه نمی‌کند. این برنامه یک کلاینت هوش مصنوعی دیگر نیست؛ کاربران همچنان در برنامه‌های رسمی کار می‌کنند.
+برنامهٔ دسکتاپ راست‌چین یکی از برنامه‌های [مونوریپوی عمومی راست‌چین](https://github.com/omega-do-it-solutions/rastchin) است. این ابزار همراه محلی، خوانایی فارسی را در rendererهای دسکتاپ پشتیبانی‌شدهٔ ChatGPT/Codex روی ویندوز، macOS و لینوکس بهتر می‌کند. زبان طبیعیِ تحت پشتیبانی فقط فارسی است. برنامه Claude Desktop را تشخیص می‌دهد، اما یکپارچه‌سازی آن را برای انتشار آینده برنامه‌ریزی‌شده نشان می‌دهد، زیرا میزبان فعلی اتصال استایل‌دهی پشتیبانی‌شده‌ای ارائه نمی‌کند. این برنامه یک کلاینت هوش مصنوعی دیگر نیست؛ کاربران همچنان در برنامه‌های رسمی کار می‌کنند.
 
 ### نصب
 
@@ -29,6 +29,7 @@
 یکپارچه‌سازی ChatGPT/Codex در این برنامه **پایدار** است. ساخت‌های بسته‌بندی‌شده، یکپارچه‌سازی runtime را بدون نیاز به ترمینال یا متغیر محیطی فعال می‌کنند.
 
 - کشف ویندوز، macOS و لینوکس با بررسی‌های ویژهٔ پلتفرم برای هویت، بسته، مسیر، معماری و مجوز پیاده‌سازی شده است. در لینوکس، برنامهٔ فروشنده را فقط از OpenAI نصب کنید؛ فرادادهٔ محلی DEB به‌تنهایی نمی‌تواند منشأ آن را به‌صورت رمزنگاری‌شده اثبات کند.
+- میزبان‌های لینوکس پشتیبانی‌شده شامل Ubuntu 24.04/26.04، ‏Zorin OS 18، ‏Debian 13 و Fedora 43/44 روی x64 و arm64 هستند.
 - استایل‌دهی runtime در ChatGPT/Codex برای هر سه پلتفرم پشتیبانی و با چک‌لیست دود ویژهٔ همان پلتفرم اعتبارسنجی می‌شود.
 - ساخت‌های فعلی Claude Desktop اتصال خصوصی اشکال‌زدایی Chromium لازم برای استایل‌دهی در حافظه را صریحاً رد می‌کنند. راست‌چین این حفاظت میزبان را دور نمی‌زند؛ کارت Claude غیرفعال است و پشتیبانی را برای انتشار آینده نشان می‌دهد.
 - رابط مدیر فارسی‌محور است، با فونت Vazirmatn همراه برنامه به‌صورت RTL رندر می‌شود و مقادیر فنی را از نظر جهت جدا نگه می‌دارد.
@@ -50,7 +51,7 @@
 
 ### گردش‌کار مورد انتظار کاربر
 
-1. یکپارچه‌ساز دسکتاپ راست‌چین را نصب و باز کنید.
+1. برنامهٔ دسکتاپ راست‌چین را نصب و باز کنید.
 2. راست‌چین برنامه‌های رسمی دسکتاپ و نسخهٔ آن‌ها را تشخیص می‌دهد.
 3. برای ChatGPT/Codex، برنامهٔ در حال اجرا را ببندید و روی **فعال‌سازی راست‌چین** کلیک کنید.
 4. راست‌چین ChatGPT/Codex را باز می‌کند و RTL را در حافظه اعمال می‌کند.
@@ -127,13 +128,13 @@ pnpm --filter rastchin-desktop-integrator package:mac:release
 
 خروجی‌ها:
 
-- `RastChin-Desktop-Integrator-Setup-<version>-<arch>.exe`
-- `RastChin-Desktop-Integrator-Portable-<version>-<arch>.exe`
-- `RastChin-Desktop-Integrator-<version>-macOS-<arch>.dmg`
-- `RastChin-Desktop-Integrator-<version>-macOS-<arch>.zip`
-- `RastChin-Desktop-Integrator-<version>-Linux-<arch>.AppImage`
-- `RastChin-Desktop-Integrator-<version>-Linux-<arch>.deb`
-- `RastChin-Desktop-Integrator-<version>-Linux-<arch>.rpm`
+- `RastChin-Desktop-App-Setup-<version>-<arch>.exe`
+- `RastChin-Desktop-App-Portable-<version>-<arch>.exe`
+- `RastChin-Desktop-App-<version>-macOS-<arch>.dmg`
+- `RastChin-Desktop-App-<version>-macOS-<arch>.zip`
+- `RastChin-Desktop-App-<version>-Linux-<arch>.AppImage`
+- `RastChin-Desktop-App-<version>-Linux-<arch>.deb`
+- `RastChin-Desktop-App-<version>-Linux-<arch>.rpm`
 
 خروجی‌های بسته‌بندی‌شده سیاست runtime را در خود دارند و با اجرای عادی کار می‌کنند؛ کاربران متغیر محیطی توسعه را تنظیم نمی‌کنند.
 

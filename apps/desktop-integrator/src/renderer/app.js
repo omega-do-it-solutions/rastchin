@@ -148,7 +148,7 @@ function renderCard(target, status) {
 
 function render(status) {
     currentStatus = status;
-    versionLabel.textContent = `یکپارچه‌ساز دسکتاپ راست‌چین، نسخهٔ ${status.version}`;
+    versionLabel.textContent = `برنامهٔ دسکتاپ راست‌چین، نسخهٔ ${status.version}`;
     platformLabel.textContent = PLATFORM_LABELS[status.platform] || 'راست‌چین برای دسکتاپ';
     warning.classList.toggle('hidden', status.supportedPlatform);
     warning.textContent = status.supportedPlatform

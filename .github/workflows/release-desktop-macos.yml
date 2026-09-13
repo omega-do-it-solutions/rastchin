@@ -62,8 +62,8 @@ jobs:
         run: |
           set -euo pipefail
           dist="apps/desktop-integrator/dist"
-          test "$(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-Integrator-*-macOS-*.dmg' | wc -l | tr -d ' ')" -eq 2
-          test "$(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-Integrator-*-macOS-*.zip' | wc -l | tr -d ' ')" -eq 2
+          test "$(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-App-*-macOS-*.dmg' | wc -l | tr -d ' ')" -eq 2
+          test "$(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-App-*-macOS-*.zip' | wc -l | tr -d ' ')" -eq 2
 
           verified_apps=0
           while IFS= read -r -d '' app; do
@@ -87,14 +87,14 @@ jobs:
             hdiutil detach "$mount_dir" >/dev/null
             rmdir "$mount_dir"
             verified_dmgs=$((verified_dmgs + 1))
-          done < <(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-Integrator-*-macOS-*.dmg' -print0)
+          done < <(find "$dist" -maxdepth 1 -name 'RastChin-Desktop-App-*-macOS-*.dmg' -print0)
           test "$verified_dmgs" -eq 2
       - name: Upload signed packages
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: rastchin-desktop-macos-signed
           path: |
-            apps/desktop-integrator/dist/RastChin-Desktop-Integrator-*-macOS-*.dmg
-            apps/desktop-integrator/dist/RastChin-Desktop-Integrator-*-macOS-*.zip
+            apps/desktop-integrator/dist/RastChin-Desktop-App-*-macOS-*.dmg
+            apps/desktop-integrator/dist/RastChin-Desktop-App-*-macOS-*.zip
           if-no-files-found: error
           retention-days: 30

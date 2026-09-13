@@ -45,7 +45,11 @@ test('manager UI renders target status without enabling release injection', asyn
     assert.equal(dom.window.document.querySelectorAll('.app-card').length, 2);
     assert.equal(dom.window.document.documentElement.lang, 'fa');
     assert.equal(dom.window.document.documentElement.dir, 'rtl');
-    assert.match(dom.window.document.body.textContent, /یکپارچه‌ساز دسکتاپ/);
+    assert.match(dom.window.document.body.textContent, /برنامهٔ دسکتاپ/);
+    assert.match(
+        dom.window.document.querySelector('.brand img').getAttribute('src'),
+        /assets\/rastchin-desktop-icon-approved\.png$/
+    );
     assert.match(dom.window.document.body.textContent, /ChatGPT \/ Codex/);
     assert.match(dom.window.document.body.textContent, /Claude Desktop/);
     const chatgptIcon = dom.window.document.querySelector('[data-target="chatgpt"] .app-icon');
@@ -182,4 +186,10 @@ test('official target icon assets are bundled at useful resolutions', () => {
     assert.equal(claude.subarray(1, 4).toString('ascii'), 'PNG');
     assert.ok(chatgpt.length > 5000);
     assert.ok(claude.length > 5000);
+});
+
+test('approved desktop app logo is a bundled PNG asset', () => {
+    const logo = fs.readFileSync(path.join(__dirname, '..', 'assets', 'rastchin-desktop-icon-approved.png'));
+    assert.equal(logo.subarray(1, 4).toString('ascii'), 'PNG');
+    assert.ok(logo.length > 5000);
 });

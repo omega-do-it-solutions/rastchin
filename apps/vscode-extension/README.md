@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../../docs/assets/rastchin-logo.png" alt="لوگوی پلکانی راست‌چین" width="112">
+  <img src="media/icon.png" alt="آیکن افزونهٔ VS Code راست‌چین" width="128">
 </p>
 
 <h1 align="center">RastChin | راست‌چین برای VS Code</h1>

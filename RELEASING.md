@@ -10,7 +10,7 @@ This guide is for maintainers. Contributors should not bump versions unless a ma
 | --- | --- | --- | --- |
 | Browser extension | `apps/browser-extension/manifest.json` and matching `package.json` | `browser-v<version>` | Chrome Web Store and Firefox Add-ons ZIPs |
 | VS Code extension | `apps/vscode-extension/package.json` | `vscode-v<version>` | `rastchin-vscode-<version>.vsix` |
-| Desktop integrator | `apps/desktop-integrator/package.json` | `desktop-v<version>` | OS- and architecture-specific installers/packages |
+| Desktop App | `apps/desktop-integrator/package.json` | `desktop-v<version>` | OS- and architecture-specific installers/packages |
 
 The root package version tracks the repository foundation only. App changelogs remain with their applications; [CHANGELOG.md](CHANGELOG.md) records repository-wide changes.
 
@@ -98,7 +98,7 @@ The `Browser extension packages` workflow builds and uploads both finite-retenti
 
 The `VS Code extension package` workflow creates a finite-retention VSIX artifact; it does not publish it. The `GitHub release` workflow publishes the verified VSIX as a manual-download asset but does not update Visual Studio Marketplace.
 
-## Desktop integrator
+## Desktop App
 
 1. Update `apps/desktop-integrator/package.json`, its changelog/release notes, support wording, supported-host matrix, and platform smoke documents.
 2. Run on every target OS:

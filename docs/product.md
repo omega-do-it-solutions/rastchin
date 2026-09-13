@@ -21,7 +21,7 @@ repository and official distribution channels.
 
 - Chrome and Firefox browser extension for supported websites.
 - VS Code extension for editor and supported AI-agent extension surfaces.
-- Electron desktop integrator for supported official AI desktop applications on
+- RastChin Desktop App for supported official AI desktop applications on
   Windows, macOS, and Linux.
 - No iOS or Android application is in scope.
 
@@ -34,7 +34,7 @@ repository and official distribution channels.
   what's-new surfaces.
 - VS Code extension: host-native commands, settings, notifications, Markdown
   behavior, and controlled integration status. It has no independent shell.
-- Desktop integrator: focused local target discovery, activation, diagnostics,
+- Desktop App: focused local target discovery, activation, diagnostics,
   and recovery. It uses clear target/status cards rather than an admin dashboard.
 - Persian is the sole supported natural language and the interface direction is
   RTL. English is preserved only inside mixed Persian-English content and for
@@ -72,7 +72,7 @@ repository and official distribution channels.
   RTL behavior and settings.
 - VS Code user: explicitly invokes installation, repair, status, or restore
   workflows for supported targets.
-- Desktop-integrator user: explicitly enables or disables supported local
+- Desktop App user: explicitly enables or disables supported local
   integrations and reviews sanitized diagnostics.
 - Contributor: proposes code, Persian documentation and copy, tests, and platform
   support through the public repository.
