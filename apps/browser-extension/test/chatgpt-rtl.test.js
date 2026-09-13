@@ -87,6 +87,7 @@ check('source: never wraps text in injected spans (no createElement)', /createEl
 // --- code / url / email / table preserved ---
 check('codeGuard: protects code', registeredRecipe.codeGuardSelectors.includes('code'), true);
 check('codeGuard: protects pre', registeredRecipe.codeGuardSelectors.includes('pre'), true);
+check('codeGuard: adapter opts into content-aware fenced-block handling', registeredRecipe.codeGuardsAreExclusions, false);
 check('bidi: isolate keeps inline LTR runs (url/email/code) readable', registeredRecipe.rtlStyle.unicodeBidi, 'isolate');
 check('composer: excluded from RTL', registeredRecipe.excludeSelectors.includes('[data-type="unified-composer"]'), true);
 check('document editor: generic contenteditable is not excluded', registeredRecipe.excludeSelectors.includes('[contenteditable="true"]'), false);
@@ -104,6 +105,8 @@ check('css: guest response inline code uses the scoped monospace rule', css.incl
 check('css: response font element list includes div (bare-div user text)', css.includes('h6, div, span,'), true);
 check('css: code keeps a monospace stack inside messages', css.includes('ui-monospace'), true);
 check('css: code descendants keep monospace despite response div/span font rule', /:is\(code,[\s\S]*?\)\s+\*\s*\{[\s\S]*?ui-monospace/.test(css), true);
+check('css: marked Persian code surfaces receive the content font', /\.cm-editor, pre,[\s\S]*?\.rastchin-chatgpt-rtl\[dir="rtl"\][\s\S]*?font-family:\s*"Vazirmatn"/.test(css), true);
+check('css: marked Persian code surfaces force RTL alignment', /\.cm-content \*[\s\S]*?direction:\s*rtl\s*!important;[\s\S]*?text-align:\s*right\s*!important/.test(css), true);
 check('css: marked ChatGPT content wins host alignment rules', /\[dir="rtl"\][^{]*\{[^}]*direction:\s*rtl\s*!important[^}]*text-align:\s*right\s*!important/.test(css), true);
 check('css: dedicated marker beats host alignment rules', css.includes('html body .rastchin-chatgpt-rtl[dir="rtl"]'), true);
 
@@ -123,13 +126,89 @@ function makeChatGptEngine() {
         messageSelectors,
         applyToMessage: registeredRecipe.applyToMessage,
         textSelectors,
-        excludeSelectors: [...registeredRecipe.excludeSelectors, ...registeredRecipe.codeGuardSelectors],
+        excludeSelectors: [...registeredRecipe.excludeSelectors],
         rtlRegex: registeredRecipe.rtlRegex,
         rtlClass: registeredRecipe.rtlClass,
         rtlStyle: registeredRecipe.rtlStyle,
         needsRTL: registeredRecipe.needsRTL,
-        isCodeLike: node => registeredRecipe.codeGuardSelectors.some(selector => node.closest?.(selector))
+        isCodeLike: registeredRecipe.isCodeLike
     });
+}
+
+// A Latin product/tax label at the start of a Persian list item must not place
+// the marker on the visual left. Lists use Persian dominance while ordinary
+// paragraphs retain ChatGPT's first-strong-letter behavior.
+{
+    const persianItem = el(
+        'li',
+        {},
+        el('strong', {}, t('KöSt (Körperschaftsteuer)')),
+        t(' — در این مثال ساختگی، شرکت باید مبلغ را با نرخ فرضی محاسبه کند و نتیجه فارسی را نمایش دهد.')
+    );
+    const secondPersianItem = el(
+        'li',
+        {},
+        el('strong', {}, t('Einkommensteuer')),
+        t(' — این توضیح فارسی برای یک محاسبه آزمایشی نوشته شده است و اطلاعات نمونه را نشان می‌دهد.')
+    );
+    const persianList = el('ul', {}, persianItem, secondPersianItem);
+    const englishItem = el('li', {}, t('English release notes with one Persian word سلام at the end.'));
+    const englishList = el('ul', {}, englishItem);
+    const turn = el(
+        'article',
+        { attrs: { 'data-testid': 'conversation-turn-list' } },
+        persianList,
+        englishList
+    );
+    const main = el('main', {}, turn);
+    const engine = makeChatGptEngine();
+    registeredRecipe.applyToMessage(turn, engine);
+
+    check('mixed list: Persian-dominant UL receives dir=rtl', persianList.getAttribute('dir'), 'rtl');
+    check('mixed list: Latin-leading Persian LI receives dir=rtl', persianItem.getAttribute('dir'), 'rtl');
+    check('mixed list: second Latin-leading Persian LI receives dir=rtl', secondPersianItem.getAttribute('dir'), 'rtl');
+    check('English list: UL with incidental Persian stays unmanaged', englishList.getAttribute('dir'), null);
+    check('English list: LI with incidental Persian stays unmanaged', englishItem.getAttribute('dir'), null);
+
+    engine.restoreStyles();
+    check('mixed list disable: UL direction is restored', persianList.getAttribute('dir'), null);
+    check('mixed list disable: LI direction is restored', persianItem.getAttribute('dir'), null);
+}
+
+// Fenced plain-text boxes that contain Persian prose are content, despite being
+// rendered through ChatGPT's CodeMirror viewer. Actual programming code and
+// inline code keep the native LTR/monospace guard.
+{
+    const persianContent = el(
+        'pre',
+        { cls: 'cm-content' },
+        el('code', {}, el('span', {}, t('موضوع: پیگیری دامنه omegado.api\n\n1. این متن فارسی برای آزمایش است و Registry ID را نمایش می‌دهد.')))
+    );
+    const persianViewer = el('div', { cls: 'cm-editor', attrs: { dir: 'ltr' } }, persianContent);
+    const technicalPre = el('pre', {}, el('code', {}, t('const message = "سلام";\nconsole.log(message);')));
+    const inlineCode = el('code', {}, t('سلام'));
+    const paragraph = el('p', {}, t('این متن دارای کد درون‌خطی است: '), inlineCode);
+    const turn = el(
+        'article',
+        { attrs: { 'data-testid': 'conversation-turn-code' } },
+        paragraph,
+        persianViewer,
+        technicalPre
+    );
+    const main = el('main', {}, turn);
+    const engine = makeChatGptEngine();
+    registeredRecipe.applyToMessage(turn, engine);
+
+    check('Persian code box: CodeMirror viewer receives dir=rtl', persianViewer.getAttribute('dir'), 'rtl');
+    check('Persian code box: viewer aligns content right', persianViewer.style.textAlign, 'right');
+    check('Persian code box: viewer uses per-line bidi', persianViewer.style.unicodeBidi, 'plaintext');
+    check('Persian code box: viewer gets RTL marker for font override', persianViewer.classList.contains('rastchin-chatgpt-rtl'), true);
+    check('technical code: code block remains unmanaged', technicalPre.getAttribute('dir'), null);
+    check('inline code: remains unmanaged', inlineCode.getAttribute('dir'), null);
+
+    engine.restoreStyles();
+    check('Persian code box disable: original dir is restored', persianViewer.getAttribute('dir'), 'ltr');
+    check('Persian code box disable: RTL marker is removed', persianViewer.classList.contains('rastchin-chatgpt-rtl'), false);
 }
 
 // Firefox's logged-out /uc/ layout: user text is a prose leaf inside a

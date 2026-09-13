@@ -27,6 +27,8 @@ function check(label, actual, expected) {
 check('source manifest is not mutated', source, original);
 check('Firefox remains Manifest V3', firefox.manifest_version, 3);
 check('Firefox version matches Chrome', firefox.version, source.version);
+check('Firefox preserves all platform scripts and exact host matches', firefox.content_scripts, source.content_scripts);
+check('Firefox preserves locally bundled font access', firefox.web_accessible_resources, source.web_accessible_resources);
 check('Firefox background uses scripts', firefox.background, { scripts: [source.background.service_worker] });
 check('Firefox removes minimum_chrome_version', 'minimum_chrome_version' in firefox, false);
 check('Firefox removes side_panel', 'side_panel' in firefox, false);

@@ -226,13 +226,13 @@ check('caption segment: does not get LTR direction class marker', persian.segmen
     check(`caption segment: no inline ${property}`, styleValue(persian.segment, property), '');
 });
 
-// --- Non-RTL captions get display settings while YouTube keeps direction/layout ---
+// --- Non-RTL captions remain completely native ---
 const english = makeCaption('Hello world this is a caption');
 registeredRecipe.applyToMessage(english.win, engine);
 check('english caption window: not marked', english.win.getAttribute('data-rastchin-youtube-rtl'), null);
-check('english caption segment: marked for CSS text styling', english.segment.getAttribute('data-rastchin-youtube-rtl'), 'true');
-check('english caption segment: gets text styling class marker', english.segment.classList.contains('rastchin-youtube-rtl'), true);
-check('english caption segment: gets LTR direction class marker', english.segment.classList.contains('rastchin-youtube-caption-dir-ltr'), true);
+check('english caption segment: not marked for CSS text styling', english.segment.getAttribute('data-rastchin-youtube-rtl'), null);
+check('english caption segment: keeps native class list', english.segment.classList.contains('rastchin-youtube-rtl'), false);
+check('english caption segment: gets no LTR metadata marker', english.segment.classList.contains('rastchin-youtube-caption-dir-ltr'), false);
 check('english caption segment: does not get RTL direction class marker', english.segment.classList.contains('rastchin-youtube-caption-dir-rtl'), false);
 ['direction', 'text-align', 'unicode-bidi', 'font-family'].forEach(prop =>
     check(`english caption segment has no inline ${prop}`, styleValue(english.segment, prop), ''));
@@ -268,10 +268,10 @@ check('code-like caption segment: not marked', excluded.segment.getAttribute('da
     cue.segments[5].textContent = '';
     cue.segments[6].textContent = '?';
     registeredRecipe.applyToMessage(cue.win, engine);
-    check('auto-translate flip: English word remains styled', cue.segments[1].getAttribute('data-rastchin-youtube-rtl'), 'true');
-    check('auto-translate flip: English word gets LTR metadata', cue.segments[1].classList.contains('rastchin-youtube-caption-dir-ltr'), true);
+    check('auto-translate flip: English word returns to native styling', cue.segments[1].getAttribute('data-rastchin-youtube-rtl'), null);
+    check('auto-translate flip: English word drops LTR metadata', cue.segments[1].classList.contains('rastchin-youtube-caption-dir-ltr'), false);
     check('auto-translate flip: emptied Persian segment restored', cue.segments[4].getAttribute('data-rastchin-youtube-rtl'), null);
-    check('auto-translate flip: punctuation remains styled with English cue', cue.segments[6].getAttribute('data-rastchin-youtube-rtl'), 'true');
+    check('auto-translate flip: punctuation returns to native with English cue', cue.segments[6].getAttribute('data-rastchin-youtube-rtl'), null);
 }
 
 // --- Persian neutral-punctuation segments (v1.1.32, Issue 1) ----------------
@@ -322,12 +322,12 @@ check('code-like caption segment: not marked', excluded.segment.getAttribute('da
     check('neutral URL context: second domain dot NOT marked', cue.segments[9].getAttribute('data-rastchin-youtube-rtl'), null);
 }
 {
-    // English-only window: a lone «?» shares the cue's display settings and stays LTR.
+    // English-only windows keep both words and punctuation completely native.
     const cue = makeCaptionMulti(['Are you sure', '?']);
     registeredRecipe.applyToMessage(cue.win, engine);
-    check('neutral: English word marked', cue.segments[0].getAttribute('data-rastchin-youtube-rtl'), 'true');
-    check('neutral: «?» in English window marked', cue.segments[1].getAttribute('data-rastchin-youtube-rtl'), 'true');
-    check('neutral: «?» in English window stays LTR', cue.segments[1].classList.contains('rastchin-youtube-caption-dir-ltr'), true);
+    check('neutral: English word stays native', cue.segments[0].getAttribute('data-rastchin-youtube-rtl'), null);
+    check('neutral: «?» in English window stays native', cue.segments[1].getAttribute('data-rastchin-youtube-rtl'), null);
+    check('neutral: «?» in English window gets no metadata class', cue.segments[1].classList.contains('rastchin-youtube-caption-dir-ltr'), false);
 }
 {
     // Code-excluded punctuation in a Persian window stays native (isExcluded first).
@@ -340,10 +340,10 @@ check('code-like caption segment: not marked', excluded.segment.getAttribute('da
 persian.segment.textContent = 'Now this cue is English';
 persian.win.textContent = 'Now this cue is English';
 registeredRecipe.applyToMessage(persian.win, engine);
-check('flip to English: segment remains styled', persian.segment.getAttribute('data-rastchin-youtube-rtl'), 'true');
-check('flip to English: text class remains', persian.segment.classList.contains('rastchin-youtube-rtl'), true);
+check('flip to English: segment marker removed', persian.segment.getAttribute('data-rastchin-youtube-rtl'), null);
+check('flip to English: text class removed', persian.segment.classList.contains('rastchin-youtube-rtl'), false);
 check('flip to English: RTL direction class removed', persian.segment.classList.contains('rastchin-youtube-caption-dir-rtl'), false);
-check('flip to English: LTR direction class added', persian.segment.classList.contains('rastchin-youtube-caption-dir-ltr'), true);
+check('flip to English: LTR direction class not added', persian.segment.classList.contains('rastchin-youtube-caption-dir-ltr'), false);
 check('flip to English: window height still preserved', styleValue(persian.win, 'height'), '62px');
 
 const disableCue = makeCaption('دوباره فارسی');
@@ -358,6 +358,7 @@ const segmentRule = css.match(/\.ytp-caption-segment\.rastchin-youtube-rtl\s*\{(
 check('css: has caption segment text rule', !!segmentRule, true);
 const segmentBody = segmentRule ? segmentRule[1] : '';
 check('css: segment rule sets Vazirmatn', /font-family:[^;]*Vazirmatn/.test(segmentBody), true);
+check('css: segment rule preserves Latin text with Roboto fallback', /font-family:[^;]*Roboto/.test(segmentBody), true);
 check('css: segment rule sets color var', /color:\s*var\(--rastchin-youtube-caption-color/.test(segmentBody), true);
 check('css: segment rule sets font-size var', /font-size:\s*var\(--rastchin-youtube-caption-font-px/.test(segmentBody), true);
 [
@@ -390,6 +391,8 @@ check('css: caption LTR metadata class has no CSS rule', /\.ytp-caption-segment\
 check('css: no caption prehide gate', /\.caption-window:not\(\.rastchin-youtube-seen\)/.test(css), false);
 check('css: no unified background classes', /rastchin-youtube-bg-(?:ready|pending)/.test(css), false);
 check('css: no rolling class rule', /rastchin-youtube-roll/.test(css), false);
+check('css: caption font face is unicode-ranged to Persian glyphs',
+    /font-family:\s*"RastChinCaptionVazirmatn";[\s\S]*?unicode-range:[\s\S]*?U\+0600-06FF[\s\S]*?\}/.test(css), true);
 
 // --- Safe caption size presets: small + medium only (v1.1.33) ---------------
 // The large (130) preset was removed. The runtime snaps every stored value into

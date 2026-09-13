@@ -4,6 +4,7 @@ const path = require('node:path');
 const { app, BrowserWindow, ipcMain, shell, Tray, Menu, nativeImage } = require('electron');
 const { IntegrationManager } = require('./services/integrationManager');
 const { resolveBuildPolicy } = require('./buildPolicy');
+const { revealWindow } = require('./windowActivation');
 const packageMetadata = require('../../package.json');
 
 let mainWindow = null;
@@ -65,7 +66,7 @@ function createMacTrayImage() {
 
 function createTrayImage() {
     if (process.platform === 'darwin') return createMacTrayImage();
-    return nativeImage.createFromPath(assetPath('icon.png')).resize({ width: 20, height: 20 });
+    return nativeImage.createFromPath(assetPath('rastchin-desktop-icon-approved.png')).resize({ width: 20, height: 20 });
 }
 
 function createWindow() {
@@ -76,8 +77,8 @@ function createWindow() {
         minHeight: 620,
         show: false,
         backgroundColor: '#101114',
-        icon: assetPath('icon.png'),
-        title: 'یکپارچه‌ساز دسکتاپ راست‌چین',
+        icon: assetPath('rastchin-desktop-icon-approved.png'),
+        title: 'برنامهٔ دسکتاپ راست‌چین',
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
@@ -106,9 +107,7 @@ function createWindow() {
 }
 
 function showMainWindow() {
-    if (!mainWindow || mainWindow.isDestroyed()) createWindow();
-    else mainWindow.show();
-    mainWindow?.focus();
+    if (!revealWindow(mainWindow, app)) createWindow();
 }
 
 function createTray() {
@@ -122,7 +121,7 @@ function createTray() {
         tray = null;
         return;
     }
-    tray.setToolTip('یکپارچه‌ساز دسکتاپ راست‌چین');
+    tray.setToolTip('برنامهٔ دسکتاپ راست‌چین');
     tray.setContextMenu(Menu.buildFromTemplate([
         { label: 'باز کردن راست‌چین', click: showMainWindow },
         { type: 'separator' },

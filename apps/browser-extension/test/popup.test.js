@@ -89,16 +89,16 @@ function check(label, actual, expected) {
 
 check('disabled current platform is reflected in popup toggle', element('extensionToggle').checked, false);
 check('disabled current platform is reflected in popup mode', element('extensionMode').textContent, 'غیرفعال');
-check('total platform count is dynamic', element('totalPlatformCount').textContent, '22');
-check('active platform count reflects settings', element('activePlatformCount').textContent, '20');
+check('total platform count is dynamic', element('totalPlatformCount').textContent, '25');
+check('active platform count reflects settings', element('activePlatformCount').textContent, '23');
 
 element('extensionToggle').checked = true;
 listeners['extensionToggle:change']({ target: element('extensionToggle') });
 check('popup writes the current platform key', JSON.stringify(writes.at(-1)), JSON.stringify({ chatgptEnabled: true }));
-check('active count updates after popup toggle', element('activePlatformCount').textContent, '21');
+check('active count updates after popup toggle', element('activePlatformCount').textContent, '24');
 
 storageChanges[0]({ claudeEnabled: { newValue: false } }, 'sync');
-check('active count updates after external settings change', element('activePlatformCount').textContent, '20');
+check('active count updates after external settings change', element('activePlatformCount').textContent, '23');
 
 storageChanges[0]({ extensionEnabled: { newValue: false } }, 'sync');
 check('legacy global disable is reflected in current-site state', element('extensionToggle').checked, false);
@@ -111,7 +111,26 @@ check(
   JSON.stringify(writes.at(-1)),
   JSON.stringify({ chatgptEnabled: true, extensionEnabled: true })
 );
-check('active count returns after reopening global gate', element('activePlatformCount').textContent, '20');
+check('active count returns after reopening global gate', element('activePlatformCount').textContent, '23');
+
+for (const [hostname, expected] of [
+  ['www.twitch.tv', 'twitch'], ['twitch.tv', 'twitch'],
+  ['kick.com', 'kick'], ['www.kick.com', 'kick'],
+  ['dashboard.twitch.tv', null], ['kick.com.example.com', null],
+  ['help.kick.com', null], ['player.twitch.tv', null]
+]) {
+  check(`streaming host detection: ${hostname}`, context.detectPlatformFromUrl(`https://${hostname}/channel`), expected);
+}
+for (const platform of ['twitch', 'kick']) {
+  context.chrome.tabs.query = (_query, callback) => callback([{ url: platform === 'twitch' ? 'https://www.twitch.tv/test' : 'https://kick.com/test' }]);
+  listeners['document:DOMContentLoaded']();
+  element('extensionToggle').checked = false;
+  listeners['extensionToggle:change']({ target: element('extensionToggle') });
+  check(`${platform}: toggle writes only its platform key`, JSON.stringify(writes.at(-1)), JSON.stringify({ [`${platform}Enabled`]: false }));
+}
+
+check('Google Search host detection', context.detectPlatformFromUrl('https://www.google.com/search?q=test'), 'googleSearch');
+check('Google Maps is not claimed by Search', context.detectPlatformFromUrl('https://maps.google.com/'), null);
 
 listeners['managePlatforms:click']();
 check('settings button opens the side-panel page', createdTabs.at(-1).url, 'src/ui/side-panel/side-panel.html');

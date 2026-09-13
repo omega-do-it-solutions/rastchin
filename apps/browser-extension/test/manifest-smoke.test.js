@@ -289,6 +289,7 @@ check('no network/telemetry/analytics calls in shipped src JS', networkRefs, [])
 const popupHtml = fs.readFileSync(rel('src/ui/popup/popup.html'), 'utf8');
 const popupJs = fs.readFileSync(rel('src/ui/popup/popup.js'), 'utf8');
 const welcomeHtml = fs.readFileSync(rel('src/ui/welcome/welcome.html'), 'utf8');
+const welcomeJs = fs.readFileSync(rel('src/ui/welcome/welcome.js'), 'utf8');
 const whatsNewJs = fs.readFileSync(rel('src/ui/whats-new/whats-new.js'), 'utf8');
 const whatsNewHtml = fs.readFileSync(rel('src/ui/whats-new/whats-new.html'), 'utf8');
 const sidePanelHtml = fs.readFileSync(rel('src/ui/side-panel/side-panel.html'), 'utf8');
@@ -309,7 +310,8 @@ check('power switch: thumb shrunk to 16px', /\.power span::before\s*\{[^}]*width
 check('standalone options HTML removed from source', fileExists('src/ui/options/options.html'), false);
 check('standalone options JS removed from source', fileExists('src/ui/options/options.js'), false);
 check('popup settings shortcut opens side-panel page', popupJs.includes("SIDE_PANEL_PAGE = 'src/ui/side-panel/side-panel.html'") && !/openOptionsPage/.test(popupJs), true);
-check('welcome settings CTA points at side-panel page', welcomeHtml.includes('href="../side-panel/side-panel.html"'), true);
+check('welcome settings CTA keeps side-panel page fallback', welcomeHtml.includes('id="openSettingsBtn"') && welcomeHtml.includes('href="../side-panel/side-panel.html"'), true);
+check('welcome settings CTA opens the browser side panel', /sidePanelApi\.open\(\{\s*windowId:\s*currentWindowId\s*\}\)/.test(welcomeJs), true);
 check('whats-new settings link points at side-panel page', whatsNewHtml.includes('href="../side-panel/side-panel.html"'), true);
 check('side-panel preview uses compact caption line-height', /\.cap-preview__pill\s*\{[^}]*line-height:\s*1\.6/.test(sidePanelHtml), true);
 check('side-panel preview uses compact caption radius', /\.cap-preview__pill\s*\{[^}]*border-radius:\s*6px/.test(sidePanelHtml), true);
@@ -347,8 +349,10 @@ check('parity: runtime min constant is the small preset', /MIN_FONT_SIZE\s*=\s*C
 check('parity: runtime max constant is the medium preset (large removed)', /MAX_FONT_SIZE\s*=\s*CAPTION_SIZE_PRESETS\.medium/.test(youtubeRtlJs), true);
 check('parity: runtime snaps legacy caption sizes to nearest preset',
     /function nearestCaptionSizePreset/.test(youtubeRtlJs) && /captionSettings\.fontSize\s*=\s*nearestCaptionSizePreset/.test(youtubeRtlJs), true);
-check('youtube captions style every visible segment, not only RTL text',
-    /markCaptionSegment\(element,\s*isNeutralPunctuationSegment\(text\)/.test(youtubeRtlJs), true);
+check('youtube captions leave English-only cues native',
+    /if\s*\(!hasRtlCaptionText\)\s*\{\s*segments\.forEach\(restoreElement\);\s*return;/.test(youtubeRtlJs), true);
+check('youtube caption font preserves Latin glyphs with Roboto fallback',
+    /font-family:\s*"RastChinCaptionVazirmatn",\s*"Roboto",\s*Arial,\s*sans-serif/.test(youtubeRtlJs), true);
 check('youtube captions keep direction as a separate segment-scoped class',
     /CAPTION_DIR_RTL_CLASS/.test(youtubeRtlJs) && /CAPTION_DIR_LTR_CLASS/.test(youtubeRtlJs), true);
 check('youtube captions do not force CSS direction on caption segments',
@@ -394,6 +398,10 @@ check('registry declares icons for all platforms', registryIcons.length >= 15, t
 for (const icon of registryIcons) {
     check(`registry icon exists: ${icon}`, fileExists(`src/assets/icons/${icon}`), true);
 }
+
+const twitchIcon = fs.readFileSync(rel('src/assets/icons/Twitch.svg'), 'utf8');
+check('Twitch icon uses vector logo geometry', /<path\b/.test(twitchIcon), true);
+check('Twitch icon is not a text placeholder', /<text\b/.test(twitchIcon), false);
 
 // Drift guard: until the popup converges on the shared registry, their storage
 // keys must stay identical (same supported platforms, same toggles).

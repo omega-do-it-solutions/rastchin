@@ -7,6 +7,7 @@ const { inspectLinuxPackage } = require('./linuxTrust');
 
 const SUPPORTED_LINUX_HOSTS = Object.freeze({
     ubuntu: Object.freeze({ versions: Object.freeze(['24.04', '26.04']), manager: 'dpkg' }),
+    zorin: Object.freeze({ versions: Object.freeze(['18']), manager: 'dpkg' }),
     debian: Object.freeze({ versions: Object.freeze(['13']), manager: 'dpkg' }),
     fedora: Object.freeze({ versions: Object.freeze(['43', '44']), manager: 'rpm' })
 });
@@ -70,7 +71,7 @@ function inspectLinuxHost(options = {}) {
             arch,
             distroId,
             manager: support?.manager || null,
-            reason: 'RastChin supports ChatGPT on Ubuntu 24.04/26.04, Debian 13, and Fedora 43/44 on x64 or arm64.',
+            reason: 'RastChin supports ChatGPT on Ubuntu 24.04/26.04, Zorin OS 18, Debian 13, and Fedora 43/44 on x64 or arm64.',
             supported: false,
             versionId
         };

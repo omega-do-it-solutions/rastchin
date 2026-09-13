@@ -1,8 +1,8 @@
 {
   "name": "rastchin-desktop-integrator",
-  "productName": "RastChin Desktop Integrator",
-  "desktopName": "rastchin-desktop-integrator",
-  "version": "0.3.4",
+  "productName": "RastChin Desktop App",
+  "desktopName": "rastchin-desktop-app",
+  "version": "0.3.6",
   "description": "Cross-platform, local-only RTL integration manager for supported AI desktop apps.",
   "private": true,
   "main": "src/main/index.js",
@@ -50,7 +50,7 @@
   },
   "build": {
     "appId": "tools.rastchin.desktop-integrator",
-    "productName": "RastChin Desktop Integrator",
+    "productName": "RastChin Desktop App",
     "extraMetadata": {
       "rastchinBuild": {
         "channel": "stable",
@@ -76,19 +76,19 @@
         "nsis",
         "portable"
       ],
-      "icon": "assets/icon.png"
+      "icon": "assets/rastchin-desktop-icon-approved.png"
     },
     "mac": {
       "target": [
         "dmg",
         "zip"
       ],
-      "icon": "assets/icon.png",
+      "icon": "assets/rastchin-desktop-icon-approved.png",
       "category": "public.app-category.utilities",
       "minimumSystemVersion": "14.0",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
-      "artifactName": "RastChin-Desktop-Integrator-${version}-macOS-${arch}.${ext}"
+      "artifactName": "RastChin-Desktop-App-${version}-macOS-${arch}.${ext}"
     },
     "linux": {
       "target": [
@@ -96,21 +96,21 @@
         "deb",
         "rpm"
       ],
-      "icon": "assets/icon.png",
+      "icon": "assets/rastchin-desktop-icon-approved.png",
       "category": "Utility",
       "maintainer": "Omega Do IT Solutions <hi@rastchin.tools>",
       "syncDesktopName": true,
-      "artifactName": "RastChin-Desktop-Integrator-${version}-Linux-${arch}.${ext}"
+      "artifactName": "RastChin-Desktop-App-${version}-Linux-${arch}.${ext}"
     },
     "nsis": {
-      "artifactName": "RastChin-Desktop-Integrator-Setup-${version}-${arch}.${ext}",
+      "artifactName": "RastChin-Desktop-App-Setup-${version}-${arch}.${ext}",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
     },
     "portable": {
-      "artifactName": "RastChin-Desktop-Integrator-Portable-${version}-${arch}.${ext}"
+      "artifactName": "RastChin-Desktop-App-Portable-${version}-${arch}.${ext}"
     }
   }
 }

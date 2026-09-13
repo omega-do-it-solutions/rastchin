@@ -27,6 +27,7 @@
     const MAIN_CONTENT_SELECTORS = CONTENT_BLOCK_SELECTORS.map(selector => `main ${selector}`);
     const LETTER_REGEX = /\p{L}/u;
     const RTL_CLASS = 'rastchin-chatgpt-rtl';
+    const RTL_CODE_MIN_RATIO = 0.4;
     // Logged-out /uc/ chats use CSS-module message bodies and a clickable
     // user bubble. Match the semantic suffix inside the known thread shell,
     // not the build-specific hash or arbitrary buttons elsewhere on the page.
@@ -113,6 +114,17 @@
         '.react-code-block',
         '.ace_editor'
     ];
+    const CODE_GUARD_SELECTOR = CODE_GUARD_SELECTORS.join(', ');
+    const CODE_BLOCK_SURFACE_SELECTORS = [
+        '.cm-editor',
+        'pre',
+        '[data-testid="code-block"]',
+        '[data-testid="code-snippet"]',
+        '.react-code-block'
+    ];
+    const CODE_BLOCK_SURFACE_SELECTOR = CODE_BLOCK_SURFACE_SELECTORS.join(', ');
+    const PLAIN_TEXT_LANGUAGES = new Set(['text', 'txt', 'plain', 'plaintext', 'markdown', 'md']);
+    const TECHNICAL_CODE_SIGNAL = /(?:^|\n)\s*(?:const|let|var|function|class|interface|type|import|export|def|return|if|for|while|SELECT|INSERT|UPDATE|DELETE)\b|[{};]{2,}/m;
 
     const CONTENT_UI_GUARD_SELECTORS = [
         ...CODE_GUARD_SELECTORS,
@@ -139,6 +151,149 @@
             if (node?.nodeType === 3) text += node.textContent || '';
         });
         return text.replace(/\s+/g, ' ').trim();
+    }
+
+    function rawTextOf(element) {
+        if (!element?.childNodes) return element?.textContent || '';
+        let text = '';
+        const visit = node => {
+            if (!node) return;
+            if (node.nodeType === 3) {
+                text += node.textContent || '';
+                return;
+            }
+            if (node.nodeType !== 1) return;
+            if (node.tagName === 'BR') text += '\n';
+            node.childNodes?.forEach?.(visit);
+        };
+        visit(element);
+        return text;
+    }
+
+    function isPersianDominantText(text, minimumRatio = RTL_CODE_MIN_RATIO) {
+        let rtlLetters = 0;
+        let totalLetters = 0;
+        for (const char of String(text || '')) {
+            if (!LETTER_REGEX.test(char)) continue;
+            totalLetters += 1;
+            if (/\p{Script=Arabic}/u.test(char)) rtlLetters += 1;
+        }
+        return rtlLetters >= 2
+            && totalLetters > 0
+            && (rtlLetters / totalLetters) >= minimumRatio;
+    }
+
+    function declaredCodeLanguage(surface) {
+        const candidates = [];
+        let current = surface;
+        let hops = 0;
+        while (current && hops < 5) {
+            candidates.push(current);
+            current = current.parentElement;
+            hops += 1;
+        }
+        surface?.querySelectorAll?.('[data-language], [class*="language-"]').forEach(element => candidates.push(element));
+
+        for (const element of candidates) {
+            const attribute = element.getAttribute?.('data-language')
+                || element.getAttribute?.('data-code-language');
+            if (attribute) return String(attribute).trim().toLowerCase();
+            const className = typeof element.className === 'string' ? element.className : '';
+            const match = className.match(/(?:^|\s)language-([\w-]+)/i);
+            if (match) return match[1].toLowerCase();
+        }
+        return '';
+    }
+
+    // ChatGPT renders fenced `text` blocks through CodeMirror and gives the
+    // whole viewer an explicit LTR direction. Only override that presentation
+    // when the block is Persian-dominant prose. Programming languages and
+    // code-shaped content retain the normal LTR/monospace code guard.
+    function isPersianProseCodeSurface(surface) {
+        if (!surface) return false;
+        const language = declaredCodeLanguage(surface);
+        if (language && !PLAIN_TEXT_LANGUAGES.has(language)) return false;
+
+        const text = rawTextOf(surface).trim();
+        if (!text || TECHNICAL_CODE_SIGNAL.test(text)) return false;
+
+        return isPersianDominantText(text);
+    }
+
+    function resolveCodeSurface(element) {
+        if (!element) return null;
+        const closestEditor = element.closest?.('.cm-editor');
+        if (closestEditor) return closestEditor;
+        const nestedEditor = element.querySelector?.('.cm-editor');
+        if (nestedEditor) return nestedEditor;
+        const closestPre = element.closest?.('pre');
+        if (closestPre) return closestPre;
+        const nestedPre = element.querySelector?.('pre');
+        if (nestedPre) return nestedPre;
+        if (element.matches?.(CODE_BLOCK_SURFACE_SELECTOR)) return element;
+        return null;
+    }
+
+    function collectCodeSurfaces(root) {
+        const surfaces = new Set();
+        const add = candidate => {
+            const surface = resolveCodeSurface(candidate);
+            if (surface) surfaces.add(surface);
+        };
+        if (root?.matches?.(CODE_BLOCK_SURFACE_SELECTOR)) add(root);
+        root?.querySelectorAll?.(CODE_BLOCK_SURFACE_SELECTOR).forEach(add);
+        return surfaces;
+    }
+
+    function needsListRTL(element, text, engine) {
+        if (element.matches?.('li')) {
+            return engine.needsRTL(text) || isPersianDominantText(text);
+        }
+        if (!element.matches?.('ul, ol')) return engine.needsRTL(text);
+
+        const items = Array.from(element.childNodes || [])
+            .filter(child => child?.nodeType === 1 && child.tagName === 'LI');
+        if (!items.length) return engine.needsRTL(text) || isPersianDominantText(text);
+
+        const rtlItems = items.filter(item => {
+            const itemText = engine.collectDirectionText(item).trim();
+            return engine.needsRTL(itemText) || isPersianDominantText(itemText);
+        }).length;
+        return rtlItems > (items.length / 2);
+    }
+
+    function isProtectedCodeLike(element) {
+        if (!element || typeof element.closest !== 'function') return true;
+        let guard;
+        try {
+            guard = element.closest(CODE_GUARD_SELECTOR);
+        } catch (_) {
+            return true;
+        }
+        if (!guard) return false;
+        const surface = resolveCodeSurface(guard);
+        // Inline code has no block surface and always keeps its technical style.
+        if (!surface) return true;
+        // A previously styled block must remain scannable so regeneration from
+        // Persian prose to technical code can restore its native presentation.
+        if (surface.classList?.contains(RTL_CLASS)) return false;
+        return !isPersianProseCodeSurface(surface);
+    }
+
+    function applyCodeSurfaceDirection(surface, engine) {
+        if (!surface) return;
+        if (!isPersianProseCodeSurface(surface)) {
+            engine.restoreElement(surface);
+            return;
+        }
+        engine.rememberStyle(surface);
+        surface.setAttribute('dir', 'rtl');
+        surface.style.direction = 'rtl';
+        surface.style.textAlign = 'right';
+        // `plaintext` recalculates each newline-separated line while keeping
+        // embedded URLs, identifiers and English phrases readable.
+        surface.style.unicodeBidi = 'plaintext';
+        surface.classList.add(RTL_CLASS);
     }
 
     // Match the browser's `dir="auto"` decision for each prose block. This handles
@@ -236,10 +391,11 @@
 
     function applyChatGptContent(root, engine) {
         if (!root || root.nodeType !== 1 || !root.isConnected) return true;
+        collectCodeSurfaces(root).forEach(surface => applyCodeSurfaceDirection(surface, engine));
         const targets = collectContentTargets(root, engine);
         targets.forEach(target => {
             const text = engine.collectDirectionText(target).trim();
-            if (engine.needsRTL(text)) {
+            if (needsListRTL(target, text, engine)) {
                 engine.applyRTL(target);
             } else {
                 engine.restoreElement(target);
@@ -274,6 +430,7 @@
         isMessageElement: isEmbeddedDocumentRoot,
         textSelectors: TEXT_SELECTORS,
         codeGuardSelectors: CODE_GUARD_SELECTORS,
+        codeGuardsAreExclusions: false,
         excludeSelectors: [
             '[data-type="unified-composer"]',
             '[data-type="unified-composer"] *',
@@ -287,11 +444,13 @@
         ],
         applyToMessage: applyChatGptContent,
         needsRTL: needsChatGptRTL,
+        isCodeLike: isProtectedCodeLike,
         rtlClass: RTL_CLASS,
         rtlStyle: { unicodeBidi: 'isolate' },
         globalCss: codeGuard => {
             const responseScope = `:is(${RESPONSE_CONTAINER_SELECTORS.join(', ')})`;
             const markedResponseScope = `html body .${RTL_CLASS}[dir="rtl"]`;
+            const markedCodeScope = `html body :is(.cm-editor, pre, [data-testid="code-block"], [data-testid="code-snippet"], .react-code-block).${RTL_CLASS}[dir="rtl"]`;
             return `
             ${codeGuard} {
                 direction: ltr !important;
@@ -316,6 +475,23 @@
             ${responseScope} :is(${codeGuard}),
             ${responseScope} :is(${codeGuard}) * {
                 font-family: ${MONO_FONT_STACK} !important;
+            }
+
+            /*
+             * A Persian-dominant fenced plain-text block is prose presented in
+             * a code-box surface, not executable source code. The adapter marks
+             * only that surface; keep copy/tool controls outside this override.
+             */
+            ${markedCodeScope},
+            ${markedCodeScope} .cm-scroller,
+            ${markedCodeScope} .cm-content,
+            ${markedCodeScope} .cm-content *,
+            ${markedCodeScope} code,
+            ${markedCodeScope} code * {
+                direction: rtl !important;
+                text-align: right !important;
+                unicode-bidi: plaintext !important;
+                font-family: ${CONTENT_FONT_STACK} !important;
             }
 
             /*
@@ -353,7 +529,12 @@
             messageSelectors: MESSAGE_SELECTORS,
             textSelectors: TEXT_SELECTORS,
             responseContainerSelectors: RESPONSE_CONTAINER_SELECTORS,
-            codeGuardSelectors: CODE_GUARD_SELECTORS
+            codeGuardSelectors: CODE_GUARD_SELECTORS,
+            collectCodeSurfaces,
+            isPersianDominantText,
+            isPersianProseCodeSurface,
+            isProtectedCodeLike,
+            needsListRTL
         });
     }
 

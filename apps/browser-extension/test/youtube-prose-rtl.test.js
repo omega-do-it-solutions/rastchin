@@ -298,8 +298,8 @@ check('config: custom needsRTL provided', typeof recipe.needsRTL, 'function');
         check('search input (Persian): dir=rtl', input.getAttribute('dir'), 'rtl');
         check('search input (Persian): text-align right', input.style.textAlign, 'right');
         check('search input (Persian): Vazirmatn font', /Vazirmatn/.test(input.style.fontFamily || ''), true);
-        check('search input (Persian): host gets RTL suggestion scope class',
-            host.classList.contains('rastchin-youtube-search-rtl'), true);
+        check('search input (Persian): host gets no blanket RTL suggestion class',
+            host.classList.contains('rastchin-youtube-search-rtl'), false);
         input.value = 'english query';
         exported.applySearchInputDirection(input, engine);
         check('search input (English): dir cleared', input.getAttribute('dir'), null);
@@ -316,8 +316,8 @@ check('config: custom needsRTL provided', typeof recipe.needsRTL, 'function');
         exported.applySearchInputDirection(preStyled, engine);
         check('search input restore setup: Persian overrides existing dir', preStyled.getAttribute('dir'), 'rtl');
         check('search input restore setup: Persian overrides existing font', /Vazirmatn/.test(preStyled.style.fontFamily || ''), true);
-        check('search input restore setup: host scope class set',
-            preStyledHost.classList.contains('rastchin-youtube-search-rtl'), true);
+        check('search input restore setup: host gets no blanket RTL suggestion class',
+            preStyledHost.classList.contains('rastchin-youtube-search-rtl'), false);
         preStyled.value = 'english query';
         exported.applySearchInputDirection(preStyled, engine);
         check('search input restore: original dir restored', preStyled.getAttribute('dir'), 'ltr');
@@ -327,6 +327,30 @@ check('config: custom needsRTL provided', typeof recipe.needsRTL, 'function');
         check('search input restore: host scope class cleared',
             preStyledHost.classList.contains('rastchin-youtube-search-rtl'), false);
     }
+}
+
+// ============================================================================
+// 12b) Comment composer keeps YouTube's native dir=auto editing behavior while
+//      using the unicode-ranged Persian font only when Persian text is present.
+// ============================================================================
+{
+    const composer = el('div', {
+        attrs: { id: 'contenteditable-root', contenteditable: 'true', dir: 'auto' }
+    }, t('نظر فارسی با YouTube'));
+    check('comment composer: dedicated selector matches', exported.isCommentComposer(composer), true);
+    exported.applyCommentComposerFont(composer, engine);
+    check('comment composer: Persian text gets font class',
+        composer.classList.contains(exported.commentComposerFontClass), true);
+    check('comment composer: native dir=auto is preserved', composer.getAttribute('dir'), 'auto');
+    check('comment composer: no inline direction override', composer.style.direction || '', '');
+    check('comment composer: no inline alignment override', composer.style.textAlign || '', '');
+
+    composer.childNodes.length = 0;
+    composer.append(t('plain English comment'));
+    exported.applyCommentComposerFont(composer, engine);
+    check('comment composer: English-only update clears font class',
+        composer.classList.contains(exported.commentComposerFontClass), false);
+    check('comment composer: English-only update still preserves dir=auto', composer.getAttribute('dir'), 'auto');
 }
 
 // ============================================================================
@@ -440,14 +464,20 @@ function flipAll(bucket) { bucket.forEach(node => engine.applyToMessage(node)); 
     check('discovery desc: "...more" button never prose-classed', moreBtn.classList.contains(PROSE_CLASS), false);
 }
 {
-    // expanded text now lives in #attributed-snippet-text (the v1.1.24 selectors missed it)
-    const snippet = el('yt-attributed-string', { attrs: { id: 'attributed-snippet-text' } }, t('متن کامل توضیحات این ویدیو به فارسی'));
-    const root = el('div', { attrs: { id: 'description-inline-expander' } }, snippet);
+    // Current live watch pages render expanded prose inside a full-width #expanded
+    // block. The inner attributed span is inline, so flipping only that leaf cannot
+    // move the description to the right edge.
+    const textLeaf = el('span', { cls: 'ytAttributedStringHost' }, t('متن کامل توضیحات این ویدیو با YouTube'));
+    const attributed = el('yt-attributed-string', {}, textLeaf);
+    const expanded = el('div', { attrs: { id: 'expanded' } }, attributed);
+    const root = el('div', { attrs: { id: 'description-inline-expander' } }, expanded);
     const bucket = discover(root);
-    check('discovery desc: #attributed-snippet-text discovered (expanded text)', bucket.has(snippet), true);
+    check('discovery desc: full-width #expanded block discovered', bucket.has(expanded), true);
+    check('discovery desc: inline attributed text leaf also discovered', bucket.has(textLeaf), true);
     flipAll(bucket);
-    check('discovery desc: expanded attributed snippet flipped', snippet.getAttribute('dir'), 'rtl');
-    check('discovery desc: expanded attributed snippet prose class', snippet.classList.contains(PROSE_CLASS), true);
+    check('discovery desc: full-width expanded block flipped', expanded.getAttribute('dir'), 'rtl');
+    check('discovery desc: full-width expanded block gets prose class', expanded.classList.contains(PROSE_CLASS), true);
+    check('discovery desc: expanded text leaf flipped', textLeaf.getAttribute('dir'), 'rtl');
 }
 {
     // the plain (non-attributed) snippet variant
@@ -533,12 +563,19 @@ function flipAll(bucket) { bucket.forEach(node => engine.applyToMessage(node)); 
 // ============================================================================
 {
     const text = el('yt-attributed-string', { attrs: { id: 'content-text' } }, t('از تور هنوز در تیوبه تشکر گذاشتی'));
-    const comment = el('ytd-comment-view-model', {}, text);
+    const more = el('button', { attrs: { role: 'button' } }, t('بیشتر'));
+    const expander = el('ytd-expander', { attrs: { id: 'expander' } }, text, more);
+    const main = el('div', { attrs: { id: 'main' } }, expander);
+    const comment = el('ytd-comment-view-model', {}, main);
     const bucket = discover(comment);
+    check('discovery comments: full-width expander discovered', bucket.has(expander), true);
     check('discovery comments: content-text discovered', bucket.has(text), true);
     flipAll(bucket);
+    check('discovery comments: full-width expander flipped dir=rtl', expander.getAttribute('dir'), 'rtl');
     check('discovery comments: content-text flipped dir=rtl', text.getAttribute('dir'), 'rtl');
     check('discovery comments: content-text prose class', text.classList.contains(PROSE_CLASS), true);
+    check('discovery comments: main layout wrapper stays LTR', main.getAttribute('dir'), null);
+    check('discovery comments: nested More button stays LTR', more.getAttribute('dir'), null);
 }
 
 // ============================================================================
@@ -657,14 +694,18 @@ function flipAll(bucket) { bucket.forEach(node => engine.applyToMessage(node)); 
     check('css-contract: font-only class present for Latin-first mixed titles', css.includes('.' + PROSE_FONT_CLASS), true);
     check('css-contract: prose font rule sets Vazirmatn',
         new RegExp('\\.' + PROSE_CLASS + '[^{]*\\{[^}]*Vazirmatn', 'm').test(css), true);
-    check('css-contract: title visual correction stays limited and present',
-        /yt-formatted-string#video-title:is\(\.rastchin-youtube-prose-rtl,\s*\.rastchin-youtube-prose-font\)[\s\S]*font-size:\s*min\(1em,\s*17\.5px\)[\s\S]*font-weight:\s*450/.test(css), true);
-    check('css-contract: search suggestion fallback scoped to searchbox RTL class',
-        css.includes('.rastchin-youtube-search-rtl') && css.includes('.ytSuggestionComponentText'), true);
-    check('css-contract: search suggestion fallback sets Vazirmatn',
-        /\.rastchin-youtube-search-rtl[^{]*\{[^}]*Vazirmatn/m.test(css), true);
-    check('css-contract: search suggestion visual correction present',
-        /\.rastchin-youtube-search-rtl[^{]*\{[^}]*font-size:\s*0\.94em[^}]*font-weight:\s*400/m.test(css), true);
+    check('css-contract: mixed prose preserves Latin glyphs with YouTube Roboto',
+        css.includes('"Vazirmatn", "Roboto", Arial, sans-serif'), true);
+    check('css-contract: YouTube keeps native title font size', css.includes('font-size: min(1em, 17.5px)'), false);
+    check('css-contract: YouTube keeps native title weight', css.includes('font-weight: 450'), false);
+    check('css-contract: no blanket search-host RTL fallback', css.includes('rastchin-youtube-search-rtl'), false);
+    check('css-contract: no search suggestion size override', css.includes('font-size: 0.94em'), false);
+
+    const composerClass = exported.commentComposerFontClass;
+    const composerRule = css.match(new RegExp('\\.' + composerClass + ',[\\s\\S]*?\\{([^}]*)\\}'));
+    check('css-contract: comment composer font rule is present', !!composerRule, true);
+    check('css-contract: comment composer rule sets only typography',
+        composerRule ? /font-family:[^;]*Vazirmatn/.test(composerRule[1]) && !/(?:direction|text-align|unicode-bidi)\s*:/.test(composerRule[1]) : false, true);
 
     // v1.1.25 More-button overlap fix (RED until Part 2): an RTL-aware reserve on a
     // flipped description block, never a global/button rule.

@@ -55,6 +55,7 @@ test("release notes require a user-visible summary and document manual desktop i
   const notes = renderReleaseNotes(metadata, "بهبود نمایش متن فارسی در نسخهٔ دسکتاپ.");
 
   assert.match(notes, /به‌صورت دستی نصب کنید/);
+  assert.doesNotMatch(notes, /محدودیت انتشار/);
   assert.match(notes, /SHA256SUMS/);
   assert.match(notes, /tag جابه‌جا نخواهد شد/);
 });

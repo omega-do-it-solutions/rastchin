@@ -34,12 +34,18 @@ const URL_TO_CHATBOT = {
     'notion.site': 'notionEnabled',
     'linear.app': 'linearEnabled',
     'mail.google.com': 'gmailEnabled',
+    'google.com': 'googleSearchEnabled',
+    'www.google.com': 'googleSearchEnabled',
     'translate.google.com': 'googleTranslateEnabled',
     'docs.google.com': 'googleWorkspaceEnabled',
     'web.whatsapp.com': 'whatsappEnabled',
     'web.telegram.org': 'telegramEnabled',
     'www.youtube.com': 'youtubeEnabled',
-    'm.youtube.com': 'youtubeEnabled'
+    'm.youtube.com': 'youtubeEnabled',
+    'www.twitch.tv': 'twitchEnabled',
+    'twitch.tv': 'twitchEnabled',
+    'kick.com': 'kickEnabled',
+    'www.kick.com': 'kickEnabled'
 };
 
 const SUFFIX_TO_CHATBOT = [

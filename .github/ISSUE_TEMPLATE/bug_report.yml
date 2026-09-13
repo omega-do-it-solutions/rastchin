@@ -14,7 +14,7 @@ body:
       options:
         - Browser extension (apps/browser-extension)
         - VS Code extension (apps/vscode-extension)
-        - Desktop integrator (apps/desktop-integrator)
+        - Desktop App (apps/desktop-integrator)
         - Repository, CI, or documentation
         - Unsure
     validations:

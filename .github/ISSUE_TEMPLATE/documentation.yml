@@ -11,7 +11,7 @@ body:
         - Root repository documentation
         - Browser extension (apps/browser-extension)
         - VS Code extension (apps/vscode-extension)
-        - Desktop integrator (apps/desktop-integrator)
+        - Desktop App (apps/desktop-integrator)
         - Contributor or release documentation
     validations:
       required: true

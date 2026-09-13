@@ -52,6 +52,22 @@ function loadController(hostname, pathname = '/', options = {}) {
     return { ctx, messageListeners, storageListeners };
 }
 
+for (const [host, key] of [
+    ['www.twitch.tv', 'twitchEnabled'], ['twitch.tv', 'twitchEnabled'],
+    ['kick.com', 'kickEnabled'], ['www.kick.com', 'kickEnabled']
+]) {
+    const { ctx, storageListeners } = loadController(host);
+    check(`controller: ${host} resolves its key`, ctx.window.chatbotConfig.getCurrentPlatformInfo().storageKey, key);
+    const snapshots = [];
+    ctx.window.chatbotConfig.subscribe(value => snapshots.push(value));
+    storageListeners[0]({ [key]: { newValue: false } }, 'sync');
+    check(`controller: ${host} disables independently`, snapshots.at(-1).enabled, false);
+    storageListeners[0]({ [key]: { newValue: true } }, 'sync');
+    check(`controller: ${host} re-enables`, snapshots.at(-1).enabled, true);
+    storageListeners[0]({ extensionEnabled: { newValue: false } }, 'sync');
+    check(`controller: ${host} respects global gate`, snapshots.at(-1).enabled, false);
+}
+
 {
     const { ctx, messageListeners, storageListeners } = loadController('claude.ai');
     check('controller: storage listener registered', storageListeners.length, 1);
@@ -132,6 +148,18 @@ function loadController(hostname, pathname = '/', options = {}) {
 }
 
 {
+    const { ctx } = loadController('www.google.com', '/search');
+    check('controller: www.google.com resolves googleSearchEnabled',
+        ctx.window.chatbotConfig.getCurrentPlatformInfo().storageKey, 'googleSearchEnabled');
+}
+
+{
+    const { ctx } = loadController('google.com', '/search');
+    check('controller: bare google.com resolves googleSearchEnabled',
+        ctx.window.chatbotConfig.getCurrentPlatformInfo().storageKey, 'googleSearchEnabled');
+}
+
+{
     const { ctx } = loadController('marketplace.visualstudio.com', '/items');
     check('controller: Visual Studio Marketplace resolves vsMarketplaceEnabled',
         ctx.window.chatbotConfig.getCurrentPlatformInfo().storageKey, 'vsMarketplaceEnabled');
@@ -200,7 +228,7 @@ function loadController(hostname, pathname = '/', options = {}) {
     const registryKeys = new Set([...registrySource.matchAll(/storageKey: '([^']+)'/g)].map(m => m[1]));
     const urlMapBlock = (source.match(/URL_TO_CHATBOT = \{([\s\S]*?)\}/) || [, ''])[1];
     const controllerKeys = [...new Set([...urlMapBlock.matchAll(/:\s*'([^']+)'/g)].map(m => m[1]))];
-    check('parity: controller maps all 22 platform keys', controllerKeys.length, 22);
+    check('parity: controller maps all 25 platform keys', controllerKeys.length, 25);
     controllerKeys.forEach(key => check(`parity: registry knows ${key}`, registryKeys.has(key), true));
 }
 

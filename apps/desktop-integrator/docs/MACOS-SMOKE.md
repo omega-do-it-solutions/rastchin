@@ -68,9 +68,9 @@ package` workflow provides the same signing checks without creating a GitHub
 Release. Validate a signed final artifact with:
 
 ```bash
-codesign --verify --deep --strict "/Applications/RastChin Desktop Integrator.app"
-spctl --assess --type exec "/Applications/RastChin Desktop Integrator.app"
-xcrun stapler validate "/Applications/RastChin Desktop Integrator.app"
+codesign --verify --deep --strict "/Applications/RastChin Desktop App.app"
+spctl --assess --type exec "/Applications/RastChin Desktop App.app"
+xcrun stapler validate "/Applications/RastChin Desktop App.app"
 ```
 
 If the private debugging pipe is rejected or no compatible renderer is found, mark

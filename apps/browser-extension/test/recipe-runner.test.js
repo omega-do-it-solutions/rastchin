@@ -138,6 +138,14 @@ const recipe = {
     check('buildEngineConfig: isCodeLike(plain node) -> false', cfg.isCodeLike({ closest: () => null }), false);
 }
 
+// --- buildEngineConfig: adapter-managed code guards ---
+{
+    const { api } = makeCtx();
+    const cfg = api.buildEngineConfig({ ...recipe, codeGuardsAreExclusions: false });
+    check('adapter-managed guards: code selectors are not duplicated into exclusions', eq(cfg.excludeSelectors, ['input', 'textarea']), true);
+    check('adapter-managed guards: default matcher still recognizes technical code', cfg.isCodeLike({ closest: () => ({}) }), true);
+}
+
 // --- buildEngineConfig: recipe WITHOUT code guards (empty-selector safety) ---
 {
     const { api } = makeCtx();

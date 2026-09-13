@@ -19,8 +19,9 @@ Do not run the integrator or these commands as root.
 
 ## Supported host applications
 
-RastChin's supported Linux matrix covers Ubuntu 24.04/26.04, Debian 13, and Fedora
-43/44 on x64 and arm64. RastChin accepts only the official package identity:
+RastChin's supported Linux matrix covers Ubuntu 24.04/26.04, Zorin OS 18, Debian
+13, and Fedora 43/44 on x64 and arm64. RastChin accepts only the official package
+identity:
 
 - DEB/RPM package: `chatgpt`
 - Package launcher: `/usr/bin/chatgpt`
@@ -35,18 +36,18 @@ action remains disabled because the required renderer connection is not supporte
 Install the RastChin package matching the distribution:
 
 ```bash
-# Ubuntu / Debian
-sudo apt install ./RastChin-Desktop-Integrator-*-Linux-*.deb
+# Ubuntu / Zorin OS / Debian
+sudo apt install ./RastChin-Desktop-App-*-Linux-*.deb
 
 # Fedora
-sudo dnf install ./RastChin-Desktop-Integrator-*-Linux-*.rpm
+sudo dnf install ./RastChin-Desktop-App-*-Linux-*.rpm
 ```
 
 Portable AppImage fallback:
 
 ```bash
-chmod +x RastChin-Desktop-Integrator-*-Linux-*.AppImage
-./RastChin-Desktop-Integrator-*-Linux-*.AppImage
+chmod +x RastChin-Desktop-App-*-Linux-*.AppImage
+./RastChin-Desktop-App-*-Linux-*.AppImage
 ```
 
 Ubuntu 24.04 may require `sudo apt install libfuse2t64` for AppImage mounting. If
@@ -54,7 +55,7 @@ installing FUSE is not appropriate, use the DEB package or launch the portable b
 without mounting it:
 
 ```bash
-APPIMAGE_EXTRACT_AND_RUN=1 ./RastChin-Desktop-Integrator-*-Linux-*.AppImage
+APPIMAGE_EXTRACT_AND_RUN=1 ./RastChin-Desktop-App-*-Linux-*.AppImage
 ```
 
 Then fully quit ChatGPT, open RastChin, click **Scan again**, and click **Enable RTL**.

@@ -21,8 +21,6 @@ const releaseTracks = {
     download: "دو فایل ZIP جداگانه برای Chrome Web Store و Firefox Add-ons پیوست شده‌اند.",
     installation:
       "این ZIPها خروجی بررسی‌شدهٔ ارسال به فروشگاه هستند. نصب عمومی Firefox باید از نسخهٔ امضاشدهٔ Mozilla و نصب Chrome باید از Chrome Web Store انجام شود.",
-    limitations:
-      "انتشار این Release فایل‌ها را به فروشگاه‌های Chrome یا Firefox ارسال نمی‌کند.",
     verification:
       "آزمون‌های افزونه، بررسی manifestها، ساخت هر دو درخت unpacked و بررسی محتوای هر دو ZIP اجرا شده‌اند.",
   },
@@ -34,22 +32,18 @@ const releaseTracks = {
     download: "فایل VSIX بررسی‌شده به این Release پیوست شده است.",
     installation:
       "نصب دستی: فایل VSIX را دانلود کنید و در VS Code از Extensions: Install from VSIX استفاده کنید؛ یا دستور code --install-extension <file.vsix> را اجرا کنید.",
-    limitations:
-      "انتشار این Release افزونه را به Visual Studio Marketplace ارسال نمی‌کند.",
     verification:
       "آزمون‌های افزونه اجرا و فهرست محتوای بستهٔ VSIX در زمان ساخت بررسی شده است.",
   },
   desktop: {
-    label: "Desktop Integrator",
+    label: "Desktop App",
     titleLabel: "🖥 Desktop",
     tagPrefix: "desktop-v",
     versionSources: [["apps/desktop-integrator/package.json", "version"]],
     download:
       "نصب‌کننده‌ها و بسته‌های Windows، macOS و Linux متناسب با سیستم‌عامل و معماری به این Release پیوست شده‌اند.",
     installation:
-      "به‌روزرسانی خودکار فعال نیست؛ فایل مناسب را دانلود و به‌صورت دستی نصب کنید. بسته‌های عمومی macOS با Developer ID امضا، notarize و stapled شده‌اند.",
-    limitations:
-      "این مسیر هیچ فروشگاه سیستم‌عامل یا سرویس auto-update را منتشر یا فعال نمی‌کند. فایل‌های Windows فعلاً بدون امضای کد منتشر می‌شوند و ممکن است هشدار SmartScreen نشان دهند.",
+      "به‌روزرسانی خودکار فعال نیست؛ فایل مناسب را دانلود و به‌صورت دستی نصب کنید. بسته‌های عمومی macOS با Developer ID امضا، notarize و stapled شده‌اند. فایل‌های Windows فعلاً بدون امضای کد منتشر می‌شوند و ممکن است هشدار SmartScreen نشان دهند.",
     verification:
       "آزمون و سیاست ایمنی روی runnerهای بومی اجرا شده، نوع و تعداد خروجی‌ها بررسی شده و بسته‌های macOS امضا و notarize شده‌اند.",
   },
@@ -143,9 +137,7 @@ function desktopReleaseCopy(metadata, macosMode) {
   return {
     ...metadata,
     installation:
-      "به‌روزرسانی خودکار فعال نیست؛ فایل مناسب را دانلود و به‌صورت دستی نصب کنید. بستهٔ macOS فعلاً ad-hoc است؛ در اولین اجرا ممکن است Gatekeeper هشدار توسعه‌دهندهٔ ناشناس نشان دهد و کاربر باید از روش رسمی Open Anyway در تنظیمات Privacy & Security استفاده کند.",
-    limitations:
-      "این مسیر هیچ فروشگاه سیستم‌عامل یا سرویس auto-update را منتشر یا فعال نمی‌کند. فایل‌های Windows فعلاً بدون امضای کد هستند و بستهٔ macOS نیز Developer ID و notarization اپل ندارد؛ بنابراین Windows SmartScreen و macOS Gatekeeper ممکن است هشدار نشان دهند.",
+      "به‌روزرسانی خودکار فعال نیست؛ فایل مناسب را دانلود و به‌صورت دستی نصب کنید. بستهٔ macOS فعلاً ad-hoc است و Developer ID یا notarization اپل ندارد؛ در اولین اجرا ممکن است Gatekeeper هشدار توسعه‌دهندهٔ ناشناس نشان دهد و کاربر باید از روش رسمی Open Anyway در تنظیمات Privacy & Security استفاده کند. فایل‌های Windows نیز فعلاً بدون امضای کد هستند و ممکن است هشدار SmartScreen نشان دهند.",
     verification:
       "آزمون و سیاست ایمنی روی runnerهای بومی اجرا شده، نوع و تعداد خروجی‌ها بررسی شده و امضای ad-hoc بسته‌های macOS پیش از انتشار تأیید شده است.",
   };
@@ -163,10 +155,6 @@ ${normalizedSummary}
 ${releaseCopy.download}
 
 ${releaseCopy.installation}
-
-## محدودیت انتشار
-
-${releaseCopy.limitations}
 
 ## حریم خصوصی و مجوزها
 

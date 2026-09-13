@@ -101,9 +101,17 @@ var RastChinRecipe = (() => {
     // unit-testable on its own.
     function buildEngineConfig(recipe) {
         const codeGuard = (recipe.codeGuardSelectors || []).join(', ');
+        // Most platforms exclude every code guard from direction handling. A
+        // platform may opt out when its adapter can safely distinguish prose in
+        // a fenced plain-text block from genuine source code (ChatGPT does this
+        // for Persian-dominant text boxes). CSS still receives the full guard
+        // list, so technical code keeps its native presentation.
+        const guardedExclusions = recipe.codeGuardsAreExclusions === false
+            ? []
+            : (recipe.codeGuardSelectors || []);
         const config = {
             messageSelectors: recipe.messageSelectors || [],
-            excludeSelectors: [...(recipe.excludeSelectors || []), ...(recipe.codeGuardSelectors || [])],
+            excludeSelectors: [...(recipe.excludeSelectors || []), ...guardedExclusions],
             textSelectors: recipe.textSelectors || [],
             rtlRegex: recipe.rtlRegex,
             rtlClass: recipe.rtlClass,

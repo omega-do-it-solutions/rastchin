@@ -118,6 +118,7 @@ test('os-release parsing and the supported Linux host matrix are strict', () => 
     });
     for (const [id, versions, manager] of [
         ['ubuntu', ['24.04', '26.04'], 'dpkg'],
+        ['zorin', ['18'], 'dpkg'],
         ['debian', ['13'], 'dpkg'],
         ['fedora', ['43', '44'], 'rpm']
     ]) {
@@ -237,10 +238,10 @@ test('Linux running-process discovery compares exact /proc executable targets', 
     assert.equal(running.has('/usr/bin/chatgpt-lookalike'), false);
 });
 
-test('Linux discovery launches the package launcher but detects the real ChatGPT process', async () => {
+test('Zorin 18 discovery launches the package launcher but detects the real ChatGPT process', async () => {
     const result = await discoverLinuxApps({
         platform: 'linux',
-        readFile: () => osRelease('ubuntu', '24.04'),
+        readFile: () => osRelease('zorin', '18'),
         arch: 'x64',
         execFile: dpkgExec(),
         ...trustedFileOptions(),
@@ -274,7 +275,7 @@ test('unsupported Linux hosts disable ChatGPT without running package commands',
     assert.equal(result.supportedPlatform, true);
     assert.equal(chatgpt.compatibility, 'platform-unavailable');
     assert.equal(chatgpt.runtimeAvailability, 'platform-unavailable');
-    assert.match(chatgpt.blockedReason, /Ubuntu 24\.04\/26\.04.*Fedora 43\/44/);
+    assert.match(chatgpt.blockedReason, /Ubuntu 24\.04\/26\.04.*Zorin OS 18.*Fedora 43\/44/);
     assert.deepEqual(result.diagnostics, []);
 });
 
