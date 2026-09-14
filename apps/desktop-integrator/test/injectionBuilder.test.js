@@ -120,7 +120,7 @@ test('ChatGPT payload applies RTL, fonts the response, directs composer, and res
     dom.window.close();
 });
 
-test('Codex composer turns RTL for pasted Persian even when English appears first', async () => {
+test('Codex composer follows the first strong character through mixed live edits and paste', async () => {
     const dom = new JSDOM(`<!doctype html><html><head></head><body>
         <div id="root"><main><p>Conversation</p>
             <form data-type="unified-composer">
@@ -145,16 +145,25 @@ test('Codex composer turns RTL for pasted Persian even when English appears firs
         value: { getData: type => type === 'text/plain' ? 'English و یک متن فارسی' : '' }
     });
     line.dispatchEvent(paste);
-    assert.equal(composer.getAttribute('dir'), 'rtl');
-    assert.equal(composer.style.getPropertyPriority('direction'), 'important');
+    assert.equal(composer.getAttribute('dir'), 'ltr');
+    assert.equal(composer.style.direction, '');
 
     // Simulate a controlled editor committing the clipboard after its paste
     // handler without dispatching another useful input event.
     line.textContent = 'Use the terminal command and سپس نتیجه را بررسی کن.';
+    await wait();
+    assert.equal(composer.getAttribute('dir'), 'ltr');
+    assert.equal(composer.style.direction, '');
+    assert.equal(composer.style.textAlign, '');
+
+    line.textContent = 'این دستور را با pnpm test اجرا کن.';
+    line.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
     await waitUntil(() => composer.getAttribute('dir') === 'rtl');
+    assert.equal(composer.style.getPropertyPriority('direction'), 'important');
     assert.equal(composer.style.textAlign, 'right');
 
     line.textContent = 'Use the terminal command and report the result.';
+    line.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
     await waitUntil(() => composer.getAttribute('dir') === 'ltr');
     assert.equal(composer.style.direction, '');
     assert.equal(composer.style.textAlign, '');

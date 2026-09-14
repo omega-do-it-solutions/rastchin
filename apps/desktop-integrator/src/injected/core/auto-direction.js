@@ -121,29 +121,9 @@
         return null;
     }
 
-    function editableContainsRtl(el) {
-        if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
-            return IS_RTL.test(el.value || "");
-        }
-
-        if (el instanceof HTMLElement && (
-            el.isContentEditable
-            || el.matches?.('[contenteditable]:not([contenteditable="false"])')
-            || (el.getAttribute("role") || "").toLowerCase() === "textbox"
-        )) {
-            const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
-            let current = walker.nextNode();
-            while (current) {
-                if (IS_RTL.test(current.textContent || "")) return true;
-                current = walker.nextNode();
-            }
-        }
-
-        return false;
-    }
-
     function detectDirection(el) {
-        return editableContainsRtl(el) ? "rtl" : "ltr";
+        const firstChar = extractFromEditable(el);
+        return firstChar && IS_RTL.test(firstChar) ? "rtl" : "ltr";
     }
 
     function applyDirection(el, dir) {
@@ -263,11 +243,14 @@
             if (!target || shouldSkipEditable(target)) return;
 
             // Controlled editors can commit clipboard content after their paste
-            // handler and omit a useful input event. Apply RTL immediately from the
-            // clipboard when Persian is present, then re-read the committed DOM on
-            // the next turns so English-only pastes and host rewrites also settle.
+            // handler and omit a useful input event. Apply the clipboard's first
+            // strong direction immediately, then re-read the committed DOM on the
+            // next turns so host rewrites and surrounding text also settle.
             const pastedText = event.clipboardData?.getData?.('text/plain') || '';
-            if (IS_RTL.test(pastedText)) applyDirection(target, 'rtl');
+            const pastedFirstChar = findFirstStrongChar(pastedText);
+            if (pastedFirstChar) {
+                applyDirection(target, IS_RTL.test(pastedFirstChar) ? 'rtl' : 'ltr');
+            }
 
             const settle = () => {
                 if (state.enabled && target.isConnected) updateDirection(target);
@@ -466,7 +449,7 @@
     if (typeof window !== 'undefined' && typeof window.__AUTO_DIR_TEST__ === 'function') {
         window.__AUTO_DIR_TEST__({
             updateDirection, applyDetectedDirection, detectDirection,
-            editableContainsRtl, extractFromEditable, findFirstStrongChar,
+            extractFromEditable, findFirstStrongChar,
             shouldSkipElement, shouldSkipEditable,
             scanEditableNodes, resolveEditableTarget
         });
