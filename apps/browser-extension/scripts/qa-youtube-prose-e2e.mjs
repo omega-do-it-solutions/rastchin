@@ -11,8 +11,8 @@
 // fixtures replicating real YouTube DOM for:
 //   #yt-sidebar  — a watch-page right-sidebar lockup (yt-lockup-metadata-view-model)
 //   #yt-home     — a homepage rich-grid video card (ytd-rich-item-renderer)
-//   #yt-desc     — an EXPANDED watch description (ytd-text-inline-expander) with a
-//                  collapsed-state "...more" button next to it
+//   #yt-desc     — the current collapsed watch-description clamp, including its
+//                  invisible sizer and absolutely positioned "more" button
 //   #yt-search   — a search-suggestion dropdown row (yt-searchbox-suggestion)
 //   #yt-control  — chrome that must stay LTR: a real <button>, a yt-icon, a caption
 //                  segment, and an English-only title
@@ -123,7 +123,7 @@ function report(label, ok, detail = '') {
 //   #yt-sidebar : `#video-title`            (a#video-title-link inside the lockup)
 //   #yt-sidebar-latin-first : font-only class for English-led mixed titles
 //   #yt-home    : `#video-title`            (yt-formatted-string#video-title)
-//   #yt-desc    : `ytd-text-inline-expander > #content`
+//   #yt-desc    : `#description-inline-expander > #snippet`
 //   #yt-search  : `yt-searchbox .ytSuggestionComponentText`
 //
 // Persian copy is chosen with Persian-strong letters (پچژگکی) and a mixed
@@ -131,79 +131,65 @@ function report(label, ok, detail = '') {
 const P_SIDEBAR = 'قسمت دوازدهم سریال جدید';                       // Persian-only
 const P_LATIN_FIRST = 'Milan Miles ❤️ اولین ولاگ با پسرم';          // mixed Latin-first: font-only, no RTL flip
 const P_HOME = 'آموزش Photoshop حرفه‌ای';                          // mixed Persian/Latin (single Latin run)
-const P_DESC = 'در این ویدیو با React و Next.js کار می‌کنیم و یک پروژه کامل می‌سازیم'; // mixed, multi-word
+const P_DESC = 'اولین جمله فارسی باید بدون فاصله از راست شروع شود.\n\nدر این ویدیو با React کار می‌کنیم و یک پروژه کامل می‌سازیم تا متن به خط پایانی برسد.'; // mixed, multi-line
 const P_SUGGEST = 'دانلود آهنگ جدید';                              // Persian-only
 const ENGLISH_TITLE = 'Top 10 Games of 2025';                     // must stay LTR/untouched
 
 const FIXTURES = `
 <div id="rastchin-yt-qa" dir="ltr" style="position:absolute; top:0; left:0; width:480px; background:#fff; color:#111; z-index:2147483647;">
 
-  <!-- (1) WATCH-PAGE RIGHT SIDEBAR lockup (modern view-model — NO #video-title,
-       so it can ONLY match the new 'yt-lockup-metadata-view-model h3 .…wiz__title'
-       selector). The list/grid/lockup wrappers AND the channel byline row (NOT
-       under the h3) must stay LTR; only the <a> title leaf flips. -->
-  <ytd-watch-next-secondary-results-renderer id="yt-sidebar-root">
-   <div id="yt-sidebar-grid" class="ytd-watch-next-secondary-results-renderer">
-    <yt-lockup-view-model id="yt-sidebar" class="ytd-item-section-renderer">
-     <yt-lockup-metadata-view-model class="yt-lockup-metadata-view-model-wiz">
-      <h3 class="ytLockupMetadataViewModelHeadingReset">
-       <a id="yt-sidebar-title" href="/watch?v=qa" class="ytLockupMetadataViewModelTitle">
-        <span class="ytAttributedStringHost ytAttributedStringWhiteSpacePreWrap">${P_SIDEBAR}</span>
-       </a>
-      </h3>
-      <div id="yt-sidebar-byline" class="yt-content-metadata-view-model-wiz__metadata-row">
-       <span class="yt-core-attributed-string">English Channel Name</span>
-      </div>
-     </yt-lockup-metadata-view-model>
-     <yt-lockup-metadata-view-model class="yt-lockup-metadata-view-model-wiz">
-      <h3 class="ytLockupMetadataViewModelHeadingReset">
-       <a id="yt-sidebar-latin-first" href="/watch?v=qa-latin-first" class="ytLockupMetadataViewModelTitle">
-        <span class="ytAttributedStringHost ytAttributedStringWhiteSpacePreWrap">${P_LATIN_FIRST}</span>
-       </a>
-      </h3>
-      <div id="yt-sidebar-latin-first-byline" class="yt-content-metadata-view-model-wiz__metadata-row">
-       <span class="yt-core-attributed-string">Mixed Channel</span>
-      </div>
-     </yt-lockup-metadata-view-model>
-    </yt-lockup-view-model>
+  <!-- Ordinary fixture elements avoid YouTube upgrading injected Polymer custom
+       elements and replacing their children. The text leaves still use the same
+       production ids/classes that PROSE_SELECTORS scans. -->
+  <div id="yt-sidebar-root">
+   <div id="yt-sidebar-grid">
+    <div id="yt-sidebar">
+     <h3><a id="video-title" href="/watch?v=qa"><span>${P_SIDEBAR}</span></a></h3>
+     <div id="yt-sidebar-byline"><span>English Channel Name</span></div>
+    </div>
+    <div id="yt-sidebar-latin-first">
+     <h3><a id="video-title" href="/watch?v=qa-latin-first"><span>${P_LATIN_FIRST}</span></a></h3>
+     <div id="yt-sidebar-latin-first-byline"><span>Mixed Channel</span></div>
+    </div>
    </div>
-  </ytd-watch-next-secondary-results-renderer>
+  </div>
 
   <!-- (2) HOMEPAGE rich-grid video card. ytd-rich-* wrappers stay LTR; the title
        link (a#video-title-link) flips. Mixed Persian/Latin copy. Text lives in a
        plain <a> (NOT a yt-formatted-string, whose custom-element upgrade wipes raw
        injected light-DOM text). -->
-  <ytd-rich-grid-renderer id="yt-home-grid">
-   <ytd-rich-item-renderer id="yt-home-item">
-    <div id="yt-home" class="ytd-rich-grid-media">
-     <h3 class="ytd-rich-grid-media">
-      <a id="video-title-link" class="ytd-rich-grid-media" href="/watch?v=qa2">${P_HOME}</a>
-     </h3>
-    </div>
-   </ytd-rich-item-renderer>
-  </ytd-rich-grid-renderer>
+  <div id="yt-home-grid">
+   <div id="yt-home-item">
+    <div id="yt-home"><h3><a id="video-title-link" href="/watch?v=qa2">${P_HOME}</a></h3></div>
+   </div>
+  </div>
 
-  <!-- (3) EXPANDED watch description with the collapsed "...more" button beside
-       it. ytd-text-inline-expander>#content is the flipping leaf; the <tp-yt-
-       paper-button role="button"> "...more" is chrome and must stay LTR/unwrapped. -->
-  <ytd-watch-metadata id="yt-desc-meta">
-   <ytd-text-inline-expander id="description-inline-expander">
-    <div id="content" class="ytd-text-inline-expander">
-     <yt-attributed-string id="attributed-snippet-text">
-      <span class="yt-core-attributed-string">${P_DESC}</span>
-     </yt-attributed-string>
+  <!-- (3) Current collapsed watch-description DOM. YouTube places #expand over
+       the invisible #expand-sizer at the physical right in LTR. RastChin must
+       mirror that control to the left without padding the nested text leaves. -->
+  <div id="yt-desc-meta">
+   <div id="description-inline-expander" style="display:block; position:relative; width:440px; line-height:20px; direction:ltr;">
+    <div id="expanded" class="style-scope ytd-text-inline-expander"></div>
+    <div id="snippet" class="style-scope ytd-text-inline-expander" style="display:block; overflow:hidden; max-height:60px; white-space:pre-wrap; mask-image:linear-gradient(to top, transparent 0%, transparent 2rem, #000 2rem, #000 100%), linear-gradient(to right, #000 0%, #000 360px, transparent 384px, transparent 100%);">
+     <span id="snippet-text" class="style-scope ytd-text-inline-expander">
+      <span id="plain-snippet-text" class="style-scope ytd-text-inline-expander" hidden></span>
+      <span id="attributed-snippet-text" class="style-scope ytd-text-inline-expander">
+       <span class="ytAttributedStringHost ytAttributedStringWhiteSpacePreWrap" role="text">${P_DESC}</span>
+      </span>
+     </span>
+     <span class="style-scope ytd-text-inline-expander"></span>
+     <span id="ellipsis" class="style-scope ytd-text-inline-expander">…</span>
+     <button id="expand-sizer" type="button" class="button style-scope ytd-text-inline-expander" style="display:inline-flex; visibility:hidden; min-width:40px;">more</button>
     </div>
-    <tp-yt-paper-button id="yt-desc-more" role="button" class="button style-scope ytd-text-inline-expander">
-     ...بیشتر
-    </tp-yt-paper-button>
-   </ytd-text-inline-expander>
-  </ytd-watch-metadata>
+    <button id="expand" type="button" class="button style-scope ytd-text-inline-expander" style="display:flex; position:absolute; bottom:0; left:400px; min-width:40px;">more</button>
+   </div>
+  </div>
 
   <!-- (4) SEARCH-SUGGESTION dropdown row. The container must stay LTR; only the
        suggestion text leaf flips. NO role="option" here, so it can only match the
        new tag/container-scoped selectors (the [role=option] scope was the fragile
        part — the reported bug). -->
-  <yt-searchbox class="ytSearchboxComponentHost">
+  <div class="ytSearchboxComponentHost">
    <div class="ytSearchboxComponentSuggestionsContainer" id="yt-search-container">
     <div id="yt-search" class="ytSuggestionComponentSuggestion ytSuggestionComponentLargerSuggestion">
      <div id="searchbox-suggestion:0" class="ytSuggestionComponentText ytSuggestionComponentScrollMargin">
@@ -211,7 +197,7 @@ const FIXTURES = `
      </div>
     </div>
    </div>
-  </yt-searchbox>
+  </div>
 
   <!-- (5) CHROME that must stay LTR/untouched: a real button, an icon, a caption
        segment (the SEPARATE caption path), and an English-only lockup title that
@@ -219,15 +205,11 @@ const FIXTURES = `
        a plain <a> so the custom-element upgrade does not wipe it. -->
   <div id="yt-control">
    <button id="yt-control-button" aria-label="عضویت">عضویت در کانال</button>
-   <yt-icon id="yt-control-icon" class="ytd-icon" aria-hidden="true">▶</yt-icon>
+   <span id="yt-control-icon" class="ytd-icon" aria-hidden="true">▶</span>
    <div class="caption-window" id="yt-control-caption">
     <span class="ytp-caption-segment">یک زیرنویس فارسی</span>
    </div>
-   <yt-lockup-metadata-view-model class="yt-lockup-metadata-view-model-wiz">
-    <h3 class="ytLockupMetadataViewModelHeadingReset">
-     <a id="yt-control-english" class="ytLockupMetadataViewModelTitle" href="/watch?v=qa3">${ENGLISH_TITLE}</a>
-    </h3>
-   </yt-lockup-metadata-view-model>
+   <h3><a id="yt-control-english" href="/watch?v=qa3">${ENGLISH_TITLE}</a></h3>
   </div>
 
 </div>`;
@@ -250,10 +232,13 @@ const MEASURE = `(async () => {
 
     const leaf = (rootId, sel) => { const r = byId(rootId); return r ? r.querySelector(sel) : null; };
 
-    const sidebarLeaf = byId('yt-sidebar-title');
-    const latinFirstLeaf = byId('yt-sidebar-latin-first');
+    const sidebarLeaf = leaf('yt-sidebar', '#video-title');
+    const latinFirstLeaf = leaf('yt-sidebar-latin-first', '#video-title');
     const homeLeaf = leaf('yt-home', '#video-title-link');
-    const descLeaf = byId('description-inline-expander') ? byId('description-inline-expander').querySelector(':scope > #content') : null;
+    const descRoot = byId('description-inline-expander');
+    const descLeaf = descRoot ? descRoot.querySelector(':scope > #snippet') : null;
+    const descNested = descRoot ? descRoot.querySelector('#attributed-snippet-text') : null;
+    const descEllipsis = descRoot ? descRoot.querySelector('#ellipsis') : null;
     const searchLeaf = leaf('yt-search', '.ytSuggestionComponentText');
 
     if (!sidebarLeaf || !latinFirstLeaf || !homeLeaf || !descLeaf || !searchLeaf) {
@@ -272,6 +257,7 @@ const MEASURE = `(async () => {
         // Inline-start reserve (px) — proves the v1.1.25 More-button overlap rule
         // landed on a flipped description block (0 on every other surface).
         padInlineStart: parseFloat(getComputedStyle(el).paddingInlineStart) || 0,
+        padInlineEnd: parseFloat(getComputedStyle(el).paddingInlineEnd) || 0,
         copy: (el.textContent || '').replace(/\\s+/g, ' ').trim(),
         bdi: bdiInfo(el)
     });
@@ -281,7 +267,7 @@ const MEASURE = `(async () => {
         return el ? { dir: el.getAttribute('dir'), cls: el.classList.contains(PROSE_CLASS) } : { missing: true };
     };
 
-    const moreBtn = byId('yt-desc-more');
+    const moreBtn = descRoot ? descRoot.querySelector(':scope > #expand') : null;
     const ctrlButton = byId('yt-control-button');
     const ctrlIcon = byId('yt-control-icon');
     const ctrlCaptionSeg = byId('yt-control-caption') ? byId('yt-control-caption').querySelector('.ytp-caption-segment') : null;
@@ -295,7 +281,12 @@ const MEASURE = `(async () => {
         sidebar: describeLeaf(sidebarLeaf),
         latinFirst: describeLeaf(latinFirstLeaf),
         home: describeLeaf(homeLeaf),
-        desc: describeLeaf(descLeaf),
+        desc: {
+            ...describeLeaf(descLeaf),
+            // The clamp also contains YouTube's ellipsis and invisible sizer;
+            // copy integrity concerns the authored description text only.
+            copy: (descNested.textContent || '').replace(/\s+/g, ' ').trim()
+        },
         search: describeLeaf(searchLeaf),
 
         // Layout wrappers — every one of these must stay LTR (no dir, no prose class).
@@ -312,6 +303,16 @@ const MEASURE = `(async () => {
         },
 
         // The collapsed "...more" button must stay LTR, keep its label, never wrap.
+        descriptionLayout: descRoot && descLeaf && descNested && descEllipsis && moreBtn ? {
+            nestedPadInlineStart: parseFloat(getComputedStyle(descNested).paddingInlineStart) || 0,
+            nestedPadInlineEnd: parseFloat(getComputedStyle(descNested).paddingInlineEnd) || 0,
+            ellipsisDisplay: getComputedStyle(descEllipsis).display,
+            maskImage: getComputedStyle(descLeaf).maskImage || getComputedStyle(descLeaf).webkitMaskImage || '',
+            moreLeftDelta: Math.abs(moreBtn.getBoundingClientRect().left - descRoot.getBoundingClientRect().left),
+            sizerPosition: getComputedStyle(descRoot.querySelector('#expand-sizer')).position,
+            sizerLeftDelta: Math.abs(descRoot.querySelector('#expand-sizer').getBoundingClientRect().left - descRoot.getBoundingClientRect().left)
+        } : { missing: true },
+
         more: moreBtn ? {
             dir: moreBtn.getAttribute('dir'),
             cls: moreBtn.classList.contains(PROSE_CLASS),
@@ -432,15 +433,17 @@ try {
         await sleep(1500);
         const processed = await evalInTarget(ytTarget, `(() => {
             const q = (id, sel) => { const r = document.getElementById(id); return r ? r.querySelector(sel) : null; };
-            const sidebar = document.getElementById('yt-sidebar-title');
+            const sidebar = q('yt-sidebar', '#video-title');
             const home = q('yt-home', '#video-title-link');
             const search = q('yt-search', '.ytSuggestionComponentText');
             const descExp = document.getElementById('description-inline-expander');
-            const desc = descExp ? descExp.querySelector(':scope > #content') : null;
+            const desc = descExp ? descExp.querySelector(':scope > #snippet') : null;
             const homeBdi = home ? home.querySelector('[data-rastchin-bidi]') : null;
+            const descBdi = desc ? [...desc.querySelectorAll('[data-rastchin-bidi]')]
+                .some(node => node.textContent === 'React') : false;
             return Boolean(sidebar && sidebar.getAttribute('dir') === 'rtl') &&
                    Boolean(home && home.getAttribute('dir') === 'rtl' && homeBdi) &&
-                   Boolean(desc && desc.getAttribute('dir') === 'rtl') &&
+                   Boolean(desc && desc.getAttribute('dir') === 'rtl' && descBdi && desc.textContent.includes('React')) &&
                    Boolean(search && search.getAttribute('dir') === 'rtl');
         })()`);
         if (processed) break;
@@ -481,17 +484,29 @@ try {
         m.home.bdi.some(b => b.tag === 'BDI' && b.dir === 'ltr' && b.text.includes('Photoshop')), JSON.stringify(m.home.bdi));
     report('home title: copy byte-identical after isolation', m.home.copy === m.expectedCopy.home, JSON.stringify(m.home.copy));
 
-    // ── (3) Expanded description (BUG #3) + collapsed "...more" (BUG #2) ──────
-    report('expanded description: dir=rtl', m.desc.dir === 'rtl', `dir=${m.desc.dir}`);
-    report('expanded description: carries prose class', m.desc.cls === true);
-    report('expanded description: computed font is Vazirmatn', m.desc.usesVazir === true && /vazirmatn/i.test(m.desc.font), m.desc.font);
-    report('expanded description (mixed): React isolated in <bdi dir=ltr>',
+    // ── (3) Collapsed description text + native "more" control ───────────────
+    report('collapsed description: dir=rtl', m.desc.dir === 'rtl', `dir=${m.desc.dir}`);
+    report('collapsed description: carries prose class', m.desc.cls === true);
+    report('collapsed description: computed font is Vazirmatn', m.desc.usesVazir === true && /vazirmatn/i.test(m.desc.font), m.desc.font);
+    report('collapsed description (mixed): React isolated in <bdi dir=ltr>',
         m.desc.bdi.some(b => b.tag === 'BDI' && b.dir === 'ltr' && b.text === 'React'), JSON.stringify(m.desc.bdi));
-    report('expanded description (mixed): Next.js isolated in <bdi dir=ltr>',
-        m.desc.bdi.some(b => b.tag === 'BDI' && b.dir === 'ltr' && /Next\.js/.test(b.text)), JSON.stringify(m.desc.bdi));
-    report('expanded description: copy byte-identical after isolation', m.desc.copy === m.expectedCopy.desc, JSON.stringify(m.desc.copy));
-    report('More-fix (bug #2): flipped description reserves inline-start room (>=20px)',
-        m.desc.padInlineStart >= 20, `padding-inline-start=${m.desc.padInlineStart}px`);
+    report('collapsed description: copy byte-identical after isolation', m.desc.copy === m.expectedCopy.desc, JSON.stringify(m.desc.copy));
+    report('collapsed description: no blank RTL-start gutter', m.desc.padInlineStart === 0,
+        `padding-inline-start=${m.desc.padInlineStart}px`);
+    report('collapsed description: control space is reserved at RTL visual end', m.desc.padInlineEnd >= 20,
+        `padding-inline-end=${m.desc.padInlineEnd}px`);
+    report('collapsed description: nested attributed text has no duplicate padding',
+        m.descriptionLayout.nestedPadInlineStart === 0 && m.descriptionLayout.nestedPadInlineEnd === 0,
+        `nested-padding=${m.descriptionLayout.nestedPadInlineStart}/${m.descriptionLayout.nestedPadInlineEnd}px`);
+    report('collapsed description: horizontal fade is mirrored left', /to left|270deg/.test(m.descriptionLayout.maskImage),
+        m.descriptionLayout.maskImage);
+    report('collapsed description: native ellipsis does not reappear at the RTL sentence start',
+        m.descriptionLayout.ellipsisDisplay === 'none', `display=${m.descriptionLayout.ellipsisDisplay}`);
+    report('collapsed description: invisible More sizer anchors left',
+        m.descriptionLayout.sizerPosition === 'absolute' && m.descriptionLayout.sizerLeftDelta <= 1,
+        `position=${m.descriptionLayout.sizerPosition} delta=${m.descriptionLayout.sizerLeftDelta}px`);
+    report('collapsed description: visible More button anchors left', m.descriptionLayout.moreLeftDelta <= 1,
+        `delta=${m.descriptionLayout.moreLeftDelta}px`);
     report('"...more" button: stays LTR (no dir flip)', m.more.dir == null || m.more.dir !== 'rtl', `dir=${m.more.dir}`);
     report('"...more" button: no prose class', m.more.cls === false);
     report('"...more" button: computed direction not rtl', m.more.direction !== 'rtl', m.more.direction);

@@ -75,7 +75,7 @@ function clickSettings(listeners) {
     {
         const { calls, element, listeners } = loadWelcome({
             chrome: calls => ({
-                runtime: { getManifest: () => ({ version: '1.1.76' }) },
+                runtime: { getManifest: () => ({ version: '1.1.77' }) },
                 windows: { WINDOW_ID_CURRENT: -2 },
                 sidePanel: {
                     open(options) {
@@ -86,7 +86,7 @@ function clickSettings(listeners) {
             })
         });
 
-        check('welcome shows the installed version', element('welcomeVersion').textContent, 'v1.1.76');
+        check('welcome shows the installed version', element('welcomeVersion').textContent, 'v1.1.77');
         check('Chrome side-panel click prevents link navigation', clickSettings(listeners), true);
         check('Chrome side-panel opens in the current window', calls.panelOpens, [{ windowId: -2 }]);
     }

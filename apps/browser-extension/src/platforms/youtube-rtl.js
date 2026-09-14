@@ -1049,32 +1049,52 @@
                 unicode-bidi: isolate !important;
             }
 
-            /* ════════ More-button overlap fix (v1.1.25, bug #2) ════════════════
-             * When the collapsed watch description flips to RTL the Persian text
-             * starts on the RIGHT, exactly where YouTube anchors its inline
-             * "...more"/«بیشتر» affordance (tp-yt-paper-button#expand, or a trailing
-             * inline run), so the first glyphs sit under the button. Reserve
-             * inline-start room on ONLY the flipped description CONTENT BLOCK so the
-             * text start clears that gutter. padding-inline-start resolves to the
-             * RIGHT edge because direction:rtl is the engine's inline style on the
-             * same node. The rule is the INTERSECTION of the prose class (added only
-             * to actually-Persian flipped nodes) AND the description-content anchors
-             * that also appear in PROSE_SELECTORS, so the padded block is one the
-             * engine actually flips (the live target may be the content clamp
-             * wrapper OR the inner snippet leaf — both are covered). A non-RTL /
-             * English description has no prose class, so the rule never applies; the
-             * button position, YouTube's own truncation and the expand/collapse
-             * handlers are untouched. No dir/direction/text-align is set here, and
-             * nothing targets a bare button, a heading, or a page-level wrapper.
-             * box-sizing keeps the reserve from widening the block past its column.
-             * NOTE: 3.5em is the «بیشتر»/"...more" footprint estimate — confirm/tune
-             * (3em–4.5em) with scripts/qa-youtube-prose-e2e.mjs on a live page. */
+            /* ════════ Collapsed description controls ════════════════════════════
+             * YouTube positions the visible #expand button over an invisible
+             * #expand-sizer at the physical right edge. That is correct for its
+             * native LTR description, but becomes the beginning of an RTL line.
+             * The old workaround also padded every matching nested text node at
+             * inline-start, which is the RIGHT side in RTL and produced a doubled
+             * blank gutter before the first Persian sentence.
+             *
+             * Keep one reserve on the outer clamp only, at RTL inline-end (the
+             * physical left), and move both expand controls there. The mirrored
+             * horizontal mask preserves YouTube's fade beside the control while
+             * the vertical mask keeps the native three-line clamp. These selectors
+             * require a flipped description sibling, so English descriptions and
+             * unrelated buttons retain YouTube's layout and typography. */
             ytd-text-inline-expander > #content.${PROSE_CLASS},
-            #description-inline-expander #snippet.${PROSE_CLASS},
-            #description-inline-expander #attributed-snippet-text.${PROSE_CLASS},
-            #description-inline-expander #plain-snippet-text.${PROSE_CLASS} {
-                padding-inline-start: 3.5em !important;
+            #description-inline-expander > #snippet.${PROSE_CLASS} {
+                padding-inline-start: 0 !important;
+                padding-inline-end: 3.5em !important;
                 box-sizing: border-box !important;
+            }
+
+            #description-inline-expander > #snippet.${PROSE_CLASS} {
+                -webkit-mask-image:
+                    linear-gradient(to top, transparent 0%, transparent 2rem, #000 2rem, #000 100%),
+                    linear-gradient(to left, #000 0%, #000 calc(100% - 5.5em), transparent calc(100% - 3.5em), transparent 100%) !important;
+                mask-image:
+                    linear-gradient(to top, transparent 0%, transparent 2rem, #000 2rem, #000 100%),
+                    linear-gradient(to left, #000 0%, #000 calc(100% - 5.5em), transparent calc(100% - 3.5em), transparent 100%) !important;
+            }
+
+            #description-inline-expander > #snippet.${PROSE_CLASS} > #ellipsis {
+                display: none !important;
+            }
+
+            #description-inline-expander > #snippet.${PROSE_CLASS} > #expand-sizer {
+                position: absolute !important;
+                top: auto !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: auto !important;
+            }
+
+            ytd-text-inline-expander > #content.${PROSE_CLASS} ~ #expand,
+            #description-inline-expander > #snippet.${PROSE_CLASS} ~ #expand {
+                left: 0 !important;
+                right: auto !important;
             }
         `
     };

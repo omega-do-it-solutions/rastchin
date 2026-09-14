@@ -661,8 +661,8 @@ function flipAll(bucket) { bucket.forEach(node => engine.applyToMessage(node)); 
 // ============================================================================
 // 20) CSS CONTRACT — the recipe stylesheet stays per-element: no global
 //     body/html/ytd-app/#masthead/#page-manager rule; the prose font rule is
-//     scoped to the prose class; the v1.1.25 More-button overlap rule is present
-//     and scoped to a flipped description block (never a bare button).
+//     scoped to the prose class; the collapsed-description controls are mirrored
+//     only beside a flipped description block (never through a bare button rule).
 // ============================================================================
 {
     const codeGuard = (recipe.codeGuardSelectors || []).join(', ');
@@ -707,11 +707,26 @@ function flipAll(bucket) { bucket.forEach(node => engine.applyToMessage(node)); 
     check('css-contract: comment composer rule sets only typography',
         composerRule ? /font-family:[^;]*Vazirmatn/.test(composerRule[1]) && !/(?:direction|text-align|unicode-bidi)\s*:/.test(composerRule[1]) : false, true);
 
-    // v1.1.25 More-button overlap fix (RED until Part 2): an RTL-aware reserve on a
-    // flipped description block, never a global/button rule.
-    check('css-contract: More-fix reserves space via padding-inline-start', css.includes('padding-inline-start'), true);
-    check('css-contract: More-fix scoped to a flipped description block',
-        /#(content|snippet|attributed-snippet-text|plain-snippet-text)\.rastchin-youtube-prose-rtl/.test(css), true);
+    const collapsedDescriptionRule = css.match(
+        /ytd-text-inline-expander > #content\.rastchin-youtube-prose-rtl,[\s\S]*?#description-inline-expander > #snippet\.rastchin-youtube-prose-rtl\s*\{([^}]*)\}/
+    );
+    check('css-contract: collapsed description reserve is present', !!collapsedDescriptionRule, true);
+    check('css-contract: collapsed description removes the erroneous RTL-start gutter',
+        collapsedDescriptionRule ? /padding-inline-start:\s*0\s*!important/.test(collapsedDescriptionRule[1]) : false, true);
+    check('css-contract: collapsed description reserves space at the RTL visual end',
+        collapsedDescriptionRule ? /padding-inline-end:\s*3\.5em\s*!important/.test(collapsedDescriptionRule[1]) : false, true);
+    check('css-contract: nested attributed text is never padded',
+        /#attributed-snippet-text\.rastchin-youtube-prose-rtl\s*\{[^}]*padding-inline/.test(css), false);
+    check('css-contract: nested plain text is never padded',
+        /#plain-snippet-text\.rastchin-youtube-prose-rtl\s*\{[^}]*padding-inline/.test(css), false);
+    check('css-contract: collapsed description mask is mirrored toward the physical left',
+        /#description-inline-expander > #snippet\.rastchin-youtube-prose-rtl\s*\{[\s\S]*?linear-gradient\(to left/.test(css), true);
+    check('css-contract: native ellipsis is hidden only inside a flipped collapsed description',
+        /#description-inline-expander > #snippet\.rastchin-youtube-prose-rtl > #ellipsis\s*\{[^}]*display:\s*none\s*!important/.test(css), true);
+    check('css-contract: invisible More sizer leaves the RTL text flow and anchors left',
+        /#description-inline-expander > #snippet\.rastchin-youtube-prose-rtl > #expand-sizer\s*\{[^}]*position:\s*absolute\s*!important;[^}]*left:\s*0\s*!important;[^}]*right:\s*auto\s*!important/.test(css), true);
+    check('css-contract: More button is pinned left only after a flipped description sibling',
+        /#description-inline-expander > #snippet\.rastchin-youtube-prose-rtl ~ #expand\s*\{[^}]*left:\s*0\s*!important;[^}]*right:\s*auto\s*!important/.test(css), true);
 }
 
 // --- summary -------------------------------------------------------------------
