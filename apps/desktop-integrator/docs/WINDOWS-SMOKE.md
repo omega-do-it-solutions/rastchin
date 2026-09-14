@@ -20,14 +20,19 @@ for general users.
 
 5. Close ChatGPT completely, including tray processes.
 6. Click **Scan again** and record the detected package name and version.
+7. Record whether the official package declares an enabled App Execution Alias. An
+   alias-less Microsoft Store/MSIX build must be shown as detected but unavailable and
+   must never produce `spawn EPERM`.
 
 Never take ownership of `WindowsApps`, edit `app.asar`, disable package integrity, or
 run the integrator as Administrator.
 
 ## ChatGPT/Codex checks
 
-1. Click **Enable RTL**. A packaged stable build must show this action
-   when opened normally, without PowerShell or an environment variable.
+1. If the package exposes a compatible App Execution Alias, click **Enable RTL**. A
+   packaged stable build must show this action when opened normally, without PowerShell
+   or an environment variable. If it exposes no alias, confirm the action is disabled
+   with the MSIX private-pipe explanation and stop this checklist.
 2. Confirm that the original official app opens and login/session state is preserved.
 3. Send a Persian paragraph containing English words, a URL, and a file path.
 4. Generate unordered and numbered Persian lists. Verify marker placement and

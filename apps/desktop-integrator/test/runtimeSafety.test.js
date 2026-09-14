@@ -7,12 +7,29 @@ const { PassThrough } = require('node:stream');
 const {
     diagnoseLaunchFailure,
     ExperimentalRuntime,
+    isWindowsAppExecutionAlias,
     resultValue,
     safeRendererUrl,
     sanitizedHostEnvironment,
     sanitizedPosixEnvironment,
     sanitizedWindowsEnvironment
 } = require('../src/main/services/runtime/experimentalRuntime');
+
+test('Windows MSIX launch accepts only the registered per-user execution-alias directory', () => {
+    const environment = { LOCALAPPDATA: 'C:\\Users\\Test\\AppData\\Local' };
+    assert.equal(isWindowsAppExecutionAlias(
+        'C:\\Users\\Test\\AppData\\Local\\Microsoft\\WindowsApps\\ChatGPT.exe',
+        environment
+    ), true);
+    assert.equal(isWindowsAppExecutionAlias(
+        'C:\\Program Files\\WindowsApps\\OpenAI.Codex\\app\\ChatGPT.exe',
+        environment
+    ), false);
+    assert.equal(isWindowsAppExecutionAlias(
+        'C:\\Users\\Test\\AppData\\Local\\Microsoft\\WindowsApps\\nested\\ChatGPT.exe',
+        environment
+    ), false);
+});
 
 async function waitUntil(predicate, timeoutMs = 3000) {
     const deadline = Date.now() + timeoutMs;
@@ -31,6 +48,18 @@ test('a host debug-switch refusal replaces the generic closed-client error', () 
     );
     assert.match(error.message, /Claude Desktop rejected the private Chromium debugging connection/);
     assert.doesNotMatch(error.message, /CDP client closed/);
+});
+
+test('an MSIX access denial becomes an actionable launch error', () => {
+    const spawnError = Object.assign(new Error('spawn EPERM'), { code: 'EPERM' });
+    const error = diagnoseLaunchFailure(
+        { name: 'ChatGPT / Codex' },
+        spawnError,
+        '',
+        { source: 'msix' }
+    );
+    assert.match(error.message, /Microsoft Store App Execution Alias/);
+    assert.doesNotMatch(error.message, /spawn EPERM/);
 });
 
 test('sanitized host environment does not forward API keys or debug flags', () => {
@@ -152,6 +181,64 @@ test('Linux starts the verified package launcher with private pipes and Persian 
     assert.equal(spawnCall.options.env.XMODIFIERS, '@im=ibus');
     assert.equal(spawnCall.options.env.OPENAI_API_KEY, undefined);
     await runtime.stop();
+});
+
+test('Windows MSIX starts a verified app execution alias instead of the protected package executable', async () => {
+    let spawnCall = null;
+    const stderr = new PassThrough();
+    const cdpWrite = new PassThrough();
+    const cdpRead = new PassThrough();
+    const spawnStub = (command, args, options) => {
+        spawnCall = { command, args, options };
+        const child = Object.assign(new EventEmitter(), {
+            stderr,
+            stdio: [null, null, stderr, cdpWrite, cdpRead],
+            unref() {}
+        });
+        cdpWrite.on('data', chunk => {
+            for (const frame of String(chunk).split('\0').filter(Boolean)) {
+                const request = JSON.parse(frame);
+                cdpRead.write(`${JSON.stringify({
+                    id: request.id,
+                    result: request.method === 'Browser.getVersion' ? { product: 'Chrome/Test' } : {}
+                })}\0`);
+            }
+        });
+        return child;
+    };
+    const alias = 'C:\\Users\\Test\\AppData\\Local\\Microsoft\\WindowsApps\\ChatGPT.exe';
+    const packageExecutable = 'C:\\Program Files\\WindowsApps\\OpenAI.Codex\\app\\ChatGPT.exe';
+    const runtime = new ExperimentalRuntime({
+        targetId: 'chatgpt', platform: 'win32', executable: alias,
+        installation: {
+            source: 'msix', packageFamilyName: 'OpenAI.Codex_8wekyb3d8bbwe',
+            packageFullName: 'OpenAI.Codex_26.908.4834.0_x64__8wekyb3d8bbwe',
+            packageApplicationId: 'App', packageExecutable
+        },
+        exists: candidate => candidate === alias || candidate === packageExecutable,
+        environment: { LOCALAPPDATA: 'C:\\Users\\Test\\AppData\\Local' },
+        spawn: spawnStub,
+        pollIntervalMs: 60000
+    });
+    runtime.waitForCompatibleRenderer = async () => true;
+
+    const status = await runtime.start();
+    assert.equal(status.state, 'active');
+    assert.equal(spawnCall.command, alias);
+    assert.deepEqual(spawnCall.args, ['--remote-debugging-pipe']);
+    assert.deepEqual(spawnCall.options.stdio, ['ignore', 'ignore', 'pipe', 'pipe', 'pipe']);
+    await runtime.stop();
+});
+
+test('Windows MSIX refuses to launch the protected package executable directly', async () => {
+    const executable = 'C:\\Program Files\\WindowsApps\\OpenAI.Codex\\app\\ChatGPT.exe';
+    const runtime = new ExperimentalRuntime({
+        targetId: 'chatgpt', platform: 'win32', executable,
+        installation: { source: 'msix' },
+        exists: () => true,
+        environment: { LOCALAPPDATA: 'C:\\Users\\Test\\AppData\\Local' }
+    });
+    await assert.rejects(runtime.validateLaunch(), /does not expose a compatible App Execution Alias/);
 });
 
 test('runtime cleanup closes and unreferences every child pipe', async () => {

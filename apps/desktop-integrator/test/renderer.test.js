@@ -90,6 +90,41 @@ test('stable build exposes the normal enable action without preview wording', as
     dom.window.close();
 });
 
+test('alias-less ChatGPT MSIX is explained and cannot trigger activation', async () => {
+    const html = fs.readFileSync(path.join(rendererRoot, 'index.html'), 'utf8');
+    const source = fs.readFileSync(path.join(rendererRoot, 'app.js'), 'utf8');
+    const dom = new JSDOM(html, { url: 'file:///app/index.html', runScripts: 'outside-only' });
+    const status = fixtureStatus();
+    status.platform = 'win32';
+    status.supportedPlatform = true;
+    status.buildChannel = 'stable';
+    status.runtimeEnabled = true;
+    status.targets[0].compatibility = 'host-blocked';
+    status.targets[0].runtimeAvailability = 'host-blocked';
+    status.targets[0].blockedReason = 'نسخهٔ Microsoft Store/MSIX فعلی مسیر اجرای امن لازم برای پایپ خصوصی راست‌چین را ارائه نمی‌کند.';
+    status.targets[0].installations = [{
+        version: '26.908.4834.0', source: 'msix', executable: '',
+        packageExecutable: 'C:\\Program Files\\WindowsApps\\OpenAI.Codex\\app\\ChatGPT.exe'
+    }];
+    let enableCalls = 0;
+    dom.window.rastchin = {
+        getStatus: async () => status, scan: async () => status,
+        enable: async () => { enableCalls += 1; }, disable: async () => null,
+        openLink: async () => null, onStatus: () => () => {}
+    };
+    dom.window.eval(source);
+    await new Promise(resolve => setImmediate(resolve));
+    const card = dom.window.document.querySelector('[data-target="chatgpt"]');
+    const button = card.querySelector('button');
+    assert.equal(button.disabled, true);
+    assert.equal(button.dataset.action, '');
+    assert.match(card.textContent, /Microsoft Store\/MSIX.*پایپ خصوصی/);
+    assert.doesNotMatch(card.textContent, /spawn EPERM/i);
+    button.click();
+    assert.equal(enableCalls, 0);
+    dom.window.close();
+});
+
 for (const [platform, platformText, source, installText, executable] of [
     ['darwin', 'مک‌اواس', 'app-bundle', 'macOS Application', '/Applications/ChatGPT.app/Contents/MacOS/ChatGPT'],
     ['linux', 'لینوکس', 'deb', 'DEB package', '/usr/lib/chatgpt/ChatGPT']

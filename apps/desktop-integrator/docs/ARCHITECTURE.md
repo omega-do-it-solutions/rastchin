@@ -24,7 +24,10 @@ for vendor application files on any platform.
 
 Discovery validates the platform identity before offering an action:
 
-- Windows: exact package/executable discovery.
+- Windows: exact package/executable discovery. MSIX packages are launched only through
+  a package-declared App Execution Alias under the current user's WindowsApps alias
+  directory. The protected package executable is retained only as identity metadata and
+  is never passed to `CreateProcess`; an alias-less package is detected but blocked.
 - macOS: exact `com.openai.codex` bundle identity and pinned OpenAI Team ID, checked
   again immediately before launch. ChatGPT Classic is excluded.
 - Linux: the expected `chatgpt` package name, launcher and renderer paths, host/package

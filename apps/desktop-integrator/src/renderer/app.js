@@ -36,6 +36,9 @@ function localizeError(value) {
         [/This integration is not supported on the current platform\.?/i, 'این یکپارچه‌سازی در سیستم‌عامل فعلی پشتیبانی نمی‌شود.'],
         [/Close (.+) before enabling RTL.*/i, match => `ابتدا ${match[1]} را کامل ببندید و سپس دوباره تلاش کنید.`],
         [/No directly launchable (.+) executable was detected\.?/i, match => `نسخهٔ قابل اجرای ${match[1]} شناسایی نشد.`],
+        [/The Microsoft Store installation does not expose a compatible App Execution Alias.*/i, 'نسخهٔ Microsoft Store/MSIX فعلی مسیر اجرای امن لازم برای فعال‌سازی راست‌چین را ارائه نمی‌کند.'],
+        [/The Microsoft Store package identity changed after discovery\.?/i, 'هویت بستهٔ Microsoft Store پس از شناسایی تغییر کرده است. دوباره بررسی کنید.'],
+        [/Windows refused the Microsoft Store App Execution Alias.*/i, 'ویندوز مسیر اجرای Microsoft Store را مسدود کرد و پایپ خصوصی راست‌چین ایجاد نشد.'],
         [/The app launched, but no compatible conversation renderer was found.*/i, 'برنامه اجرا شد، اما صفحهٔ گفتگوی سازگار پیدا نشد.'],
         [/CDP client (?:is )?closed\.?/i, 'ارتباط موقت با برنامه قطع شد.'],
         [/Host exited before integration completed.*/i, 'برنامه پیش از تکمیل یکپارچه‌سازی بسته شد.']
