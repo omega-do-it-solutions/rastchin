@@ -53,8 +53,10 @@ repository and official distribution channels.
   tested, fail-closed adapters with clear compatibility ownership.
 - A shared RTL package may be extracted only after at least two applications use
   the same proven behavior and host constraints can be preserved.
-- Stable ChatGPT/Codex desktop support is maintained through platform smoke
-  checklists and fail-closed compatibility checks for every supported release.
+- ChatGPT/Codex desktop support is maintained through platform smoke checklists
+  and fail-closed compatibility checks for every supported release. A Windows MSIX
+  package must expose a compatible App Execution Alias before it is launchable;
+  an alias-less package remains detected but blocked.
 
 ## Brand Identity
 

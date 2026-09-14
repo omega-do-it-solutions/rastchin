@@ -7,6 +7,8 @@ const { summarizeTargets: summarizeForPlatform } = require('./discoverySummary')
 
 const execFileAsync = promisify(execFile);
 
+const WINDOWS_MSIX_PRIVATE_PIPE_BLOCKED = 'نسخهٔ Microsoft Store/MSIX فعلی ChatGPT/Codex مسیر اجرای امن لازم برای پایپ خصوصی راست‌چین را ارائه نمی‌کند. این نصب شناسایی شده است، اما تا زمانی که بستهٔ رسمی App Execution Alias سازگار ارائه نکند، فعال‌سازی نمی‌شود.';
+
 function powershellDiscoveryScript() {
     const targetJson = JSON.stringify(TARGETS.map(target => ({
         id: target.id,
@@ -23,7 +25,7 @@ ${targetJson}
 $results = @()
 
 function Add-RastChinResult {
-    param($TargetId, $Source, $Name, $Version, $Executable, $PackageFamilyName, $PackageFullName, $IsRunning)
+    param($TargetId, $Source, $Name, $Version, $Executable, $PackageFamilyName, $PackageFullName, $PackageApplicationId, $PackageExecutable, $IsRunning)
     if (-not $TargetId) { return }
     $script:results += [PSCustomObject]@{
         targetId = [string]$TargetId
@@ -33,6 +35,8 @@ function Add-RastChinResult {
         executable = [string]$Executable
         packageFamilyName = [string]$PackageFamilyName
         packageFullName = [string]$PackageFullName
+        packageApplicationId = [string]$PackageApplicationId
+        packageExecutable = [string]$PackageExecutable
         isRunning = [bool]$IsRunning
     }
 }
@@ -49,22 +53,36 @@ foreach ($target in $targets) {
     }
 
     foreach ($package in $packages) {
-        $executables = @()
         $manifestPath = Join-Path $package.InstallLocation 'AppxManifest.xml'
         if (Test-Path $manifestPath) {
             try {
                 [xml]$manifest = Get-Content -LiteralPath $manifestPath
                 foreach ($application in @($manifest.Package.Applications.Application)) {
-                    if ($application.Executable) {
-                        $candidate = Join-Path $package.InstallLocation ([string]$application.Executable)
-                        if (Test-Path $candidate) { $executables += $candidate }
+                    if (-not $application.Executable) { continue }
+                    $packageExecutable = Join-Path $package.InstallLocation ([string]$application.Executable)
+                    $packageExecutableName = [IO.Path]::GetFileName($packageExecutable)
+                    if (-not (Test-Path -LiteralPath $packageExecutable)) { continue }
+                    if ($target.executableNames -notcontains $packageExecutableName) { continue }
+
+                    $aliases = @($application.SelectNodes('.//*[local-name()="ExecutionAlias"]') | ForEach-Object {
+                        [string]$_.Alias
+                    } | Where-Object {
+                        $_ -and ($target.executableNames -contains [IO.Path]::GetFileName($_))
+                    })
+                    $launchAliases = @($aliases | ForEach-Object {
+                        $candidate = Join-Path (Join-Path $env:LOCALAPPDATA 'Microsoft\\WindowsApps') ([IO.Path]::GetFileName($_))
+                        if (Test-Path -LiteralPath $candidate) { $candidate }
+                    } | Select-Object -Unique)
+
+                    if ($launchAliases.Count -eq 0) {
+                        Add-RastChinResult $target.id 'msix' $package.Name $package.Version '' $package.PackageFamilyName $package.PackageFullName $application.Id $packageExecutable $running
+                    } else {
+                        foreach ($launchAlias in $launchAliases) {
+                            Add-RastChinResult $target.id 'msix' $package.Name $package.Version $launchAlias $package.PackageFamilyName $package.PackageFullName $application.Id $packageExecutable $running
+                        }
                     }
                 }
             } catch {}
-        }
-        if ($executables.Count -eq 0) { $executables = @('') }
-        foreach ($executable in $executables) {
-            Add-RastChinResult $target.id 'msix' $package.Name $package.Version $executable $package.PackageFamilyName $package.PackageFullName $running
         }
     }
 
@@ -90,7 +108,7 @@ foreach ($target in $targets) {
             foreach ($candidate in ($directCandidates | Select-Object -Unique)) {
                 if (-not (Test-Path -LiteralPath $candidate)) { continue }
                 $info = (Get-Item -LiteralPath $candidate).VersionInfo
-                Add-RastChinResult $target.id 'desktop' $info.ProductName $info.ProductVersion $candidate '' '' $running
+                Add-RastChinResult $target.id 'desktop' $info.ProductName $info.ProductVersion $candidate '' '' '' '' $running
             }
         }
     }
@@ -118,12 +136,25 @@ function normalizeRows(raw) {
         executable: String(row.executable || ''),
         packageFamilyName: String(row.packageFamilyName || ''),
         packageFullName: String(row.packageFullName || ''),
+        packageApplicationId: String(row.packageApplicationId || ''),
+        packageExecutable: String(row.packageExecutable || ''),
         isRunning: Boolean(row.isRunning)
     })).filter(row => row.targetId);
 }
 
 function summarizeTargets(rows) {
-    return summarizeForPlatform(rows, 'win32');
+    return summarizeForPlatform(rows, 'win32').map(target => {
+        const onlyBlockedMsix = target.detected
+            && target.installations.every(installation => installation.source === 'msix')
+            && !target.installations.some(installation => installation.executable);
+        if (!onlyBlockedMsix || target.id !== 'chatgpt') return target;
+        return {
+            ...target,
+            compatibility: 'host-blocked',
+            runtimeAvailability: 'host-blocked',
+            blockedReason: WINDOWS_MSIX_PRIVATE_PIPE_BLOCKED
+        };
+    });
 }
 
 async function discoverWindowsApps(options = {}) {
@@ -170,5 +201,6 @@ module.exports = {
     encodePowerShell,
     normalizeRows,
     powershellDiscoveryScript,
-    summarizeTargets
+    summarizeTargets,
+    WINDOWS_MSIX_PRIVATE_PIPE_BLOCKED
 };

@@ -103,7 +103,7 @@ function diagnosticError(error) {
         .slice(0, 240);
 }
 
-function diagnoseLaunchFailure(target, error, stderr = '') {
+function diagnoseLaunchFailure(target, error, stderr = '', installation = {}) {
     const original = error instanceof Error ? error : new Error(String(error || 'Runtime launch failed.'));
     const output = String(stderr || '');
     if (DEBUG_SWITCH_REFUSAL.test(output) || output === 'host-refused-debugging-switch') {
@@ -112,7 +112,25 @@ function diagnoseLaunchFailure(target, error, stderr = '') {
             + 'required for runtime RTL styling. Desktop support requires an official host integration and is planned for a future release.'
         );
     }
+    if (installation.source === 'msix'
+        && (original.code === 'EPERM' || /\bspawn EPERM\b/i.test(original.message))) {
+        return new Error(
+            'Windows refused the Microsoft Store App Execution Alias. '
+            + 'The package cannot preserve RastChin\'s private debugging pipe on this host.'
+        );
+    }
     return original;
+}
+
+function isWindowsAppExecutionAlias(executable, environment = process.env) {
+    const localAppData = String(environment.LOCALAPPDATA || '');
+    if (!path.win32.isAbsolute(localAppData) || !path.win32.isAbsolute(executable || '')) return false;
+    const aliasRoot = path.win32.join(localAppData, 'Microsoft', 'WindowsApps');
+    const relative = path.win32.relative(aliasRoot, executable);
+    return Boolean(relative)
+        && !relative.startsWith('..')
+        && !path.win32.isAbsolute(relative)
+        && !relative.includes(path.win32.sep);
 }
 
 function compactTargetInfo(info) {
@@ -235,6 +253,25 @@ class ExperimentalRuntime extends EventEmitter {
             throw new Error(`Unexpected executable for ${this.target.name}: ${basename}`);
         }
 
+        if (this.platform === 'win32' && this.installation.source === 'msix') {
+            if (!isWindowsAppExecutionAlias(this.executable, this.environment)) {
+                throw new Error(
+                    'The Microsoft Store installation does not expose a compatible App Execution Alias. '
+                    + 'RastChin will not launch its protected WindowsApps executable directly.'
+                );
+            }
+            const packageExecutable = String(this.installation.packageExecutable || '');
+            const packageExecutableName = path.win32.basename(packageExecutable).toLowerCase();
+            if (!this.installation.packageFamilyName
+                || !this.installation.packageFullName
+                || !this.installation.packageApplicationId
+                || !path.win32.isAbsolute(packageExecutable)
+                || !allowed.includes(packageExecutableName)
+                || !this.exists(packageExecutable)) {
+                throw new Error('The Microsoft Store package identity changed after discovery.');
+            }
+        }
+
         if (this.platform === 'darwin') {
             const trusted = await this.verifyMacAppBundle(
                 this.installation.bundlePath,
@@ -323,7 +360,12 @@ class ExperimentalRuntime extends EventEmitter {
             this.schedulePoll(this.pollGeneration);
             return this.snapshot();
         } catch (error) {
-            const diagnosed = diagnoseLaunchFailure(this.target, error, this.hostDiagnostic);
+            const diagnosed = diagnoseLaunchFailure(
+                this.target,
+                error,
+                this.hostDiagnostic,
+                this.installation
+            );
             if (this.state === 'failed') {
                 this.lastError = diagnosed.message;
                 this.emit('status', this.snapshot());
@@ -580,6 +622,7 @@ class ExperimentalRuntime extends EventEmitter {
 module.exports = {
     diagnoseLaunchFailure,
     ExperimentalRuntime,
+    isWindowsAppExecutionAlias,
     POSIX_SAFE_ENV_KEYS,
     SAFE_ENV_KEYS,
     resultValue,

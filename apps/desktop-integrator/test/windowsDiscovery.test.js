@@ -6,7 +6,8 @@ const {
     encodePowerShell,
     normalizeRows,
     powershellDiscoveryScript,
-    summarizeTargets
+    summarizeTargets,
+    WINDOWS_MSIX_PRIVATE_PIPE_BLOCKED
 } = require('../src/main/services/windowsDiscovery');
 
 test('PowerShell discovery is encoded as UTF-16LE and remains read-only', () => {
@@ -14,6 +15,8 @@ test('PowerShell discovery is encoded as UTF-16LE and remains read-only', () => 
     const decoded = Buffer.from(encodePowerShell(script), 'base64').toString('utf16le');
     assert.equal(decoded, script);
     assert.match(script, /Get-AppxPackage/);
+    assert.match(script, /ExecutionAlias/);
+    assert.match(script, /Microsoft\\WindowsApps/);
     assert.doesNotMatch(script, /Remove-AppxPackage|Set-Content|Add-Content|Remove-Item/);
 });
 
@@ -23,13 +26,51 @@ test('normalizes a single PowerShell JSON result', () => {
         source: 'msix',
         name: 'OpenAI.Codex',
         version: '26.820.10647.0',
-        executable: 'C:\\Program Files\\WindowsApps\\OpenAI.Codex\\app\\ChatGPT.exe',
+        executable: '',
+        packageFamilyName: 'OpenAI.Codex_8wekyb3d8bbwe',
+        packageFullName: 'OpenAI.Codex_26.820.10647.0_x64__8wekyb3d8bbwe',
+        packageApplicationId: 'App',
+        packageExecutable: 'C:\\Program Files\\WindowsApps\\OpenAI.Codex\\app\\ChatGPT.exe',
         isRunning: false
     }));
     assert.equal(rows.length, 1);
     assert.equal(rows[0].targetId, 'chatgpt');
     assert.equal(rows[0].source, 'msix');
+    assert.equal(rows[0].executable, '');
+    assert.equal(rows[0].packageApplicationId, 'App');
+    assert.match(rows[0].packageExecutable, /WindowsApps/);
     assert.equal(rows[0].isRunning, false);
+});
+
+test('an alias-less ChatGPT MSIX is detected but blocked before launch', () => {
+    const summary = summarizeTargets([{
+        targetId: 'chatgpt', source: 'msix', name: 'OpenAI.Codex', version: '26.908.4834.0',
+        executable: '', packageFamilyName: 'OpenAI.Codex_8wekyb3d8bbwe',
+        packageFullName: 'OpenAI.Codex_26.908.4834.0_x64__8wekyb3d8bbwe',
+        packageApplicationId: 'App',
+        packageExecutable: 'C:\\Program Files\\WindowsApps\\OpenAI.Codex\\app\\ChatGPT.exe',
+        isRunning: false
+    }]);
+    const chatgpt = summary.find(item => item.id === 'chatgpt');
+    assert.equal(chatgpt.detected, true);
+    assert.equal(chatgpt.compatibility, 'host-blocked');
+    assert.equal(chatgpt.runtimeAvailability, 'host-blocked');
+    assert.equal(chatgpt.blockedReason, WINDOWS_MSIX_PRIVATE_PIPE_BLOCKED);
+});
+
+test('a registered ChatGPT MSIX execution alias remains launchable', () => {
+    const summary = summarizeTargets([{
+        targetId: 'chatgpt', source: 'msix', name: 'OpenAI.Codex', version: '26.908.4834.0',
+        executable: 'C:\\Users\\Test\\AppData\\Local\\Microsoft\\WindowsApps\\ChatGPT.exe',
+        packageFamilyName: 'OpenAI.Codex_8wekyb3d8bbwe',
+        packageFullName: 'OpenAI.Codex_26.908.4834.0_x64__8wekyb3d8bbwe',
+        packageApplicationId: 'App',
+        packageExecutable: 'C:\\Program Files\\WindowsApps\\OpenAI.Codex\\app\\ChatGPT.exe',
+        isRunning: false
+    }]);
+    const chatgpt = summary.find(item => item.id === 'chatgpt');
+    assert.equal(chatgpt.compatibility, 'needs-probe');
+    assert.equal(chatgpt.runtimeAvailability, 'stable');
 });
 
 test('summarizes both registered apps and keeps unknown support closed', () => {
