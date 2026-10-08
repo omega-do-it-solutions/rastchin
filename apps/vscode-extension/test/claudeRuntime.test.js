@@ -25,7 +25,7 @@ function nextFrame() {
 // Instrumented boot: identical to renderClaudeRoot's boot path, but
 //   (1) swaps in a MutationObserver subclass that tallies "self-origin"
 //       deliveries -- callbacks whose records are ENTIRELY the runtime's own
-//       writes (dir/class attribute flips + wrapArrows childList splices), and
+//       writes (dir/class attribute flips), and
 //   (2) drives a manual rAF queue so animation frames can be pumped one batch at
 //       a time and we can observe whether reapply work settles or free-runs.
 function bootInstrumentedClaude(inner) {
@@ -45,7 +45,7 @@ function bootInstrumentedClaude(inner) {
   };
 
   // Count observer callbacks that carry ONLY runtime-origin mutations. applyText
-  // writes dir + our fa-*-clean classes; wrapArrows does childList replaceChild.
+  // writes dir + our fa-*-clean classes without replacing host text nodes.
   // An external text edit shows up as characterData / a non-fa-* class, so it is
   // excluded -- this isolates the SELF-trigger signal.
   let selfOriginDeliveries = 0;
@@ -142,7 +142,7 @@ test('Claude runtime does not self-trigger a free-running reapply loop', async (
   // writes back through the observers it set up. On the buggy runtime the
   // per-element observer (attributes class/style/dir + childList + subtree +
   // characterData) and the root observer both observe the very attributes
-  // applyText/wrapArrows write, so a single change cascades into multiple
+  // applyText write, so a single change cascades into multiple
   // self-origin deliveries (and, in a real browser's per-frame batching, an
   // unbounded reapply-every-frame loop). The fix drains those self-records so
   // this collapses to a tight constant.
@@ -406,6 +406,50 @@ test('Claude runtime does not mistake Update followed by Persian prose for SQL',
 
   assert.equal(paragraph.getAttribute('dir'), 'rtl');
   assert.equal(paragraph.classList.contains('fa-rtl-clean'), true);
+});
+
+test('Claude runtime treats account labels and parenthesized amounts as Persian prose', () => {
+  const doc = renderClaudeRoot(`
+    <div class="timelineMessage_07S1Yg">
+      <ul data-id="accounts">
+        <li data-id="deposit"><strong>MEDIACUBE (+€ 4 100. Revolut):</strong> در داده‌هایت واریز است، چون پول از بیرون آمده. این تنها پرداخت واقعی است.</li>
+        <li data-id="insurance"><strong>EUROP ASSISTANCE (+€ 200):</strong> تأیید پیشنهاده را بزنید، چون پول از بیمه برگشته است.</li>
+        <li data-id="date"><strong>Eva (+€ 40، 11 سپتامبر):</strong> آمده، پس احتمالاً پول برگشتی است که فرستاده‌اید.</li>
+      </ul>
+      <p data-id="account"><strong>Revolut (IBAN):</strong> این حساب شخصی خودتان است و باید انتقال بین حساب‌های خودم ثبت شود.</p>
+      <p data-id="english">English-first explanation with only a short فارسی fragment should keep its original direction.</p>
+      <pre class="toolBodyPlainText_07S1Yg" data-id="code">print("سلام دنیا")</pre>
+      <pre class="toolBodyPlainText_07S1Yg" data-id="condition">if (ready): print("سلام")</pre>
+    </div>`);
+
+  for (const id of ['deposit', 'insurance', 'date', 'account']) {
+    const block = doc.querySelector('[data-id="' + id + '"]');
+    assert.equal(block.getAttribute('dir'), 'rtl', id + ' should be RTL');
+    assert.equal(block.classList.contains('fa-rtl-clean'), true);
+    assert.equal(block.querySelector('strong').classList.contains('bidi-inline-ltr-clean'), true);
+  }
+  assert.equal(doc.querySelector('[data-id="accounts"]').getAttribute('dir'), 'rtl');
+  for (const id of ['english', 'code', 'condition']) {
+    assert.equal(doc.querySelector('[data-id="' + id + '"]').getAttribute('dir'), 'ltr');
+  }
+});
+
+test('Claude labels follow streamed text without isolating Persian emphasis or code', async () => {
+  const doc = renderClaudeRoot(`
+    <div class="timelineMessage_07S1Yg">
+      <p><strong data-id="label">Revolut (+€ 200):</strong> این پول از حساب شخصی خودتان آمده است.</p>
+      <p><strong data-id="persian">تأیید پرداخت:</strong> این متن فارسی باید راست‌چین بماند.</p>
+      <pre><code><strong data-id="code-label">Revolut</strong></code></pre>
+    </div>`);
+  const label = doc.querySelector('[data-id="label"]');
+  assert.equal(label.classList.contains('bidi-inline-ltr-clean'), true);
+  assert.equal(doc.querySelector('[data-id="persian"]').classList.contains('bidi-inline-ltr-clean'), false);
+  assert.equal(doc.querySelector('[data-id="code-label"]').classList.contains('bidi-inline-ltr-clean'), false);
+  label.textContent = 'حساب شخصی:';
+  await nextFrame();
+  await nextFrame();
+  assert.equal(label.classList.contains('bidi-inline-ltr-clean'), false);
+  assert.equal(label.parentElement.getAttribute('dir'), 'rtl');
 });
 
 test('Claude runtime styles sent Persian user prompt bubbles RTL', () => {
