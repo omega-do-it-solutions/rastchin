@@ -127,12 +127,20 @@ ${scope} ol.fa-rtl-clean {
 
 ${scope} :is(ul, ol).fa-rtl-clean > li.fa-rtl-clean,
 ${scope} :is(ul, ol).fa-rtl-clean > li[dir="rtl"],
-${scope} :is(ul, ol).fa-rtl-clean > li.fa-rtl-clean > :not(.fa-ltr-clean):not(pre):not(code):not(kbd):not(samp),
-${scope} :is(ul, ol).fa-rtl-clean > li[dir="rtl"] > :not(.fa-ltr-clean):not(pre):not(code):not(kbd):not(samp) {
+${scope} :is(ul, ol).fa-rtl-clean > li.fa-rtl-clean > :not(.fa-ltr-clean):not(.bidi-inline-ltr-clean):not(pre):not(code):not(kbd):not(samp),
+${scope} :is(ul, ol).fa-rtl-clean > li[dir="rtl"] > :not(.fa-ltr-clean):not(.bidi-inline-ltr-clean):not(pre):not(code):not(kbd):not(samp) {
   direction: rtl !important;
   text-align: right !important;
   unicode-bidi: isolate !important;
   font-family: var(--persian-rtl-clean-font-family) !important;
+}
+
+/* Isolate a Latin account/product label without changing its font or turning
+   an inline emphasis node into a block. Parentheses and amounts then stay with
+   their label inside the surrounding Persian sentence. */
+${scope} .bidi-inline-ltr-clean {
+  direction: ltr !important;
+  unicode-bidi: isolate !important;
 }
 
 ${scope} :is(ul, ol).fa-rtl-clean > li.fa-rtl-clean :is(span, strong, em, b, i, del, mark, small, sub, sup, a):not(.fa-ltr-clean):not(code *):not(pre *):not(kbd *):not(samp *),
@@ -272,11 +280,6 @@ ${scope} .fa-rtl-clean-text code.fa-rtl-clean * {
   white-space: inherit !important;
 }
 
-${scope} .bidi-arrow-mirror-clean {
-  display: inline-block;
-  transform: scaleX(-1);
-  unicode-bidi: isolate;
-}
 `;
 }
 
@@ -309,6 +312,7 @@ function runtimeJs(options = {}) {
     var EMAIL = /\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\b/i;
     var CODE_SEL = ${JSON.stringify(codeSelector)};
     var TEXT_SEL = ${JSON.stringify(textSelector)};
+    var INLINE_LABEL_SEL = ${JSON.stringify(options.inlineLabelSelector || '')};
     var DYNAMIC_SEL = ${JSON.stringify(dynamicSelector)};
     var CARD_SEL = ${JSON.stringify(cardSelector)};
     var OPTION_SEL = ${JSON.stringify(optionSelector)};
@@ -335,20 +339,15 @@ function runtimeJs(options = {}) {
     var CLEAN_CLASS = ${JSON.stringify(CLEAN_CLASS)};
     var FORCE_RTL_CLASS = ${JSON.stringify(FORCE_RTL_CLASS)};
     var FORCE_LTR_CLASS = ${JSON.stringify(FORCE_LTR_CLASS)};
-    var ARROWS = ['\\u2192','\\u2190','\\u27f6','\\u27f5','\\u21d2','\\u21d0','\\u279c','\\u2794','\\u27a4','\\u279e'];
-    var ARROW_RE = new RegExp('(' + ARROWS.join('|') + ')', 'g');
-    var ARROW_CHARS_RE = new RegExp('[' + ARROWS.join('') + ']', 'g');
     var STATUS_LTR = /^\\s*(?:\\.{3}|…)?\\s*(?:Actioning|Brewing|Calculating|Combobulating|Concocting|Considering|Cooking|Finishing|Flibbertigibbeting|Mixing|Percolating|Preparing|Processing|Puttering|Pontificating|Retrying|Simmering|Stirring|Thinking|Working|Reading|Writing|Searching|Running|Loading|Queued|Thought for \\d+s|Worked for \\d+s)\\s*(?:\\.{3}|…)?\\s*$/i;
-    var MIRROR_CLASS = 'bidi-arrow-mirror-clean';
     var LIST_FONT_VALUE = 'var(--persian-rtl-clean-font-family)';
-    var flipAttempts = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
 
     // ---- self-write suppression (breaks the MutationObserver feedback loops) ----
     // Every observer the runtime owns is registered here so a single write phase
     // can drain ALL of their pending record queues at once (defeats the
     // cross-observer loop, not just the per-element self-loop).
     var rtlObservers = [];
-    // Re-entrant write guard. A COUNTER, not a boolean: applyText -> wrapArrows ->
+    // Re-entrant write guard. A COUNTER, not a boolean: applyText -> watchTable ->
     // more mutators, and scanMutationTarget -> watch -> applyText all nest, so we
     // must only drain when the OUTERMOST write completes (depth returns to 0).
     var rtlWriteDepth = 0;
@@ -558,6 +557,12 @@ function runtimeJs(options = {}) {
       if (/^\\s*(?:create|alter|drop)\\s+(?:table|index|database|view)\\b/i.test(value)) return true;
       if (/^\\s*(?:\\/[^\\s]+\\/|\\.\\.?\\/|~\\/|[A-Za-z]:[\\\\/])/.test(value)) return true;
       if (/^\\s*[\\w.-]+\\/\\S*\\.[A-Za-z0-9]{1,8}\\b/.test(value)) return true;
+      // Markdown often starts Persian prose with a Latin label and an amount
+      // or date: "Revolut (+€ 200): ...". Parentheses in that label are prose,
+      // not a function call. Remove only this leading annotation for syntax
+      // detection; the displayed text and the direction counts stay intact.
+      // Assignments, quoted arguments, paths and language syntax remain guarded.
+      value = value.replace(/^([A-Za-z][^()[\\]{}=;<>"'\\x60\\n]*)\\(([^()[\\]{}=;<>"'\\x60\\n]*)\\)\\s*:\\s*/, '$1$2 ');
       var rtlIndex = value.search(RTL_LETTER);
       var prefix = rtlIndex >= 0 ? value.slice(0, rtlIndex) : value;
       if (
@@ -655,7 +660,6 @@ function runtimeJs(options = {}) {
           // The agent owns every node below its textarea/contenteditable. Static
           // transcript scans must never classify or rewrite an in-progress draft.
           if (!isDynamicField(el) && isInsideDynamicField(node.parentElement)) return NodeFilter.FILTER_REJECT;
-          if (node.parentElement.classList && node.parentElement.classList.contains(MIRROR_CLASS)) return NodeFilter.FILTER_REJECT;
           return NodeFilter.FILTER_ACCEPT;
         },
       });
@@ -705,66 +709,6 @@ function runtimeJs(options = {}) {
       }
       return RTL_SCRIPT.test(text) ? 'rtl' : 'ltr';
     }
-    function stripArrows(text) { return String(text || '').replace(ARROW_CHARS_RE, ''); }
-    function immediateToken(text, leftSlice) {
-      var stripped = stripArrows(text);
-      var match = leftSlice ? stripped.match(/(\\S+)\\s*$/) : stripped.match(/^\\s*(\\S+)/);
-      return match ? match[1] : '';
-    }
-    function tokenKind(token) {
-      if (!token) return null;
-      if (URL.test(token) || EMAIL.test(token)) return 'protected-ltr';
-      return RTL_LETTER.test(token) ? 'prose-rtl' : 'prose-ltr';
-    }
-    function shouldMirrorText(text, offset, length) {
-      var left = tokenKind(immediateToken(text.slice(0, offset), true));
-      var right = tokenKind(immediateToken(text.slice(offset + length), false));
-      return left === 'prose-rtl' || right === 'prose-rtl';
-    }
-    function wrapArrows(root) {
-      if (!root || !root.querySelectorAll) return;
-      var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-        acceptNode: function (node) {
-          if (!node.nodeValue) return NodeFilter.FILTER_REJECT;
-          ARROW_RE.lastIndex = 0;
-          if (!ARROW_RE.test(node.nodeValue)) return NodeFilter.FILTER_REJECT;
-          ARROW_RE.lastIndex = 0;
-          var parent = node.parentElement;
-          if (!parent || isProtected(parent) || isInsideDynamicField(parent)) return NodeFilter.FILTER_REJECT;
-          if (parent.classList && parent.classList.contains(MIRROR_CLASS)) return NodeFilter.FILTER_REJECT;
-          if (flipAttempts && (flipAttempts.get(parent) || 0) >= 10) return NodeFilter.FILTER_REJECT;
-          return NodeFilter.FILTER_ACCEPT;
-        },
-      });
-      var nodes = [], node;
-      while ((node = walker.nextNode())) nodes.push(node);
-      nodes.forEach(function (textNode) {
-        var text = textNode.nodeValue;
-        var parent = textNode.parentElement;
-        var fragment = document.createDocumentFragment();
-        var changed = false;
-        var last = 0;
-        var match;
-        ARROW_RE.lastIndex = 0;
-        while ((match = ARROW_RE.exec(text))) {
-          if (match.index > last) fragment.appendChild(document.createTextNode(text.slice(last, match.index)));
-          if (shouldMirrorText(text, match.index, match[1].length)) {
-            var span = document.createElement('span');
-            span.className = MIRROR_CLASS;
-            span.textContent = match[1];
-            fragment.appendChild(span);
-            changed = true;
-          } else {
-            fragment.appendChild(document.createTextNode(match[1]));
-          }
-          last = match.index + match[1].length;
-        }
-        if (!changed) return;
-        if (last < text.length) fragment.appendChild(document.createTextNode(text.slice(last)));
-        if (flipAttempts && parent) flipAttempts.set(parent, (flipAttempts.get(parent) || 0) + 1);
-        if (textNode.parentNode) textNode.parentNode.replaceChild(fragment, textNode);
-      });
-    }
     function shouldWatchTextLeaf(el) {
       if (!el || !el.classList || el.__persianRtlCleanWatched) return false;
       if (isProtected(el) || isDynamicField(el) || isInsideDynamicField(el)) return false;
@@ -780,9 +724,22 @@ function runtimeJs(options = {}) {
         if (shouldWatchTextLeaf(el)) watch(el);
       });
     }
+    function syncInlineLabels(el, rtl) {
+      if (!INLINE_LABEL_SEL || !isSemanticTextBlock(el)) return;
+      el.querySelectorAll(INLINE_LABEL_SEL).forEach(function (label) {
+        // Each paragraph/list item owns its own labels, including nested lists.
+        if (label.closest(SEMANTIC_TEXT_BLOCK_SEL) !== el || isProtected(label)) return;
+        var text = label.textContent || '';
+        var annotatedLabel = /^[A-Za-z][^()[\\]{}=;<>"'\\x60\\n]*\\([^()[\\]{}=;<>"'\\x60\\n]*\\)\\s*:?[\\s]*$/.test(text.trim());
+        var isolate = rtl && editableFirstStrongDir(text) === 'ltr' &&
+          (!RTL_SCRIPT.test(text) || annotatedLabel);
+        if (isolate) addClass(label, 'bidi-inline-ltr-clean');
+        else removeClass(label, 'bidi-inline-ltr-clean');
+      });
+    }
     function applyText(el, dynamic) {
       // Wrap the whole pass as one write phase: every class/dir/childList write it
-      // makes (incl. wrapArrows + watchTable, which nest under this depth) is
+      // makes (incl. watchTable, which nests under this depth) is
       // drained from all observers at depth 0 so applyText cannot re-trigger its
       // own per-element observer or the root observer.
       return doWrite(function () { return applyTextImpl(el, dynamic); });
@@ -817,6 +774,7 @@ function runtimeJs(options = {}) {
       }
       var persian = forceRtl || (!forceLtr && RTL_SCRIPT.test(text));
       if (!persian) {
+        if (!dynamic) syncInlineLabels(el, false);
         if (!dynamic && shouldForceLtrText(text)) {
           applyLtrState(el);
           return;
@@ -856,11 +814,13 @@ function runtimeJs(options = {}) {
       }
       syncCodeBlockRoot(el, previewRtl && dir === 'rtl' ? 'rtl' : null);
       syncNearestList(el);
+      if (!dynamic) syncInlineLabels(el, dir === 'rtl');
       if (dynamic) applyDynamicFields(el, dir);
-      // Never replace text nodes inside textarea/contenteditable editors. Rich
-      // paste and editor frameworks keep live Range/selection references to
-      // those nodes; replacing one can crash or disable the agent composer.
-      if (!dynamic) wrapArrows(el);
+      // Both the composer and transcript belong to the host renderer. React
+      // retains Text-node references while streaming and swapping image/tool
+      // results. Splicing arrow spans into prose detaches those references and
+      // makes a later removeChild/insertBefore throw, blanking the chat. Apply
+      // direction/font attributes only; keep the host's text and child tree.
       if (el.querySelectorAll) el.querySelectorAll('table').forEach(watchTable);
     }
     function watch(el) {
@@ -927,7 +887,6 @@ function runtimeJs(options = {}) {
       if (!el || !el.children) return false;
       for (var i = 0; i < el.children.length; i++) {
         var child = el.children[i];
-        if (child.classList && child.classList.contains(MIRROR_CLASS)) continue;
         if (isProtected(child)) continue;
         if (RTL_SCRIPT.test(textOutsideProtected(child))) return true;
       }
@@ -1323,6 +1282,7 @@ ${runtimeJs({
     rootSelector: 'document.getElementById("root")',
     textSelector: '[class*="timelineMessage_"],[class*="userMessageContainer_"],[class*="userMessage_"],[class*="permissionRequestContainer_"],[class*="permissionsContainer_"],[class*="titleTextInner_"],[class*="sessionName_"]',
     dynamicSelector: '[class*="messageInput_"],[class*="mentionMirror_"]',
+    inlineLabelSelector: 'strong, b',
     inlineCodeSelector: '[class*="permissionPath_"],[class*="permissionRequestInput_"]',
     // Claude's AskUserQuestion tool is rendered by the normal permission
     // request component. Scope card semantics to that surface so Latin-first
@@ -1351,6 +1311,7 @@ ${MARKERS.claudePlanJsStart}
 ${runtimeJs({
     rootSelector: 'document.getElementById("content")',
     textSelector: 'p, li, blockquote, h1, h2, h3, h4, h5, h6, td, th',
+    inlineLabelSelector: 'strong, b',
     dynamicSelector: 'textarea, input, [contenteditable="true"]',
     logName: 'claude-plan-preview',
   })}

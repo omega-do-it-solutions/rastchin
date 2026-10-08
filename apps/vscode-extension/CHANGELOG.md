@@ -6,6 +6,19 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.15] - 2026-10-08
+
+### Fixed
+
+- Codex and Claude transcript styling now preserves renderer-owned text nodes,
+  including Persian arrow text. Completing an image/tool response or replacing
+  streamed prose can no longer fail because RastChin detached a node that the
+  host renderer still needs. Direction and typography remain attribute-based.
+- Persian Claude responses that start with a Latin account or product label and
+  a parenthesized amount or date now use RTL paragraph and list layout. Inline
+  emphasized labels keep their names, amounts, parentheses, and dates together;
+  English-first prose and actual code retain LTR behavior.
+
 ## [0.3.14] - 2026-09-01
 
 ### Fixed
@@ -231,6 +244,7 @@ The release links below point to the legacy standalone repository that created
 versions through `0.3.12`. They are retained as historical provenance; new
 source changes and release documentation live in the RastChin monorepo.
 
+[0.3.15]: https://github.com/omega-do-it-solutions/rastchin/releases/tag/vscode-v0.3.15
 [0.3.14]: https://github.com/omega-do-it-solutions/rastchin/releases/tag/vscode-v0.3.14
 [0.3.13]: https://github.com/omega-do-it-solutions/rastchin/releases/tag/vscode-v0.3.13
 [0.2.1]: https://github.com/omega-do-it-solutions/rastchin-vscode/releases/tag/v0.2.1
