@@ -55,8 +55,8 @@
         // ordinary response prose and the composer still receive Vazirmatn.
         // Keep in sync with CODE_GUARD_SELECTORS in platforms/gemini-rtl.js.
         "gemini.google.com": 'code, pre, [data-test-id="code-content"], .code-container, .formatted-code-block-internal-container, [class*="code-block"], [class*="codeBlock"], [role="code"], .monaco-editor, .cm-editor',
-        "chatgpt.com": '[data-message-author-role], [data-message-id], [data-testid^="conversation-turn"], main article, main .wm-app-thread [class*="_messageCopy"]',
-        "chat.openai.com": '[data-message-author-role], [data-message-id], [data-testid^="conversation-turn"], main article, main .wm-app-thread [class*="_messageCopy"]'
+        "chatgpt.com": '[data-message-author-role], [data-message-id], [data-chatgpt-selection-message-id], [data-markdown-text-style="assistant-message"], [data-testid^="conversation-turn"], main article, main .wm-app-thread [class*="_messageCopy"]',
+        "chat.openai.com": '[data-message-author-role], [data-message-id], [data-chatgpt-selection-message-id], [data-markdown-text-style="assistant-message"], [data-testid^="conversation-turn"], main article, main .wm-app-thread [class*="_messageCopy"]'
     };
 
     function responseSkipSelector() {
@@ -66,6 +66,11 @@
 
     function isResponseTarget(element) {
         const selector = responseSkipSelector();
+        const host = window.location?.hostname;
+        // The stylesheet already fonts the editable host. Inline font changes
+        // to pasted paragraphs/spans make ProseMirror redraw the prompt repeatedly.
+        if ((host === 'chatgpt.com' || host === 'chat.openai.com')
+            && element.closest?.('[data-composer-body], [data-composer-markdown], #prompt-textarea, [data-type="unified-composer"], [data-testid*="composer" i]')) return true;
         return !!selector && !!element.closest?.(selector);
     }
     const OBSERVER_CONFIG = {
@@ -335,6 +340,10 @@
 
         if (node.nodeType === Node.ELEMENT_NODE) {
             const element = node;
+
+            // CSS owns these complete subtrees; walking every syntax token in
+            // each streaming response is redundant even without style writes.
+            if (isResponseTarget(element)) return;
 
             if (element.shadowRoot) {
                 applyToShadow(element.shadowRoot);

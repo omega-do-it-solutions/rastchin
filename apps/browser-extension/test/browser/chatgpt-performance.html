@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>RastChin ChatGPT performance regression</title>
+<script type="importmap">IMPORT_MAP</script>
+<style>
+@font-face { font-family: Vazirmatn; src: url('/font.ttf'); font-weight: 100 900; }
+body { background: #151515; color: #eee; font: 16px/1.65 system-ui; margin: 1rem auto; max-width: 1000px; }
+aside { float: left; width: 160px; }
+main { margin-left: 180px; }
+article { border-bottom: 1px solid #555; margin-bottom: 1rem; }
+/* Mirror the host's one-sided logical spacing: generic bordered cells hide
+   the zero-gap bug when adjacent cells use different text directions. */
+table { border-collapse: separate; border-spacing: 0; width: 100%; }
+td,th { border-bottom: 1px solid #555; padding: 12px 0; padding-inline-end: 24px; }
+th:last-child { padding-inline-end: 40px; }
+pre { background: #282828; padding: 1rem; overflow: auto; }
+[data-d-default-strong] { font-weight: 700; }
+[data-markdown-copy="code-block"] { border-radius: 1rem; background: #282828; margin-block: 1rem; overflow: hidden; }
+[data-markdown-copy="exclude"] { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem; }
+[data-markdown-copy="exclude"] .truncate { flex: 1; }
+.chatgpt-code-scrollport { overflow: auto; padding: 0 1rem 1rem; }
+.chatgpt-code-scrollport code { display: block; white-space: pre; min-width: max-content; }
+[data-composer-body] { border: 1px solid #777; border-radius: 1rem; padding: 1rem; }
+.ProseMirror { outline: none; white-space: pre-wrap; max-height: 100px; overflow: auto; }
+#results { position: sticky; top: 0; z-index: 2; background: #202c2a; white-space: pre-wrap; font: 13px/1.4 monospace; padding: 1rem; max-height: 200px; overflow: auto; }
+</style>
+<h1>ChatGPT performance and RTL regression</h1>
+<div id="results" role="status">Running…</div>
+<aside><button id="hover">Synthetic sidebar title</button></aside>
+<main><div data-composer-body><div id="editor"></div></div><div id="conversation"></div></main>
+<script type="module" src="/test.js"></script>

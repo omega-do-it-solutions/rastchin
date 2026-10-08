@@ -6,3 +6,11 @@ allowBuilds:
   electron-winstaller: true
   keytar: false
   unrs-resolver: true
+# Compatible security patches for exact transitive pins in release/test tooling.
+# Remove a selector when its parent stops requesting that affected version.
+overrides:
+  "fast-uri@3.1.6": "3.1.7"
+  "undici@6.28.0": "6.28.1"
+  "brace-expansion@1.1.18": "1.1.20"
+  "brace-expansion@2.1.4": "2.1.6"
+  "http-cache-semantics@4.2.0": "4.3.0"

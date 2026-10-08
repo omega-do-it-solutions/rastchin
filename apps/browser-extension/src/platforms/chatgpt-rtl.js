@@ -28,6 +28,13 @@
     const LETTER_REGEX = /\p{L}/u;
     const RTL_CLASS = 'rastchin-chatgpt-rtl';
     const RTL_CODE_MIN_RATIO = 0.4;
+    const COMPOSER_SELECTORS = ['[data-composer-body]', '[data-composer-markdown]'];
+    const MUTATION_UI_GUARD = [
+        ...COMPOSER_SELECTORS, '[data-type="unified-composer"]', '#prompt-textarea',
+        '[data-testid*="composer" i]', 'input', 'textarea', 'select',
+        'nav', 'aside', '[role="navigation"]', '[role="menu"]',
+        '[role="menuitem"]', '[role="toolbar"]', '[role="tooltip"]'
+    ].join(', ');
     // Logged-out /uc/ chats use CSS-module message bodies and a clickable
     // user bubble. Match the semantic suffix inside the known thread shell,
     // not the build-specific hash or arbitrary buttons elsewhere on the page.
@@ -52,6 +59,8 @@
         '[data-message-author-role="assistant"]',
         '[data-message-author-role="user"]',
         '[data-message-id]',
+        '[data-chatgpt-selection-message-id]',
+        '[data-markdown-text-style="assistant-message"]',
         '[data-testid="assistant-turn"]',
         '[data-testid="user-turn"]',
         '[data-testid="message-text"]',
@@ -95,14 +104,18 @@
     const RESPONSE_CONTAINER_SELECTORS = [
         '[data-message-author-role]',
         '[data-message-id]',
+        '[data-chatgpt-selection-message-id]',
+        '[data-markdown-text-style="assistant-message"]',
         '[data-testid^="conversation-turn"]',
         'main article',
         ANONYMOUS_MESSAGE_SELECTOR
     ];
 
+    const NATIVE_CODE_BODY_SELECTOR = '[data-markdown-copy="code-block"] .chatgpt-code-scrollport';
     const CODE_GUARD_SELECTORS = [
         'code',
         'pre',
+        NATIVE_CODE_BODY_SELECTOR,
         '[data-testid="code-block"]',
         '[data-testid="code-snippet"]',
         '[class*="code-block"]',
@@ -118,6 +131,7 @@
     const CODE_BLOCK_SURFACE_SELECTORS = [
         '.cm-editor',
         'pre',
+        '[data-markdown-copy="code-block"]',
         '[data-testid="code-block"]',
         '[data-testid="code-snippet"]',
         '.react-code-block'
@@ -128,12 +142,15 @@
 
     const CONTENT_UI_GUARD_SELECTORS = [
         ...CODE_GUARD_SELECTORS,
+        '[data-markdown-copy="exclude"]',
         '[role="toolbar"]',
         '[role="menu"]',
         '[role="menuitem"]',
         '[role="navigation"]',
         'nav',
         'aside',
+        '[role="tooltip"]',
+        ...COMPOSER_SELECTORS,
         '[data-type="unified-composer"]',
         '#prompt-textarea',
         '[data-testid*="composer" i]',
@@ -202,11 +219,22 @@
             const match = className.match(/(?:^|\s)language-([\w-]+)/i);
             if (match) return match[1].toLowerCase();
         }
+        // The code-only renderer exposes its language in the separate copy/wrap
+        // header. Read that label, never the prose body or action-button text.
+        const nativeBlock = surface?.closest?.('[data-markdown-copy="code-block"]');
+        if (nativeBlock) {
+            const labelElement = nativeBlock.querySelector?.('[data-markdown-copy="exclude"] .truncate');
+            const label = rawTextOf(labelElement).trim().toLowerCase();
+            if (label === 'plain text') return 'plaintext';
+            // Unknown/missing labels remain technical, rather than turning a
+            // programming block containing Persian comments into prose.
+            return label || 'unknown';
+        }
         return '';
     }
 
-    // ChatGPT renders fenced `text` blocks through CodeMirror and gives the
-    // whole viewer an explicit LTR direction. Only override that presentation
+    // ChatGPT renders fenced `text` blocks through CodeMirror or a code-only
+    // scrollport and gives the viewer explicit LTR direction. Only override it
     // when the block is Persian-dominant prose. Programming languages and
     // code-shaped content retain the normal LTR/monospace code guard.
     function isPersianProseCodeSurface(surface) {
@@ -230,6 +258,9 @@
         if (closestPre) return closestPre;
         const nestedPre = element.querySelector?.('pre');
         if (nestedPre) return nestedPre;
+        const nativeBody = element.closest?.(NATIVE_CODE_BODY_SELECTOR)
+            || element.closest?.('[data-markdown-copy="code-block"]')?.querySelector?.('.chatgpt-code-scrollport');
+        if (nativeBody) return nativeBody;
         if (element.matches?.(CODE_BLOCK_SURFACE_SELECTOR)) return element;
         return null;
     }
@@ -287,19 +318,32 @@
             return;
         }
         engine.rememberStyle(surface);
-        surface.setAttribute('dir', 'rtl');
-        surface.style.direction = 'rtl';
-        surface.style.textAlign = 'right';
+        if (surface.getAttribute('dir') !== 'rtl') surface.setAttribute('dir', 'rtl');
+        if (surface.style.direction !== 'rtl') surface.style.direction = 'rtl';
+        if (surface.style.textAlign !== 'right') surface.style.textAlign = 'right';
         // `plaintext` recalculates each newline-separated line while keeping
         // embedded URLs, identifiers and English phrases readable.
-        surface.style.unicodeBidi = 'plaintext';
-        surface.classList.add(RTL_CLASS);
+        if (surface.style.unicodeBidi !== 'plaintext') surface.style.unicodeBidi = 'plaintext';
+        if (!surface.classList.contains(RTL_CLASS)) surface.classList.add(RTL_CLASS);
     }
 
-    // Match the browser's `dir="auto"` decision for each prose block. This handles
-    // Persian-first mixed paragraphs such as `سلام! This is ...` while preserving
-    // an English-first paragraph that merely contains a later Persian term. URLs,
-    // email addresses, code and paths are stripped before the first-letter check.
+    // A product-name prefix is a label, not an English sentence. Keep short
+    // Persian descriptions such as "Self-hosted است." RTL without turning an
+    // ordinary English sentence containing a Persian word into RTL.
+    function hasLatinLabelPrefix(text) {
+        const match = String(text).trim().match(/^([A-Za-z][A-Za-z\d\s/+=_.():\p{Sc}-]*?)\s*(\p{Script=Arabic}[\s\S]*)$/u);
+        if (!match) return false;
+        const words = match[1].match(/[A-Za-z][A-Za-z\d-]*/g) || [];
+        const labelShape = words.length > 1 || /[=/+()_-]|[A-Z].*[A-Z]/.test(match[1]);
+        const persianPredicate = /(?:^|\s)(?:است|هست|بود|باشد|دارد|می[\u200c\s]?\p{Script=Arabic}+)(?:[.!؟،\s]|$)/u.test(match[2]);
+        const persianWords = match[2].match(/\p{Script=Arabic}+/gu) || [];
+        return words.length > 0 && words.length <= 12
+            && words.every(word => /^[A-Z][A-Za-z\d-]*$/.test(word))
+            && ((labelShape && (isPersianDominantText(text) || persianWords.length >= 3)) || persianPredicate);
+    }
+
+    // Persian-first prose and Latin labels followed by a Persian description use
+    // RTL. English sentences with incidental Persian retain their direction.
     function needsChatGptRTL(text, engine) {
         if (!text) return false;
         const stripped = typeof engine?.stripLtrTokens === 'function'
@@ -308,7 +352,7 @@
         const rtlRegex = engine?.rtlRegex || /\p{Script=Arabic}/u;
         for (const char of stripped) {
             if (!LETTER_REGEX.test(char)) continue;
-            return rtlRegex.test(char);
+            return rtlRegex.test(char) || hasLatinLabelPrefix(stripped);
         }
         return false;
     }
@@ -389,21 +433,76 @@
         return targets;
     }
 
+    function explicitColumnAlignment(target, engine) {
+        const cell = target.closest?.('td, th');
+        if (!cell) return '';
+        const original = engine.styledElements?.get(cell)?.styleTextAlign ?? cell.style.textAlign;
+        const alignment = String(original || cell.getAttribute('align') || cell.getAttribute('data-d-align') || '').toLowerCase();
+        return { left: 'left', right: 'right', center: 'center', start: 'left', end: 'right' }[alignment] || '';
+    }
+
     function applyChatGptContent(root, engine) {
         if (!root || root.nodeType !== 1 || !root.isConnected) return true;
-        collectCodeSurfaces(root).forEach(surface => applyCodeSurfaceDirection(surface, engine));
+        if (root.closest?.(MUTATION_UI_GUARD)) return true;
         const targets = collectContentTargets(root, engine);
-        targets.forEach(target => {
+        // Read direction before changing styles. Interleaved reads/writes force
+        // layout once per block on long responses containing tables and code.
+        const directions = Array.from(targets, target => {
             const text = engine.collectDirectionText(target).trim();
-            if (needsListRTL(target, text, engine)) {
+            // Markdown's explicit column alignment belongs to the table, not
+            // to the language of a cell. Read the original inline value before
+            // applying/restoring our direction styles on repeated scans.
+            return [target, needsListRTL(target, text, engine), explicitColumnAlignment(target, engine)];
+        });
+        collectCodeSurfaces(root).forEach(surface => applyCodeSurfaceDirection(surface, engine));
+        directions.forEach(([target, rtl, cellAlignment]) => {
+            if (rtl) {
                 engine.applyRTL(target);
+                if (cellAlignment && target.style.textAlign !== cellAlignment) target.style.textAlign = cellAlignment;
             } else {
                 engine.restoreElement(target);
+                // English items, continuations and table cells must not inherit
+                // direction from a Persian list, quotation or table ancestor.
+                if (target.parentElement?.closest?.(`.${RTL_CLASS}`)) {
+                    engine.rememberStyle(target);
+                    if (target.getAttribute('dir') !== 'ltr') target.setAttribute('dir', 'ltr');
+                    if (target.style.direction !== 'ltr') target.style.direction = 'ltr';
+                    const alignment = cellAlignment || 'left';
+                    if (target.style.textAlign !== alignment) target.style.textAlign = alignment;
+                }
             }
         });
         // The turn/document wrapper is a discovery boundary only. Returning true
         // prevents the shared engine from applying direction to a flex/layout root.
         return true;
+    }
+
+    function shouldScanMutation(mutation, engine) {
+        const target = mutation.target?.nodeType === 1 ? mutation.target : mutation.target?.parentElement;
+        if (!target || target.closest?.(MUTATION_UI_GUARD)) return false;
+        if (mutation.type === 'attributes') {
+            // Only streaming transitions need an attribute-triggered rescan.
+            // Hover classes and RastChin's own marker are not content changes.
+            if (mutation.attributeName === 'class') {
+                const wasStreaming = String(mutation.oldValue || '').split(/\s+/).includes('result-streaming');
+                return wasStreaming !== target.classList.contains('result-streaming');
+            }
+            return mutation.oldValue !== target.getAttribute(mutation.attributeName);
+        }
+        if (target.closest?.(engine.messageSelector)) return true;
+        if (mutation.type !== 'childList') return false;
+        const containsMessage = node => {
+            if (node.nodeType !== 1 || node.closest?.(MUTATION_UI_GUARD)) return false;
+            // Detached fallback turns no longer match `main article/main p`.
+            // Their marker still identifies removed content so snapshots can be
+            // released when navigating to an empty chat.
+            if (engine.styledElements?.has(node) || node.querySelector?.(`.${RTL_CLASS}`)) return true;
+            if (node.matches?.(engine.messageSelector)) return true;
+            return Array.from(node.querySelectorAll?.(engine.messageSelector) || [])
+                .some(child => !child.closest?.(MUTATION_UI_GUARD));
+        };
+        return Array.from(mutation.addedNodes || []).some(containsMessage)
+            || Array.from(mutation.removedNodes || []).some(containsMessage);
     }
 
     function isEmbeddedDocumentRoot(element) {
@@ -419,19 +518,25 @@
     const recipe = {
         version: 1,
         storageKey: 'chatgptEnabled',
-        // Wrap Latin runs inside RTL text in <bdi>; skip the live streaming turn
-        // (ChatGPT marks it) so we only restructure settled, React-committed DOM.
-        inlineIsolate: true,
+        // Keep renderer-owned Text nodes intact, including settled responses.
+        // Native bidi joins Latin words across ChatGPT's per-word spans. One
+        // injected BDI per span reverses "Open Notebook" and breaks references
+        // the renderer needs for subsequent updates/removals.
+        inlineIsolate: false,
         streamingSelector: '.result-streaming, [data-is-streaming="true"], [data-message-status="in_progress"]',
         hosts: ['chat.openai.com', 'chatgpt.com'],
         allowOpaqueOriginFrames: true,
         rtlRegex: /\p{Script=Arabic}/u,
         messageSelectors: MESSAGE_SELECTORS,
         isMessageElement: isEmbeddedDocumentRoot,
+        coalesceCandidateSubtrees: true,
+        shouldScanMutation,
         textSelectors: TEXT_SELECTORS,
         codeGuardSelectors: CODE_GUARD_SELECTORS,
         codeGuardsAreExclusions: false,
         excludeSelectors: [
+            ...COMPOSER_SELECTORS,
+            'nav', 'aside', '[role="navigation"]', '[role="tooltip"]',
             '[data-type="unified-composer"]',
             '[data-type="unified-composer"] *',
             'form[data-type="unified-composer"]',
@@ -450,7 +555,7 @@
         globalCss: codeGuard => {
             const responseScope = `:is(${RESPONSE_CONTAINER_SELECTORS.join(', ')})`;
             const markedResponseScope = `html body .${RTL_CLASS}[dir="rtl"]`;
-            const markedCodeScope = `html body :is(.cm-editor, pre, [data-testid="code-block"], [data-testid="code-snippet"], .react-code-block).${RTL_CLASS}[dir="rtl"]`;
+            const markedCodeScope = `html body :is(.cm-editor, pre, ${NATIVE_CODE_BODY_SELECTOR}, [data-testid="code-block"], [data-testid="code-snippet"], .react-code-block).${RTL_CLASS}[dir="rtl"]`;
             return `
             ${codeGuard} {
                 direction: ltr !important;
@@ -501,7 +606,31 @@
              */
             ${markedResponseScope} {
                 direction: rtl !important;
+            }
+
+            ${markedResponseScope}:not(td):not(th) {
                 text-align: right !important;
+            }
+
+            /* The native table renderer puts prose in paragraphs. Honor the
+             * column alignment propagated to these leaves instead of letting
+             * the ordinary Persian paragraph rule force them to the right.
+             */
+            html body :is(td, th) .${RTL_CLASS}[dir="rtl"][style*="text-align: center"] {
+                text-align: center !important;
+            }
+            html body :is(td, th) .${RTL_CLASS}[dir="rtl"][style*="text-align: left"] {
+                text-align: left !important;
+            }
+
+            /* ChatGPT cells have only padding-inline-end. Once a Persian cell
+             * becomes RTL its padding moves left; a neighbouring LTR cell has
+             * zero left padding, so their text touches at the shared boundary.
+             * Add the missing inset only to RTL cells, preserving host end
+             * padding (including the table controls' extra reserved space).
+             */
+            html body :is(td, th).${RTL_CLASS}[dir="rtl"] {
+                padding-inline-start: 0.75rem !important;
             }
 
             [dir="rtl"] ul,

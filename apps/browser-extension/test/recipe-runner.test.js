@@ -133,6 +133,12 @@ const recipe = {
     check('buildEngineConfig: rtlStyle default unicodeBidi', cfg.rtlStyle.unicodeBidi, 'isolate');
     check('buildEngineConfig: observeCharacterData passthrough', cfg.observeCharacterData, false);
     check('buildEngineConfig: scanBeforePaint passthrough', cfg.scanBeforePaint, true);
+    const shouldScanMutation = () => true;
+    const shouldIsolateElement = () => false;
+    const custom = api.buildEngineConfig({ ...recipe, shouldScanMutation, shouldIsolateElement, coalesceCandidateSubtrees: true });
+    check('buildEngineConfig: mutation filter passthrough', custom.shouldScanMutation, shouldScanMutation);
+    check('buildEngineConfig: leaf isolation policy passthrough', custom.shouldIsolateElement, shouldIsolateElement);
+    check('buildEngineConfig: subtree coalescing passthrough', custom.coalesceCandidateSubtrees, true);
     check('buildEngineConfig: isCodeLike(null) -> true', cfg.isCodeLike(null), true);
     check('buildEngineConfig: isCodeLike(code-matching node) -> true', cfg.isCodeLike({ closest: () => ({}) }), true);
     check('buildEngineConfig: isCodeLike(plain node) -> false', cfg.isCodeLike({ closest: () => null }), false);

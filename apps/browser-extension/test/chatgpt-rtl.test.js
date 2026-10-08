@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
-const { makeEngine, el, t } = require('./engine-harness');
+const { makeEngine, makeIsolatingEngine, el, t } = require('./engine-harness');
 
 const SOURCE_PATH = path.join(__dirname, '..', 'src', 'platforms', 'chatgpt-rtl.js');
 const source = fs.readFileSync(SOURCE_PATH, 'utf8');
@@ -107,7 +107,8 @@ check('css: code keeps a monospace stack inside messages', css.includes('ui-mono
 check('css: code descendants keep monospace despite response div/span font rule', /:is\(code,[\s\S]*?\)\s+\*\s*\{[\s\S]*?ui-monospace/.test(css), true);
 check('css: marked Persian code surfaces receive the content font', /\.cm-editor, pre,[\s\S]*?\.rastchin-chatgpt-rtl\[dir="rtl"\][\s\S]*?font-family:\s*"Vazirmatn"/.test(css), true);
 check('css: marked Persian code surfaces force RTL alignment', /\.cm-content \*[\s\S]*?direction:\s*rtl\s*!important;[\s\S]*?text-align:\s*right\s*!important/.test(css), true);
-check('css: marked ChatGPT content wins host alignment rules', /\[dir="rtl"\][^{]*\{[^}]*direction:\s*rtl\s*!important[^}]*text-align:\s*right\s*!important/.test(css), true);
+check('css: marked ChatGPT content wins host direction rules', /\[dir="rtl"\][^{]*\{[^}]*direction:\s*rtl\s*!important/.test(css), true);
+check('css: prose alignment does not override table column alignment', css.includes('html body .rastchin-chatgpt-rtl[dir="rtl"]:not(td):not(th)'), true);
 check('css: dedicated marker beats host alignment rules', css.includes('html body .rastchin-chatgpt-rtl[dir="rtl"]'), true);
 
 // Cross-file parity: the recipe must font EXACTLY what font-inject skips, or some
@@ -131,8 +132,201 @@ function makeChatGptEngine() {
         rtlClass: registeredRecipe.rtlClass,
         rtlStyle: registeredRecipe.rtlStyle,
         needsRTL: registeredRecipe.needsRTL,
-        isCodeLike: registeredRecipe.isCodeLike
+        isCodeLike: registeredRecipe.isCodeLike,
+        coalesceCandidateSubtrees: registeredRecipe.coalesceCandidateSubtrees,
+        shouldScanMutation: registeredRecipe.shouldScanMutation
     });
+}
+
+{
+    const header = el('th', { attrs: { align: 'right' } }, t('تعداد'));
+    const centered = el('td', { attrs: { align: 'center' } }, t('فارسی'));
+    const inlineAligned = el('td', { style: { textAlign: 'left' } }, t('متن فارسی'));
+    const number = el('td', { attrs: { align: 'right' } }, t('43'));
+    const english = el('td', {}, t('English'));
+    const table = el('table', {}, el('thead', {}, el('tr', {}, header)), el('tbody', {}, el('tr', {}, centered, inlineAligned, number, english)));
+    const turn = el('article', {}, table);
+    el('main', {}, turn);
+    const engine = makeChatGptEngine();
+    engine.applyToMessage(turn);
+    check('table: numeric cell remains LTR', number.getAttribute('dir'), 'ltr');
+    check('table: explicit numeric right alignment is preserved', number.style.textAlign, 'right');
+    check('table: centered Persian column stays centered', centered.style.textAlign, 'center');
+    check('table: original inline column alignment is preserved', inlineAligned.style.textAlign, 'left');
+    engine.applyToMessage(turn);
+    check('table: repeated scan preserves original inline column alignment', inlineAligned.style.textAlign, 'left');
+    check('table: repeated scan preserves centered alignment', centered.style.textAlign, 'center');
+    engine.restoreStyles();
+    check('table: disable restores original inline alignment', inlineAligned.style.textAlign, 'left');
+    check('table: disable removes numeric alignment override', number.style.textAlign, '');
+    check('table: disable removes Persian direction', centered.getAttribute('dir'), null);
+}
+
+// Current native tables declare logical Markdown alignment on the cell. The
+// nested paragraph must inherit that explicit column decision as well.
+{
+    const numberParagraph = el('p', {}, el('span', {}, t('43')));
+    const number = el('td', { attrs: { 'data-d-align': 'end' } }, numberParagraph);
+    const persianParagraph = el('p', {}, el('span', {}, t('فارسی')));
+    const center = el('td', { attrs: { 'data-d-align': 'center' } }, persianParagraph);
+    const englishParagraph = el('p', {}, t('English'));
+    const englishCenter = el('td', { attrs: { 'data-d-align': 'center' } }, englishParagraph);
+    const inlineParagraph = el('p', {}, t('متن فارسی'));
+    const inlineCell = el('td', { style: { textAlign: 'left' } }, inlineParagraph);
+    const turn = el('article', {}, el('table', {}, el('tr', {}, number, center, englishCenter, inlineCell)));
+    el('main', {}, turn);
+    const engine = makeChatGptEngine();
+    engine.applyToMessage(turn);
+    check('native column end: number cell stays right-aligned', number.style.textAlign, 'right');
+    check('native column end: nested number paragraph stays right-aligned', numberParagraph.style.textAlign, 'right');
+    check('native centered column: Persian cell stays centered', center.style.textAlign, 'center');
+    check('native centered column: Persian paragraph stays centered', persianParagraph.style.textAlign, 'center');
+    check('native centered column: English paragraph stays centered', englishParagraph.style.textAlign, 'center');
+    check('inline column alignment: nested Persian paragraph stays left-aligned', inlineParagraph.style.textAlign, 'left');
+    engine.applyToMessage(turn);
+    check('native column alignment: repeated scans preserve centering', persianParagraph.style.textAlign, 'center');
+    engine.restoreStyles();
+    check('native column alignment: disable preserves host data attribute', center.getAttribute('data-d-align'), 'center');
+    check('native column alignment: disable restores inline value', inlineCell.style.textAlign, 'left');
+}
+
+// The September ChatGPT composer has neither the old id nor unified-composer
+// hook. Pasting a rich prompt must never route its ProseMirror content through
+// the response walker, even during the initial whole-document discovery.
+for (const attribute of ['data-composer-markdown', 'data-composer-body']) {
+    const paragraph = el('p', {}, t('یک ورودی آزمایشی با English'));
+    const editor = el('div', { cls: 'ProseMirror', attrs: { contenteditable: 'true', [attribute]: '' } }, paragraph);
+    const main = el('main', {}, editor);
+    const engine = makeChatGptEngine();
+    const candidates = new Set();
+    engine.collectCandidates(main, candidates);
+    check(`${attribute}: editor excluded from initial discovery`, candidates.has(editor), false);
+    check(`${attribute}: pasted paragraph excluded`, candidates.has(paragraph), false);
+    registeredRecipe.applyToMessage(main, engine);
+    check(`${attribute}: paragraph receives no direction mutation`, paragraph.getAttribute('dir'), null);
+    check(`${attribute}: prompt changes do not schedule response scans`, registeredRecipe.shouldScanMutation({type:'childList', target:editor, addedNodes:[paragraph], removedNodes:[]}, engine), false);
+}
+
+{
+    const engine = makeChatGptEngine();
+    const shortLabel = el('li', {}, t('Self-hosted است.'));
+    const products = el('li', {}, t('OpenAI / Claude / Gemini / Ollama / LM Studio / OpenRouter را پشتیبانی می‌کند.'));
+    const english = el('li', {}, t('This English sentence mentions سلام once.'));
+    const list = el('ul', {}, shortLabel, products, english);
+    const labelParagraph = el('p', {}, t('Open Notebook = یک NotebookLM شخصی Self-hosted و قابل اتصال به Agentها.'));
+    const turn = el('div', { attrs: { 'data-chatgpt-selection-message-id': 'sample' } }, list, labelParagraph);
+    el('main', {}, turn);
+    engine.applyToMessage(turn);
+    check('current native ChatGPT boundary is discovered', turn.matches(messageSelectors.join(', ')), true);
+    check('short Latin label with Persian copula is RTL', shortLabel.getAttribute('dir'), 'rtl');
+    check('product-name list with Persian predicate is RTL', products.getAttribute('dir'), 'rtl');
+    check('Latin-labelled Persian paragraph is RTL', labelParagraph.getAttribute('dir'), 'rtl');
+    check('English item in RTL list explicitly stays LTR', english.getAttribute('dir'), 'ltr');
+    engine.restoreStyles();
+    check('mixed-list disable restores English item direction', english.getAttribute('dir'), null);
+    check('short English greeting with incidental Persian stays LTR', engine.needsRTL('Hello سلام'), false);
+    check('English sentence with a long later Persian quote stays LTR', engine.needsRTL('This is a quote: این یک نقل‌قول بلند فارسی برای آزمون است.'), false);
+}
+
+{
+    const p = el('p', {}, t('متن فارسی'));
+    const turn = el('article', {}, el('div', { attrs: { 'data-message-id': 'nested' } }, p));
+    const main = el('main', {}, turn);
+    const engine = makeChatGptEngine();
+    const visited = [];
+    engine.applyToMessage = node => visited.push(node);
+    engine.pendingNodes.add(main);
+    engine.pendingNodes.add(p);
+    engine.processQueue();
+    check('long-chat discovery walks overlapping subtree once', visited.length, 1);
+    check('long-chat discovery keeps the outer response boundary', visited[0], turn);
+
+    const body = el('body', {}, main);
+    const tooltip = el('div', { role: 'tooltip' }, t('عنوان ساختگی'));
+    const unrelated = { type:'childList', target:body, addedNodes:[tooltip], removedNodes:[] };
+    check('sidebar portal insertion does not rescan conversation', registeredRecipe.shouldScanMutation(unrelated, engine), false);
+    unrelated.addedNodes=[]; unrelated.removedNodes=[tooltip];
+    check('sidebar portal removal does not rescan conversation', registeredRecipe.shouldScanMutation(unrelated, engine), false);
+    check('own marker class does not rescan conversation', registeredRecipe.shouldScanMutation({type:'attributes', attributeName:'class', target:p, oldValue:''}, engine), false);
+    check('hover classes do not rescan conversation', registeredRecipe.shouldScanMutation({type:'attributes', attributeName:'class', target:turn, oldValue:'hover'}, engine), false);
+    check('streaming completion still triggers rescan', registeredRecipe.shouldScanMutation({type:'attributes', attributeName:'class', target:turn, oldValue:'result-streaming'}, engine), true);
+    check('response text replacement still triggers rescan', registeredRecipe.shouldScanMutation({type:'childList', target:p, addedNodes:[t('بند تازه')], removedNodes:[t('قدیمی')]}, engine), true);
+    // After removal, a fallback article loses the `main` ancestor in its
+    // selector. Its direction snapshots still need releasing on empty chats.
+    const removed = el('article', {}, el('p', { cls: 'rastchin-chatgpt-rtl' }, t('بند قدیمی')));
+    check('detached fallback response still triggers snapshot cleanup', registeredRecipe.shouldScanMutation({type:'childList', target:body, addedNodes:[], removedNodes:[removed]}, engine), true);
+}
+
+// Currency/date labels are prefixes to Persian prose, including ChatGPT's
+// streamed bold-label spans. They must not change an English sentence's base.
+{
+    const engine = makeChatGptEngine();
+    for (const label of ['Revolut (+€ 200):', 'MEDIACUBE (+€ 4 100):', 'Eva (September 23):', 'OpenAI ($20):']) {
+        const paragraph = el('p', {}, el('strong', {}, t(label)), t(' این یک نام ساختگی برای تست پرانتز و عدد در متن فارسی است.'));
+        const turn = el('article', {}, paragraph);
+        el('main', {}, turn);
+        engine.applyToMessage(turn);
+        check(`Latin label ${label}: Persian paragraph is RTL`, paragraph.getAttribute('dir'), 'rtl');
+    }
+    check('English sentence with a currency amount stays LTR', engine.needsRTL('This costs €200: این توضیح فارسی فقط بخشی از نقل قول است.'), false);
+    check('Ordinary English-first prose still stays LTR', engine.needsRTL('English-first paragraph with a later عبارت فارسی should stay left-to-right.'), false);
+}
+
+// The current renderer uses a code-only scrollport, with the language and
+// copy/wrap buttons in a separate header. Only a known prose body may change.
+{
+    const box = (label, text) => {
+        const title = el('div', { cls: 'truncate' }, t(label));
+        const copy = el('button', { attrs: { 'aria-label': 'Copy' } }, t('Copy'));
+        const header = el('div', { attrs: { 'data-markdown-copy': 'exclude' } }, title, copy);
+        const code = el('code', {}, el('span', {}, t(text)));
+        const body = el('div', { cls: 'chatgpt-code-scrollport', attrs: { dir: 'ltr' }, style: { textAlign: '' } }, code);
+        return { root: el('div', { attrs: { 'data-markdown-copy': 'code-block' } }, header, body), header, body, code };
+    };
+    const prose = box('Plain text', 'این متن فقط نمونه است.\nمرحله اول → مرحله دوم\nنتیجه با English token و عدد ۱۲۳');
+    const technical = box('JavaScript', 'const greeting = "سلام";\nconsole.log(greeting);');
+    const declaredCode = box('Python', '# این فقط توضیح فارسی در یک برنامه است.');
+    const unknown = box('Unknown language', 'این فقط توضیح فارسی در یک زبان ناشناخته است.');
+    const english = box('Plain text', 'This is a plain English sample.');
+    const turn = el('article', {}, prose.root, technical.root, declaredCode.root, unknown.root, english.root);
+    el('main', {}, turn);
+    const engine = makeChatGptEngine();
+    engine.applyToMessage(turn);
+    check('native prose code-only box: scrollport is RTL', prose.body.getAttribute('dir'), 'rtl');
+    check('native prose code-only box: content aligns right', prose.body.style.textAlign, 'right');
+    check('native prose code-only box: uses per-line bidi', prose.body.style.unicodeBidi, 'plaintext');
+    check('native prose code-only box: header is untouched', prose.header.getAttribute('dir'), null);
+    check('native code-only JavaScript: stays LTR', technical.body.getAttribute('dir'), 'ltr');
+    check('native code-only Python: Persian comments stay technical', declaredCode.body.getAttribute('dir'), 'ltr');
+    check('native code-only unknown language: fails closed', unknown.body.getAttribute('dir'), 'ltr');
+    check('native English plain text: stays LTR', english.body.getAttribute('dir'), 'ltr');
+    prose.code.childNodes[0].childNodes[0].textContent = 'const greeting = "سلام";\nconsole.log(greeting);';
+    engine.applyToMessage(turn);
+    check('native regenerated technical content: restores LTR', prose.body.getAttribute('dir'), 'ltr');
+    check('native regenerated technical content: removes font/direction marker', prose.body.classList.contains('rastchin-chatgpt-rtl'), false);
+    engine.restoreStyles();
+    check('native prose disable: restores body direction', prose.body.getAttribute('dir'), 'ltr');
+    check('native prose disable: restores body alignment', prose.body.style.textAlign, '');
+}
+
+// React and the word-stream renderer retain Text references after streaming.
+// Splitting Latin phrases into one BDI per word reverses names such as "Open
+// Notebook" in RTL and makes later renderer removals unsafe. Style-only bidi
+// must preserve both the element and its original text children.
+{
+    const openText = t('Open ');
+    const notebookText = t('Notebook ');
+    const open = el('span', { attrs: { 'data-d-stream-word': '' } }, openText);
+    const notebook = el('span', { attrs: { 'data-d-stream-word': '' } }, notebookText);
+    const paragraph = el('p', {}, open, notebook, t('= یک سرویس آزمایشی فارسی است.'));
+    const turn = el('article', {}, paragraph);
+    el('main', {}, turn);
+    const engine = makeIsolatingEngine({ ...registeredRecipe });
+    engine.applyToMessage(turn);
+    check('word-stream renderer: paragraph still gets RTL', paragraph.getAttribute('dir'), 'rtl');
+    check('word-stream renderer: original Open text stays a direct child', open.childNodes[0] === openText, true);
+    check('word-stream renderer: original Notebook text stays a direct child', notebook.childNodes[0] === notebookText, true);
+    check('word-stream renderer: no injected BDI boundaries between words', paragraph.querySelectorAll('bdi[data-rastchin-bidi]').length, 0);
 }
 
 // A Latin product/tax label at the start of a Persian list item must not place

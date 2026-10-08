@@ -127,7 +127,7 @@
     "vscode:uninstall": "node ./scripts/uninstall.js"
   },
   "devDependencies": {
-    "@vscode/vsce": "3.9.2",
+    "@vscode/vsce": "4.0.0",
     "jsdom": "30.0.1"
   },
   "icon": "media/icon.png",

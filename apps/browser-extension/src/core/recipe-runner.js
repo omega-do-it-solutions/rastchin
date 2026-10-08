@@ -137,6 +137,9 @@ var RastChinRecipe = (() => {
         if (typeof recipe.applyToMessage === 'function') config.applyToMessage = recipe.applyToMessage;
         if (typeof recipe.needsRTL === 'function') config.needsRTL = recipe.needsRTL;
         if (typeof recipe.isMessageElement === 'function') config.isMessageElement = recipe.isMessageElement;
+        if (typeof recipe.shouldScanMutation === 'function') config.shouldScanMutation = recipe.shouldScanMutation;
+        if (typeof recipe.shouldIsolateElement === 'function') config.shouldIsolateElement = recipe.shouldIsolateElement;
+        if (recipe.coalesceCandidateSubtrees !== undefined) config.coalesceCandidateSubtrees = recipe.coalesceCandidateSubtrees;
         // Inline BiDi isolation opt-in (see src/core/bidi-isolate.js). streamingSelector
         // names the recipe's actively-streaming turn, left untouched until it settles.
         if (recipe.inlineIsolate !== undefined) config.inlineIsolate = recipe.inlineIsolate;

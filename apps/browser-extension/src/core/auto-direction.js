@@ -41,6 +41,8 @@
     const CHATGPT_RESPONSE_SKIP = [
         '[data-message-author-role]',
         '[data-message-id]',
+        '[data-chatgpt-selection-message-id]',
+        '[data-markdown-text-style="assistant-message"]',
         '[data-testid^="conversation-turn"]',
         'main article'
     ].join(', ');
