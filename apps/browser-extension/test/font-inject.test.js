@@ -280,6 +280,17 @@ for (const hostname of ['chatgpt.com', 'chat.openai.com']) {
     exports_.evaluateTextNode(composerText);
     check('chatgpt composer text: still gets Vazirmatn', composer.style.getPropertyValue('font-family').startsWith('"Vazirmatn", GptComposer'), true);
 
+    const currentComposer = new MockElement('div', { contenteditable: true, attrs: { 'data-composer-markdown': '' } });
+    const pastedSpan = new MockElement('span', { parentElement: currentComposer });
+    exports_.evaluateTextNode(new MockTextNode('متن چسبانده‌شده با English', pastedSpan));
+    exports_.updateElementFont(currentComposer);
+    check('current ChatGPT composer uses CSS without inline font writes', currentComposer.style.fontFamily, '');
+    check('pasted ChatGPT spans receive no font mutations', pastedSpan.style.fontFamily, '');
+    const nativeResponse = new MockElement('div', { attrs: { 'data-markdown-text-style': 'assistant-message' } });
+    const nativeSpan = new MockElement('span', { parentElement: nativeResponse });
+    exports_.evaluateTextNode(new MockTextNode('پاسخ در renderer جدید', nativeSpan));
+    check('current native ChatGPT response skips inline font mutation', nativeSpan.style.fontFamily, '');
+
     delete ctx.window.location;
 }
 

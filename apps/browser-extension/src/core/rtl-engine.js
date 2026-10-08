@@ -177,7 +177,10 @@ var RTLEngine = class {
 
         this.observer = new MutationObserver(mutations => {
             if (!this.enabled) return;
+            let removedContent = false;
             for (const mutation of mutations) {
+                if (typeof this.config.shouldScanMutation === 'function'
+                    && !this.config.shouldScanMutation(mutation, this)) continue;
                 if (mutation.type === 'childList') {
                     this.markMutated(mutation.target);
                     mutation.addedNodes.forEach(node => {
@@ -185,7 +188,7 @@ var RTLEngine = class {
                         this.scheduleScan(node);
                     });
                     if (mutation.removedNodes && mutation.removedNodes.length) {
-                        this.cleanupDetached();
+                        removedContent = true;
                         // A streaming turn swapped wholesale for its settled
                         // render may carry no other observable signal — rescan
                         // the mutation root so the settled content is isolated.
@@ -195,10 +198,19 @@ var RTLEngine = class {
                     this.markMutated(mutation.target);
                     this.scheduleScan(mutation.target.parentElement || mutation.target);
                 } else if (mutation.type === 'attributes') {
+                    // Adding our marker changes class even when all host classes
+                    // are unchanged. It is not new content or a streaming signal.
+                    if (mutation.attributeName === 'class' && this.rtlClass
+                        && mutation.oldValue !== undefined && mutation.oldValue !== null) {
+                        const hostClasses = value => String(value || '').split(/\s+/)
+                            .filter(token => token && token !== this.rtlClass).join(' ');
+                        if (hostClasses(mutation.oldValue) === hostClasses(mutation.target.getAttribute('class'))) continue;
+                    }
                     this.markMutated(mutation.target);
-                    this.scheduleScan(mutation.target.parentElement || mutation.target);
+                    this.scheduleScan(mutation.target);
                 }
             }
+            if (removedContent) this.cleanupDetached();
         });
 
         const observerOptions = {
@@ -208,6 +220,7 @@ var RTLEngine = class {
         };
         if (this.streamingSelector) {
             observerOptions.attributes = true;
+            observerOptions.attributeOldValue = true;
             observerOptions.attributeFilter = ['class', 'data-is-streaming', 'data-message-status'];
         }
         this.observer.observe(target, observerOptions);
@@ -266,13 +279,30 @@ var RTLEngine = class {
             return;
         }
 
-        const nodes = Array.from(this.pendingNodes);
+        const nodes = Array.from(this.pendingNodes).filter(node => {
+            if (node.isConnected === false) return false;
+            if (!this.config.coalesceCandidateSubtrees) return true;
+            for (let parent = node.parentElement; parent; parent = parent.parentElement) {
+                if (this.pendingNodes.has(parent)) return false;
+            }
+            return true;
+        });
         this.pendingNodes.clear();
 
         const candidates = new Set();
         nodes.forEach(node => this.collectCandidates(node, candidates));
 
-        candidates.forEach(el => this.applyToMessage(el));
+        candidates.forEach(el => {
+            // Custom subtree walkers already handle every descendant. Running
+            // the same walker on article, message, list, item and paragraph is
+            // quadratic on large transcripts. Other recipes retain their policy.
+            if (this.config.coalesceCandidateSubtrees) {
+                for (let parent = el.parentElement; parent; parent = parent.parentElement) {
+                    if (candidates.has(parent)) return;
+                }
+            }
+            this.applyToMessage(el);
+        });
         this.cleanupDetached();
     }
 
@@ -283,6 +313,7 @@ var RTLEngine = class {
 
         const addIfCandidate = el => {
             if (!el || !(el instanceof Element)) return;
+            if (this.isExcluded(el)) return;
             if ((selector && el.matches(selector)) || (isMessageElement && isMessageElement(el))) {
                 bucket.add(el);
             }
@@ -318,7 +349,9 @@ var RTLEngine = class {
                 if (container) bucket.add(container);
             }
             if (selector && node.querySelectorAll) {
-                node.querySelectorAll(selector).forEach(el => bucket.add(el));
+                node.querySelectorAll(selector).forEach(el => {
+                    if (!this.isExcluded(el)) bucket.add(el);
+                });
             }
             if (isMessageElement && node.querySelectorAll) {
                 node.querySelectorAll('*').forEach(el => {
@@ -486,13 +519,15 @@ var RTLEngine = class {
     applyRTL(el) {
         if (!el || !(el instanceof Element)) return;
         this.rememberStyle(el);
-        el.setAttribute('dir', 'rtl');
-        el.style.direction = this.rtlStyle.direction || 'rtl';
-        el.style.textAlign = this.rtlStyle.textAlign || 'right';
+        if (el.getAttribute('dir') !== 'rtl') el.setAttribute('dir', 'rtl');
+        const direction = this.rtlStyle.direction || 'rtl';
+        const align = this.rtlStyle.textAlign || 'right';
+        if (el.style.direction !== direction) el.style.direction = direction;
+        if (el.style.textAlign !== align) el.style.textAlign = align;
         if (this.rtlStyle.unicodeBidi !== undefined) {
-            el.style.unicodeBidi = this.rtlStyle.unicodeBidi;
+            if (el.style.unicodeBidi !== this.rtlStyle.unicodeBidi) el.style.unicodeBidi = this.rtlStyle.unicodeBidi;
         }
-        if (this.rtlClass) {
+        if (this.rtlClass && !el.classList.contains(this.rtlClass)) {
             el.classList.add(this.rtlClass);
         }
         // Single chokepoint: any recipe that routes an element through applyRTL
@@ -521,6 +556,7 @@ var RTLEngine = class {
         if (!this.inlineIsolate || !this.bidi) return;
         if (!el || !(el instanceof Element) || el.isConnected === false) return;
         if (this.isExcluded(el)) return;
+        if (typeof this.config.shouldIsolateElement === 'function' && !this.config.shouldIsolateElement(el)) return;
         if (this.isInStreamingSubtree(el)) {
             // Bare return on purpose: a self-scheduled settle scan here becomes
             // a ~300ms full-walk polling loop for as long as the turn streams.

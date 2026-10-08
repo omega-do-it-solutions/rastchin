@@ -283,6 +283,27 @@ check(
 const engineG = makeEngine({ rtlRegex: /\p{Script=Arabic}/gu });
 check('needsRTL: g-flag rtlRegex works correctly', engineG.needsRTL('هذا النص العربي with some English'), true);
 
+// MutationObserver reports even redundant classList.add/style assignments in
+// browsers. A repeat direction pass must produce no writes after the first pass.
+{
+    const quietEngine = makeEngine({ rtlClass: 'rastchin-test' });
+    const paragraph = el('p', {}, t('این یک بند فارسی است'));
+    quietEngine.applyRTL(paragraph);
+    let writes = 0;
+    const setAttribute = paragraph.setAttribute.bind(paragraph);
+    paragraph.setAttribute = (...args) => { writes++; setAttribute(...args); };
+    const add = paragraph.classList.add.bind(paragraph.classList);
+    paragraph.classList.add = (...args) => { writes++; add(...args); };
+    paragraph.style = new Proxy(paragraph.style, { set(target, key, value) { writes++; target[key] = value; return true; } });
+    quietEngine.applyRTL(paragraph);
+    check('repeat RTL scan does not write unchanged DOM styles/marker', writes, 0);
+    paragraph.style.direction = 'ltr';
+    quietEngine.applyRTL(paragraph);
+    check('host direction changes are still repaired', paragraph.style.direction, 'rtl');
+    quietEngine.restoreStyles();
+    check('idempotent styling still restores original direction', paragraph.getAttribute('dir'), null);
+}
+
 if (failures === 0) {
     console.log(`ALL PASS (${assertions} assertions)`);
     process.exit(0);
