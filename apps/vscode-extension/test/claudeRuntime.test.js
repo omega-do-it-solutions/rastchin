@@ -176,6 +176,117 @@ test('Claude runtime keeps observer count bounded for long transcripts', () => {
   assert.ok(h.observerCount <= 2, 'long transcript created ' + h.observerCount + ' MutationObservers');
 });
 
+function directionState(doc) {
+  return Array.from(doc.querySelectorAll('#root *')).map((el) => [
+    el.getAttribute('dir') || '',
+    Array.from(el.classList).filter((name) => /^(YBY|fa-|bidi-)/.test(name)).sort().join(' '),
+  ].join('|'));
+}
+
+function bootLongClaudeTranscript(count) {
+  const blocks = Array.from({ length: count }, (_, i) => `
+    <div class="timelineMessage_07S1Yg" data-role="message">
+      <p>پیام فارسی شماره ${i} که باید راست‌چین بماند.</p>
+      <div class="toolBodyRowContent_ZUQaOA">
+        <div data-role="collapsible"><pre class="toolBodyPlainText_ZUQaOA">src/file${i}.js\nok ${i}</pre></div>
+      </div>
+    </div>`).join('');
+  const h = bootInstrumentedClaude(`<div data-id="timeline">${blocks}</div>`);
+  const timeline = h.document.querySelector('[data-id="timeline"]');
+  // Count subtree scans of the whole transcript container.
+  let timelineScans = 0;
+  const proto = h.window.Element.prototype;
+  const nativeQuerySelectorAll = proto.querySelectorAll;
+  proto.querySelectorAll = function querySelectorAll(selector) {
+    if (this === timeline) timelineScans += 1;
+    return nativeQuerySelectorAll.call(this, selector);
+  };
+  return Object.assign(h, { timeline, get timelineScans() { return timelineScans; } });
+}
+
+test('Claude runtime batches resize-driven host commits without rescanning the transcript', async () => {
+  const h = bootLongClaudeTranscript(40);
+  await h.pump(4);
+  const boxes = Array.from(h.document.querySelectorAll('[data-role="collapsible"]'));
+  const before = directionState(h.document);
+  const scansBefore = h.timelineScans;
+
+  // A split-editor resize makes every tool block re-measure in its own
+  // ResizeObserver callback, so the host emits one small commit per block.
+  async function resize(targets, open) {
+    for (const box of targets) {
+      box.classList.toggle('overflowing_x', open);
+      if (open) {
+        const more = h.document.createElement('button');
+        more.className = 'collapseButton_xGDvVg';
+        more.textContent = 'Show more';
+        box.parentElement.appendChild(more);
+      } else {
+        box.parentElement.querySelector('.collapseButton_xGDvVg').remove();
+      }
+      box.closest('[data-role="message"]').style.setProperty('--engine-mark-top', open ? '20px' : '0px');
+      // eslint-disable-next-line no-await-in-loop
+      await Promise.resolve();
+    }
+  }
+
+  // Frames scheduled for a single host commit. jsdom can boot the runtime more
+  // than once (the manual DOMContentLoaded plus its own), so measure the
+  // per-burst cost instead of assuming one root observer.
+  let rafBefore = h.rafScheduled;
+  await resize([boxes[0]], true);
+  const singleCommitFrames = h.rafScheduled - rafBefore;
+  await h.pump(2);
+  await resize([boxes[0]], false);
+  await h.pump(2);
+  assert.ok(singleCommitFrames > 0, 'a host commit must schedule a frame');
+
+  rafBefore = h.rafScheduled;
+  await resize(boxes, true);
+  assert.equal(
+    h.rafScheduled - rafBefore,
+    singleCommitFrames,
+    'a burst of host commits must coalesce into the frames of a single commit',
+  );
+  await h.pump(2);
+  await resize(boxes, false);
+  await h.pump(2);
+
+  assert.equal(h.timelineScans - scansBefore, 0, 'a resize must not re-scan the whole transcript');
+  assert.deepEqual(directionState(h.document), before, 'resize churn must not change direction state');
+});
+
+test('Claude runtime ignores host inline-style churn', async () => {
+  const h = bootLongClaudeTranscript(5);
+  await h.pump(4);
+  const rafBefore = h.rafScheduled;
+  for (const message of h.document.querySelectorAll('[data-role="message"]')) {
+    message.style.setProperty('--engine-mark-top', '12px');
+    message.style.height = '120px';
+  }
+  await h.pump(2);
+  assert.equal(h.rafScheduled - rafBefore, 0, 'inline style changes must not schedule work');
+});
+
+test('Claude runtime styles a message appended to a long transcript without rescanning it', async () => {
+  const h = bootLongClaudeTranscript(40);
+  await h.pump(4);
+  const scansBefore = h.timelineScans;
+
+  const message = h.document.createElement('div');
+  message.className = 'timelineMessage_07S1Yg';
+  message.innerHTML = '<p data-id="fresh">Update افزونه انجام شد و پاسخ تازه باید راست‌چین شود.</p>'
+    + '<ul><li data-id="item"><strong>Desktop:</strong> خط آپشن‌ها پررنگ‌تر شد.</li></ul>';
+  h.timeline.appendChild(message);
+  await h.pump(2);
+
+  const fresh = h.document.querySelector('[data-id="fresh"]');
+  assert.equal(fresh.getAttribute('dir'), 'rtl');
+  assert.equal(fresh.classList.contains('fa-rtl-clean'), true);
+  assert.equal(h.document.querySelector('[data-id="item"]').closest('ul').getAttribute('dir'), 'rtl');
+  assert.equal(h.timelineScans - scansBefore, 0, 'only the appended message may be scanned');
+});
+
 test('Claude runtime keeps English progress statuses LTR inside Persian content', () => {
   const doc = renderClaudeRoot(`
     <div class="timelineMessage_07S1Yg" data-id="wrapper">

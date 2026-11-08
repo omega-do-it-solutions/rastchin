@@ -351,6 +351,13 @@ function runtimeJs(options = {}) {
     // more mutators, and scanMutationTarget -> watch -> applyText all nest, so we
     // must only drain when the OUTERMOST write completes (depth returns to 0).
     var rtlWriteDepth = 0;
+    // PERF_MODE (Claude): batch root-observer work per animation frame and
+    // memoize the expensive, DOM-text-derived predicates for the duration of
+    // one write phase. Within a synchronous write phase the host cannot change
+    // the DOM and our own writes (class/dir/style) never change text, tags or
+    // host class names, so these caches cannot go stale while they are alive.
+    var PERF_MODE = ${options.perfMode ? 'true' : 'false'};
+    var batch = null;
     function registerObserver(obs) {
       if (obs) rtlObservers.push(obs);
       return obs;
@@ -367,10 +374,25 @@ function runtimeJs(options = {}) {
       }
     }
     function doWrite(fn) {
+      var outer = false;
+      if (PERF_MODE && !batch) {
+        batch = { prot: new Map(), preview: new Map(), lists: new Set(), leaves: new Set() };
+        outer = true;
+      }
       rtlWriteDepth++;
       try {
         return fn();
       } finally {
+        if (outer) {
+          try {
+            // List direction/font is derived from the final state of its items,
+            // so sync each touched list once per write phase instead of after
+            // every item (which was O(items^2) per list).
+            batch.lists.forEach(function (list) { if (list.isConnected) syncList(list); });
+          } finally {
+            batch = null;
+          }
+        }
         rtlWriteDepth--;
         if (rtlWriteDepth === 0) drainObservers();
       }
@@ -463,6 +485,18 @@ function runtimeJs(options = {}) {
     function isEligibleTextPreview(el) {
       var preview = previewElement(el);
       if (!preview) return false;
+      if (batch) {
+        // Every text node inside one <pre> resolves to the same preview; without
+        // this cache each node re-read the whole block's textContent (O(n^2)).
+        var hit = batch.preview.get(preview);
+        if (hit !== undefined) return hit;
+        var value = eligiblePreviewImpl(preview);
+        batch.preview.set(preview, value);
+        return value;
+      }
+      return eligiblePreviewImpl(preview);
+    }
+    function eligiblePreviewImpl(preview) {
       var block = codeBlockRoot(preview);
       if (block && !isPlainTextCodeBlock(block)) return false;
       var value = previewText(preview);
@@ -472,6 +506,13 @@ function runtimeJs(options = {}) {
       return isEligibleTextPreview(el);
     }
     function isProtected(el) {
+      if (batch && el) {
+        var hit = batch.prot.get(el);
+        if (hit !== undefined) return hit;
+        var value = !!(el.closest && el.closest(CODE_SEL) && !isRtlTextPreview(el));
+        batch.prot.set(el, value);
+        return value;
+      }
       return !!(el && el.closest && el.closest(CODE_SEL) && !isRtlTextPreview(el));
     }
     function isDynamicField(el) { return !!(el && el.matches && el.matches(DYNAMIC_FIELD_SEL)); }
@@ -649,7 +690,10 @@ function runtimeJs(options = {}) {
       });
     }
     function syncNearestList(el) {
-      syncList(nearestList(el));
+      var list = nearestList(el);
+      if (!list) return;
+      if (batch) batch.lists.add(list);
+      else syncList(list);
     }
     function textOutsideProtected(el) {
       if (!el) return '';
@@ -721,6 +765,12 @@ function runtimeJs(options = {}) {
     function watchTextLeaves(container) {
       if (!container || !container.querySelectorAll) return;
       container.querySelectorAll(TEXT_LEAF_SEL).forEach(function (el) {
+        // Nested TEXT_SEL containers enumerate the same leaves again; a leaf's
+        // eligibility cannot change inside one write phase.
+        if (batch) {
+          if (batch.leaves.has(el)) return;
+          batch.leaves.add(el);
+        }
         if (shouldWatchTextLeaf(el)) watch(el);
       });
     }
@@ -983,29 +1033,59 @@ function runtimeJs(options = {}) {
     function scanMutationTarget(target) {
       return doWrite(function () { return scanMutationTargetImpl(target); });
     }
-    function scanMutationTargetImpl(target) {
+    function scanMutationTargetImpl(target, seen, attrOnly) {
       var el = target && target.nodeType === 1 ? target : target && target.parentElement;
       if (!el) return;
+      // Batched mode: nodes removed before the frame flush need no work.
+      if (seen && !el.isConnected) return;
       // A rich paste can add dozens of nodes in one editor transaction. Treat the
       // nearest dynamic composer as one opaque field and coalesce a direction
       // refresh; recursively scanning each pasted node is both unsafe and O(n²).
       var editor = closestMatch(el, DYNAMIC_SEL);
       if (editor) {
         if (!editor.__persianRtlCleanWatched) watch(editor);
-        else if (editor.__persianRtlCleanSchedule) editor.__persianRtlCleanSchedule();
+        else if (seen) {
+          // Batched mode already runs inside an animation frame; apply now
+          // instead of deferring the composer by one more frame.
+          if (!seen.has(editor)) {
+            seen.set(editor, 2);
+            applyText(editor, true);
+          }
+        } else if (editor.__persianRtlCleanSchedule) editor.__persianRtlCleanSchedule();
         return;
       }
       var candidates = [];
+      var noScan = null;
       addUnique(candidates, el);
-      addUnique(candidates, closestMatch(el, TEXT_SEL));
-      addUnique(candidates, closestMatch(el, DYNAMIC_SEL));
-      addUnique(candidates, closestMatch(el, RTL_PREVIEW_SEL));
-      addUnique(candidates, closestMatch(el, CARD_SEL));
-      addUnique(candidates, closestMatch(el, APPROVAL_GROUP_SEL));
-      addUnique(candidates, closestMatch(el, APPROVAL_OPTION_SEL));
-      addUnique(candidates, el.parentElement);
+      // An attribute change (e.g. the host toggling an "overflowing" class in a
+      // ResizeObserver) changes no text, so ancestors keep their direction; only
+      // the element itself needs re-evaluation. Text/childList changes still
+      // re-evaluate the enclosing blocks exactly as before.
+      if (!attrOnly) {
+        addUnique(candidates, closestMatch(el, TEXT_SEL));
+        addUnique(candidates, closestMatch(el, DYNAMIC_SEL));
+        addUnique(candidates, closestMatch(el, RTL_PREVIEW_SEL));
+        addUnique(candidates, closestMatch(el, CARD_SEL));
+        addUnique(candidates, closestMatch(el, APPROVAL_GROUP_SEL));
+        addUnique(candidates, closestMatch(el, APPROVAL_OPTION_SEL));
+        // Batched mode: the parent's own direction is still re-evaluated, but
+        // its subtree is not re-scanned. Only el's subtree changed (scan(el)
+        // covers it), and for a message appended to the transcript the parent
+        // is the whole timeline -- a full re-scan per streamed message.
+        if (seen && el.parentElement && candidates.indexOf(el.parentElement) === -1) noScan = el.parentElement;
+        addUnique(candidates, el.parentElement);
+      }
       candidates.forEach(function (node) {
         if (!node || !node.querySelectorAll) return;
+        // Batched mode: processing a candidate is idempotent for a given DOM
+        // state, so each block is handled once per frame, not once per record.
+        // seen: 1 = checked without subtree scan, 2 = checked and scanned.
+        var skipScan = node === noScan;
+        if (seen) {
+          var state = seen.get(node);
+          if (state === 2 || (state === 1 && skipScan)) return;
+          seen.set(node, skipScan ? 1 : 2);
+        }
         if (node.matches && node.matches(TEXT_SEL + ',' + DYNAMIC_SEL)) {
           if (node.__persianRtlCleanWatched) applyText(node, !!node.matches(DYNAMIC_SEL));
           else watch(node);
@@ -1028,7 +1108,7 @@ function runtimeJs(options = {}) {
           if (node.__persianRtlCleanWatched) applyText(node, false);
           else watch(node);
         }
-        scan(node);
+        if (!skipScan) scan(node);
       });
     }
     function cellDir(cell) {
@@ -1132,8 +1212,52 @@ function runtimeJs(options = {}) {
       var root = ${rootSelector};
       if (root === document) root = document.body || document.documentElement;
       if (!root) { setTimeout(boot, 300); return; }
-      scan(root);
+      if (PERF_MODE) doWrite(function () { scan(root); });
+      else scan(root);
+      // Batched mode: collect mutation targets and process them once per frame.
+      // The host emits one React commit per ResizeObserver callback on a resize,
+      // so per-record processing re-scanned the whole transcript hundreds of
+      // times and froze the webview for seconds.
+      var pendingFull = new Set();
+      var pendingAttr = new Set();
+      var flushQueued = false;
+      function flushPending() {
+        if (!flushQueued) return;
+        flushQueued = false;
+        var full = pendingFull;
+        var attrs = pendingAttr;
+        pendingFull = new Set();
+        pendingAttr = new Set();
+        doWrite(function () {
+          var seen = new Map();
+          full.forEach(function (node) { scanMutationTargetImpl(node, seen, false); });
+          attrs.forEach(function (node) { if (!full.has(node)) scanMutationTargetImpl(node, seen, true); });
+        });
+      }
+      function queueFlush() {
+        if (flushQueued) return;
+        flushQueued = true;
+        // rAF runs before the next paint, so streamed text is styled in the same
+        // frame it appears. The timeout is a fallback for throttled frames.
+        requestAnimationFrame(flushPending);
+        setTimeout(flushPending, 250);
+      }
       registerObserver(new MutationObserver(function (muts) {
+        if (PERF_MODE) {
+          for (var a = 0; a < muts.length; a++) {
+            var mut = muts[a];
+            if (mut.type === 'attributes') {
+              // Inline style never affects text direction; the host rewrites it
+              // constantly during layout (heights, CSS variables).
+              if (mut.attributeName !== 'style') pendingAttr.add(mut.target);
+            } else if (mut.type === 'characterData') {
+              pendingFull.add(mut.target);
+            }
+            for (var b = 0; b < mut.addedNodes.length; b++) pendingFull.add(mut.addedNodes[b]);
+          }
+          if (pendingFull.size || pendingAttr.size) queueFlush();
+          return;
+        }
         doWrite(function () {
           for (var i = 0; i < muts.length; i++) {
             if (muts[i].type === 'characterData' || muts[i].type === 'attributes') {
@@ -1292,6 +1416,7 @@ ${runtimeJs({
     cardSelector: '[class*="permissionRequestContent_"],[class*="questionBlock_"]',
     rtlPreviewSelector: '[class*="toolBodyRowContent_"] pre,[class*="toolBodyRowContent_"] pre code,[class*="toolBodyPlainText_"],[class*="toolBodyPlainText_"] code,[class*="timelineMessage_"] pre,[class*="timelineMessage_"] pre code,[class*="codeBlockWrapper_"] pre,[class*="codeBlockWrapper_"] pre code',
     logName: 'claude-code',
+    perfMode: true,
   })}
 ${MARKERS.claudeJsEnd}`;
 }

@@ -46,6 +46,23 @@ test('explicit targets suppress filesystem fallback and keep only the active pat
   assert.equal(targets[0].active, true);
 });
 
+test('filesystem fallback matches manifest IDs case-insensitively like VS Code', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rastchin-registry-case-'));
+  const claude = path.join(root, 'anthropic.claude-code-2.1.319-linux-x64');
+  mkdir(claude);
+  // Claude Code's real manifest uses the capitalized publisher "Anthropic".
+  fs.writeFileSync(path.join(claude, 'package.json'), JSON.stringify({
+    publisher: 'Anthropic',
+    name: 'claude-code',
+    version: '2.1.319',
+  }));
+
+  const targets = discoverTargets('claude', { extensionsRoot: root }, root);
+  assert.equal(targets.length, 1);
+  assert.equal(targets[0].extensionPath, claude);
+  assert.equal(targets[0].version, '2.1.319');
+});
+
 test('filesystem fallback rejects a mismatched extension package manifest', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rastchin-registry-manifest-'));
   const fake = path.join(root, 'openai.chatgpt-99.0.0-linux-x64');

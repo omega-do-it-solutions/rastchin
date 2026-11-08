@@ -6,6 +6,20 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The Claude Code panel no longer freezes for seconds when it is resized, for
+  example when an image opens or closes in a split editor. Claude re-measures
+  every tool block on a resize and commits one small update per block; the
+  runtime re-scanned the whole transcript for each of them. Claude mutations
+  are now batched once per animation frame, inline-style churn is ignored,
+  attribute-only changes re-check just the changed element, and an appended
+  message is scanned without re-scanning the transcript. Direction and
+  typography results are unchanged; Codex keeps its existing behavior.
+- `Disable / Restore Patches` now finds Claude Code again. Its manifest
+  publisher is `Anthropic`, and the case-sensitive ID check made restore
+  report "Claude Code extension not found" while leaving the patch installed.
+
 ## [0.3.15] - 2026-10-08
 
 ### Fixed

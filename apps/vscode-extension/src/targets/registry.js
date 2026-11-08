@@ -56,7 +56,10 @@ function normalizeCandidate(spec, value, source) {
     : null;
   // An exact path supplied by VS Code is authoritative. For fallback scanning,
   // a package manifest that identifies a different extension is rejected.
-  if (source === 'filesystem' && manifestId && manifestId !== spec.extensionId) return null;
+  // VS Code extension IDs are case-insensitive: Claude Code's manifest says
+  // publisher "Anthropic", so a case-sensitive compare made Disable/Restore
+  // report "Claude Code extension not found" and leave the patch in place.
+  if (source === 'filesystem' && manifestId && manifestId.toLowerCase() !== spec.extensionId.toLowerCase()) return null;
 
   const givenVersion = typeof value === 'object' && value.version ? String(value.version) : null;
   const version = givenVersion

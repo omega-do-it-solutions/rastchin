@@ -124,6 +124,29 @@ test('patches and restores Claude/Codex fixtures idempotently', () => {
   assert.equal(fs.existsSync(path.join(fixture.codex, 'webview', INJECT_DIR)), false);
 });
 
+test('restoreAll restores a Claude install whose manifest publisher is capitalized', () => {
+  const fixture = makeFixture();
+  write(path.join(fixture.claude, 'package.json'), JSON.stringify({
+    publisher: 'Anthropic',
+    name: 'claude-code',
+    version: '2.1.170',
+  }));
+  const jsPath = path.join(fixture.claude, 'webview', 'index.js');
+
+  // The extension patches the active target reported by the VS Code API ...
+  patcher.patchAll({
+    includeCodex: false,
+    targets: { claude: [{ extensionPath: fixture.claude, version: '2.1.170' }] },
+  });
+  assert.equal(count(read(jsPath), MARKERS.claudeJsStart), 1);
+
+  // ... while Disable / Restore scans the shared extensions directory.
+  const restored = patcher.restoreAll({ includeCodex: false, extensionsRoot: fixture.root });
+  assert.equal(restored.messages.includes('Claude Code extension not found.'), false);
+  assert.equal(restored.changed, true);
+  assert.equal(read(jsPath), 'console.log("claude webview");\n');
+});
+
 test('adds the minimum self sources needed by Codex injected assets when CSP exists', () => {
   const fixture = makeFixture();
   const htmlPath = path.join(fixture.codex, 'webview', 'index.html');
